@@ -1,23 +1,27 @@
-version: '3.8'
-
 services:
   node-service:
     build: ./backend/node
+    container_name: node-service
     ports:
       - "5000:5000"
     volumes:
-      - ./backend/node:/app
+      - ./backend/node:/app:ro
     depends_on:
       - mongo
+    networks:
+      - app-network
 
   python-service:
     build: ./backend/python
+    container_name: python-service
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/python:/app
+      - ./backend/python:/app:ro
     depends_on:
       - mysql
+    networks:
+      - app-network
 
   mongo:
     image: mongo:latest
@@ -26,28 +30,42 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    networks:
+      - app-network
+    environment:
+      MONGO_INITDB_DATABASE: tienda
 
   mysql:
     image: mysql:latest
     container_name: mysqldb
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: inventory
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: inventory
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
 
   api-gateway:
     build: ./gateway
+    container_name: api-gateway
     ports:
       - "8080:8080"
     volumes:
-      - ./gateway:/app
+      - ./gateway:/app:ro
     depends_on:
       - node-service
       - python-service
+    networks:
+      - app-network
 
 volumes:
   mongo-data:
   mysql-data:
+
+networks:
+  app-network:
