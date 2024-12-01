@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  node-service:
+    build: ./backend/node
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/node:/app
+    depends_on:
+      - mongo
+
+  python-service:
+    build: ./backend/python
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/python:/app
+    depends_on:
+      - mysql
+
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  mysql:
+    image: mysql:latest
+    container_name: mysqldb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: inventory
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  api-gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gateway:/app
+    depends_on:
+      - node-service
+      - python-service
+
+volumes:
+  mongo-data:
+  mysql-data:
