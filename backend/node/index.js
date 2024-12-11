@@ -1,14 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose'); // Importar mongoose para MongoDB
-const Pedido = require('./models/Pedido'); // Modelo de Pedido (asegúrate de crearlo como te mostré antes)
+const Pedido = require('./models/pedido'); // Modelo de Pedido (asegúrate de crearlo como te mostré antes)
 
 const app = express();
 app.use(express.json()); // Middleware para parsear JSON
 
 // Conexión a MongoDB
-mongoose.connect('mongodb://username:password@mongodb:27017/tienda')
-.then(() => console.log('Conectado a MongoDB'))
-.catch(err => console.error('Error al conectar a MongoDB:', err));
+mongoose.connect('mongodb://root:rootpassword@mongodb:27017/tienda?authSource=admin')
+  .then(() => console.log('Conectado a MongoDB'))
+  .catch(err => console.error('Error al conectar a MongoDB:', err));
 
 // Ruta de prueba
 app.get('/', (req, res) => {

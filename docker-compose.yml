@@ -30,10 +30,13 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+      - ./database/mongo:/docker-entrypoint-initdb.d
     networks:
       - app-network
     environment:
       MONGO_INITDB_DATABASE: tienda
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
 
   mysql:
     image: mysql:latest
@@ -45,10 +48,9 @@ services:
     networks:
       - app-network
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: inventory
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppassword
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tienda
+
 
   api-gateway:
     build: ./gateway
