@@ -42,3 +42,7 @@ async def create_inventario(nombre_producto: str, cantidad: int):
     session.refresh(nuevo_item)
     session.close()
     return {"id": nuevo_item.id, "nombre_producto": nuevo_item.nombre_producto, "cantidad": nuevo_item.cantidad}
+
+@app.get("/")
+async def root():
+    return {"message": "Python service is running!"}

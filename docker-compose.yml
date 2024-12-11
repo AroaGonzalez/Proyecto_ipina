@@ -50,7 +50,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: tienda
-
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root --password=root || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api-gateway:
     build: ./gateway

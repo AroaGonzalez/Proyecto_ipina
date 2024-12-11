@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function PedidoForm() {
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+function PedidoForm({ setPedidos }) { // Acepta setPedidos como prop
   const [form, setForm] = useState({
     tiendaId: '',
     productoId: '',
@@ -19,13 +21,15 @@ function PedidoForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
-      .post('http://localhost:5000/pedidos', form)
+      .post(`${BASE_URL}/pedidos`, form)
       .then(() => {
         alert('Pedido creado con éxito');
         setForm({ tiendaId: '', productoId: '', cantidadSolicitada: 1, estado: 'Pendiente' });
+        // Recargar la lista de pedidos
+        axios.get(`${BASE_URL}/pedidos`).then((response) => setPedidos(response.data));
       })
       .catch((error) => console.error('Error al crear pedido:', error));
-  };
+  };  
 
   return (
     <form onSubmit={handleSubmit} className="pedido-form">

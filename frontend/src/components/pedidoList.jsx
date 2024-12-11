@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import axios from 'axios';
 
-function PedidoList() {
-  const [pedidos, setPedidos] = useState([]);
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+function PedidoList({ pedidos, setPedidos }) { // Acepta pedidos y setPedidos como props
   // Obtener pedidos al cargar el componente
   useEffect(() => {
     axios
-      .get('http://localhost:5000/pedidos')
-      .then((response) => setPedidos(response.data))
+      .get(`${BASE_URL}/pedidos`)
+      .then((response) => setPedidos(response.data)) // Usa setPedidos del padre
       .catch((error) => console.error('Error al obtener pedidos:', error));
-  }, []);
+  }, [setPedidos]); // Asegúrate de incluir setPedidos como dependencia
 
   return (
     <div className="pedido-list">

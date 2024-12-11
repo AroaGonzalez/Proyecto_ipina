@@ -1,9 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose'); // Importar mongoose para MongoDB
+const cors = require('cors'); // Importar cors
 const Pedido = require('./models/pedido'); // Modelo de Pedido (asegúrate de crearlo como te mostré antes)
 
 const app = express();
-app.use(express.json()); // Middleware para parsear JSON
+
+// Configurar CORS para permitir solicitudes desde otros dominios
+app.use(cors());
+
+// Middleware para parsear JSON
+app.use(express.json());
 
 // Conexión a MongoDB
 mongoose.connect('mongodb://root:rootpassword@mongodb:27017/tienda?authSource=admin')
