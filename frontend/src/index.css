@@ -1,83 +1,179 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-  }
-  
-  .app {
-    text-align: center;
-    margin: 20px;
-  }
-  
-  .pedido-form, .pedido-list {
-    margin: 20px auto;
-    padding: 20px;
-    max-width: 500px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .pedido-form h2, .pedido-list h2 {
-    margin-bottom: 15px;
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
-  
-  input, select, button {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  .menu {
-    width: 200px;
-    background: #333;
-    color: white;
-    position: fixed;
-    height: 100%;
-    padding: 20px;
-  }
-  
-  .menu ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .menu ul li {
-    margin: 15px 0;
-  }
-  
-  .menu ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .menu ul li a:hover {
-    text-decoration: underline;
-  }
-  
-  .app {
-    margin-left: 220px; /* Espacio para el menú */
-    padding: 20px;
-  }
-  
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0; /* Fondo claro */
+}
+
+.app {
+  display: flex; /* Flexbox para el menú y contenido */
+}
+
+.menu {
+  width: 200px;
+  background: #333;
+  color: white;
+  position: fixed;
+  height: 100%;
+  padding: 20px;
+}
+
+.menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+.menu ul li {
+  margin: 15px 0;
+}
+
+.menu ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.menu ul li a:hover {
+  text-decoration: underline;
+}
+
+.content {
+  margin-left: 220px; /* Espacio para el menú */
+  padding: 20px;
+  flex: 1;
+  text-align: center;
+}
+
+.full-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Pantalla completa */
+  width: 100vw; /* Ancho completo */
+  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Cambia esta ruta por la de tu imagen */
+  background-size: cover; /* Asegura que la imagen cubra toda el área */
+  background-position: center; /* Centra la imagen */
+  background-repeat: no-repeat; /* Evita que se repita */
+  margin: 0; /* Elimina cualquier margen sobrante */
+}
+
+/* Formulario de pedidos */
+.pedido-form, .pedido-list {
+  margin: 20px auto;
+  padding: 20px;
+  max-width: 500px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pedido-form h2, .pedido-list h2 {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Estilos para el login */
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white; /* Texto blanco */
+  text-align: center;
+}
+
+.login h2 {
+  font-size: 2.5rem; /* Tamaño mayor para el título */
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  font-weight: bold;
+  text-align: center;
+  color: white; /* Cambia el color del texto a blanco */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Añade una sombra negra suave */
+}
+
+.login form {
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+  width: 350px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* Sombra suave */
+}
+
+.login label {
+  display: block;
+  margin: 10px 0 5px;
+  color: #333; /* Texto oscuro */
+  font-weight: bold;
+}
+
+.login input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f9f9f9;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
+}
+
+.login input:focus {
+  outline: none;
+  border: 2px solid #2575fc;
+  box-shadow: 0 0 5px rgba(37, 117, 252, 0.5); /* Sombra al enfocarse */
+}
+
+.login button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2575fc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login button:hover {
+  background-color: #1a5bb8;
+  transform: scale(1.03); /* Efecto de agrandamiento */
+}
+
+.login button:active {
+  transform: scale(0.98); /* Efecto al presionar */
+}
+
+.login small {
+  display: block;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #666;
+}

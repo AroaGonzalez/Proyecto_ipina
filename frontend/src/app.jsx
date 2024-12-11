@@ -1,8 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import PedidoList from './components/pedidoList';
-import PedidoForm from './components/pedidoForm';
-import Login from './components/login'; 
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import PedidosPage from './components/pedidosPage';
+import Login from './components/login';
 import Menu from './components/menu';
 
 function Home() {
@@ -14,18 +13,28 @@ function Home() {
   );
 }
 
+function Layout({ children }) {
+  const location = useLocation();
+  const hideMenu = location.pathname === '/'; // Oculta el menú en la pantalla de login
+
+  return (
+    <div className="app">
+      {!hideMenu && <Menu />} {/* Muestra el menú solo si no estamos en la pantalla de login */}
+      <div className={hideMenu ? 'full-content' : 'content'}>{children}</div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <div className="app">
-        <h1>Pedidos Tienda</h1>
-        {/* Define las rutas */}
+      <Layout>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/pedidos" element={<><PedidoForm /><PedidoList /></>} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} /> {/* Pantalla principal es login */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/pedidos" element={<PedidosPage />} />
         </Routes>
-      </div>
+      </Layout>
     </Router>
   );
 }

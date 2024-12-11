@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-function PedidoList({ pedidos, setPedidos }) { // Acepta pedidos y setPedidos como props
+function PedidoList({ pedidos = [], setPedidos }) { // Asigna un array vacío como valor predeterminado
   // Obtener pedidos al cargar el componente
   useEffect(() => {
     axios
@@ -16,11 +16,15 @@ function PedidoList({ pedidos, setPedidos }) { // Acepta pedidos y setPedidos co
     <div className="pedido-list">
       <h2>Lista de Pedidos</h2>
       <ul>
-        {pedidos.map((pedido) => (
-          <li key={pedido._id}>
-            Tienda: {pedido.tiendaId}, Producto: {pedido.productoId}, Cantidad: {pedido.cantidadSolicitada}, Estado: {pedido.estado}
-          </li>
-        ))}
+        {pedidos.length > 0 ? ( // Comprueba si pedidos tiene elementos
+          pedidos.map((pedido) => (
+            <li key={pedido._id}>
+              Tienda: {pedido.tiendaId}, Producto: {pedido.productoId}, Cantidad: {pedido.cantidadSolicitada}, Estado: {pedido.estado}
+            </li>
+          ))
+        ) : (
+          <p>No hay pedidos disponibles.</p> // Mensaje si no hay pedidos
+        )}
       </ul>
     </div>
   );
