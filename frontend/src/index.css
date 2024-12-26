@@ -1,341 +1,370 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f0f0f0; /* Fondo claro */
+font-family: Arial, sans-serif;
+margin: 0;
+padding: 0;
+background-color: #f0f0f0; /* Fondo claro */
 }
 
 .app {
-  display: flex; /* Flexbox para el menú y contenido */
+display: flex; /* Flexbox para el menú y contenido */
 }
 
 .menu {
-  width: 200px;
-  background: #333;
-  color: white;
-  position: fixed;
-  height: 100%;
-  padding: 20px;
+width: 200px;
+background: #333;
+color: white;
+position: fixed;
+height: 100%;
+padding: 20px;
 }
 
 .menu ul {
-  list-style: none;
-  padding: 0;
+list-style: none;
+padding: 0;
 }
 
 .menu ul li {
-  margin: 15px 0;
+margin: 15px 0;
 }
 
 .menu ul li a {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
+color: white;
+text-decoration: none;
+font-weight: bold;
 }
 
 .menu ul li a:hover {
-  text-decoration: underline;
+text-decoration: underline;
 }
 
 .content {
-  margin-left: 220px; /* Espacio para el menú */
-  padding: 20px;
-  flex: 1;
-  text-align: center;
+margin-left: 220px; /* Espacio para el menú */
+padding: 20px;
+flex: 1;
+text-align: center;
 }
 
 .full-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Pantalla completa */
-  width: 100vw; /* Ancho completo */
-  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Cambia esta ruta por la de tu imagen */
-  background-size: cover; /* Asegura que la imagen cubra toda el área */
-  background-position: center; /* Centra la imagen */
-  background-repeat: no-repeat; /* Evita que se repita */
-  margin: 0; /* Elimina cualquier margen sobrante */
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh; /* Pantalla completa */
+width: 100vw; /* Ancho completo */
+background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Cambia esta ruta por la de tu imagen */
+background-size: cover; /* Asegura que la imagen cubra toda el área */
+background-position: center; /* Centra la imagen */
+background-repeat: no-repeat; /* Evita que se repita */
+margin: 0; /* Elimina cualquier margen sobrante */
 }
 
 /* Formulario de pedidos */
 .pedido-form, .pedido-list {
-  margin: 20px auto;
-  padding: 20px;
-  max-width: 500px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+margin: 20px auto;
+padding: 20px;
+max-width: 500px;
+background: #fff;
+border-radius: 8px;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pedido-form h2, .pedido-list h2 {
-  margin-bottom: 15px;
+margin-bottom: 15px;
 }
 
 label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
+display: block;
+margin-bottom: 5px;
+font-weight: bold;
 }
 
 input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+width: 100%;
+padding: 10px;
+margin: 10px 0;
+border: 1px solid #ddd;
+border-radius: 4px;
 }
 
 button {
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+background-color: #007BFF;
+color: white;
+border: none;
+cursor: pointer;
+transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background-color: #0056b3;
+background-color: #0056b3;
 }
 
 /* Estilos para el login */
 .login {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white; /* Texto blanco */
-  text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+color: white; /* Texto blanco */
+text-align: center;
 }
 
 .login h2 {
-  font-size: 2.5rem; /* Tamaño mayor para el título */
-  margin-bottom: 30px;
-  text-transform: uppercase;
-  font-weight: bold;
-  text-align: center;
-  color: white; /* Cambia el color del texto a blanco */
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Añade una sombra negra suave */
+font-size: 2.5rem; /* Tamaño mayor para el título */
+margin-bottom: 30px;
+text-transform: uppercase;
+font-weight: bold;
+text-align: center;
+color: white; /* Cambia el color del texto a blanco */
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Añade una sombra negra suave */
 }
 
 .login form {
-  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
-  padding: 30px;
-  border-radius: 10px;
-  text-align: center;
-  width: 350px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* Sombra suave */
+background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
+padding: 30px;
+border-radius: 10px;
+text-align: center;
+width: 350px;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25); /* Sombra suave */
 }
 
 .login label {
-  display: block;
-  margin: 10px 0 5px;
-  color: #333; /* Texto oscuro */
-  font-weight: bold;
+display: block;
+margin: 10px 0 5px;
+color: #333; /* Texto oscuro */
+font-weight: bold;
 }
 
 .login input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1rem;
-  background-color: #f9f9f9;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
+width: 100%;
+padding: 10px;
+margin-bottom: 15px;
+border: 1px solid #ddd;
+border-radius: 5px;
+font-size: 1rem;
+background-color: #f9f9f9;
+box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
 }
 
 .login input:focus {
-  outline: none;
-  border: 2px solid #2575fc;
-  box-shadow: 0 0 5px rgba(37, 117, 252, 0.5); /* Sombra al enfocarse */
+outline: none;
+border: 2px solid #2575fc;
+box-shadow: 0 0 5px rgba(37, 117, 252, 0.5); /* Sombra al enfocarse */
 }
 
 .login button {
-  width: 100%;
-  padding: 12px;
-  background-color: #2575fc;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+width: 100%;
+padding: 12px;
+background-color: #2575fc;
+color: white;
+border: none;
+border-radius: 5px;
+font-size: 1rem;
+cursor: pointer;
+transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .login button:hover {
-  background-color: #1a5bb8;
-  transform: scale(1.03); /* Efecto de agrandamiento */
+background-color: #1a5bb8;
+transform: scale(1.03); /* Efecto de agrandamiento */
 }
 
 .login button:active {
-  transform: scale(0.98); /* Efecto al presionar */
+transform: scale(0.98); /* Efecto al presionar */
 }
 
 .login small {
-  display: block;
-  margin-top: 15px;
-  font-size: 0.9rem;
-  color: #666;
+display: block;
+margin-top: 15px;
+font-size: 0.9rem;
+color: #666;
 }
 
 .register {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Ocupa toda la pantalla */
-  width: 100vw; /* Asegúrate de cubrir todo el ancho */
-  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Ruta de tu imagen */
-  background-size: cover; /* Asegura que la imagen cubra toda el área */
-  background-position: center; /* Centra la imagen */
-  background-repeat: no-repeat; /* Evita que se repita */
-  color: white; /* Texto blanco */
-  text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+height: 100vh; /* Ocupa toda la pantalla */
+width: 100vw; /* Asegúrate de cubrir todo el ancho */
+background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Ruta de tu imagen */
+background-size: cover; /* Asegura que la imagen cubra toda el área */
+background-position: center; /* Centra la imagen */
+background-repeat: no-repeat; /* Evita que se repita */
+color: white; /* Texto blanco */
+text-align: center;
 }
 
 .register h2 {
-  font-size: 3rem; /* Tamaño mayor para el título */
-  margin-bottom: 30px;
-  text-transform: uppercase;
-  font-weight: bold;
-  text-align: center;
-  color: #ffd700; /* Texto dorado para diferenciar */
-  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9); /* Sombra más destacada */
+font-size: 3rem; /* Tamaño mayor para el título */
+margin-bottom: 30px;
+text-transform: uppercase;
+font-weight: bold;
+text-align: center;
+color: #ffd700; /* Texto dorado para diferenciar */
+text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9); /* Sombra más destacada */
 }
 
 .register form {
-  background-color: rgba(255, 255, 255, 0.85); /* Fondo blanco casi opaco */
-  padding: 40px;
-  border-radius: 20px; /* Bordes más redondeados */
-  text-align: center;
-  width: 400px; /* Ancho más amplio */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); /* Sombra más fuerte */
+background-color: rgba(255, 255, 255, 0.85); /* Fondo blanco casi opaco */
+padding: 40px;
+border-radius: 20px; /* Bordes más redondeados */
+text-align: center;
+width: 400px; /* Ancho más amplio */
+box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); /* Sombra más fuerte */
 }
 
 .register label {
-  display: block;
-  margin: 15px 0 5px;
-  color: #555; /* Texto más claro */
-  font-weight: bold;
-  font-size: 1.1rem;
+display: block;
+margin: 15px 0 5px;
+color: #555; /* Texto más claro */
+font-weight: bold;
+font-size: 1.1rem;
 }
 
 .register input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #bbb;
-  border-radius: 8px;
-  font-size: 1rem;
-  background-color: #f4f4f4; /* Fondo claro */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15); /* Sombra interna */
+width: 100%;
+padding: 12px;
+margin-bottom: 20px;
+border: 1px solid #bbb;
+border-radius: 8px;
+font-size: 1rem;
+background-color: #f4f4f4; /* Fondo claro */
+box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15); /* Sombra interna */
 }
 
 .register input:focus {
-  outline: none;
-  border: 2px solid #ff6347; /* Borde naranja para diferenciación */
-  box-shadow: 0 0 8px rgba(255, 99, 71, 0.8); /* Sombra naranja */
+outline: none;
+border: 2px solid #ff6347; /* Borde naranja para diferenciación */
+box-shadow: 0 0 8px rgba(255, 99, 71, 0.8); /* Sombra naranja */
 }
 
 .register button {
-  width: 100%;
-  padding: 14px;
-  background-color: #ff6347; /* Naranja para diferenciar */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+width: 100%;
+padding: 14px;
+background-color: #ff6347; /* Naranja para diferenciar */
+color: white;
+border: none;
+border-radius: 8px;
+font-size: 1.2rem;
+font-weight: bold;
+cursor: pointer;
+transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .register button:hover {
-  background-color: #e5533d;
-  transform: scale(1.05); /* Efecto de agrandamiento */
+background-color: #e5533d;
+transform: scale(1.05); /* Efecto de agrandamiento */
 }
 
 .register button:active {
-  transform: scale(0.97); /* Efecto al presionar */
+transform: scale(0.97); /* Efecto al presionar */
 }
 
 .register small {
-  display: block;
-  margin-top: 20px;
-  font-size: 1rem;
-  color: #999;
+display: block;
+margin-top: 20px;
+font-size: 1rem;
+color: #999;
 }
 
 .tabla-pedidos {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-  font-size: 1rem;
-  text-align: left;
+width: 100%;
+border-collapse: collapse;
+margin: 20px 0;
+font-size: 1rem;
+text-align: left;
 }
 
 .tabla-pedidos th,
 .tabla-pedidos td {
-  border: 1px solid #ddd;
-  padding: 8px;
+border: 1px solid #ddd;
+padding: 8px;
 }
 
 .tabla-pedidos th {
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
+background-color: #007bff;
+color: white;
+font-weight: bold;
 }
 
 .tabla-pedidos tr:nth-child(even) {
-  background-color: #f2f2f2;
+background-color: #f2f2f2;
 }
 
 .tabla-pedidos tr:hover {
-  background-color: #ddd;
+background-color: #ddd;
 }
 
 .filters-container {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: space-between;
+display: flex;
+gap: 10px;
+margin-bottom: 20px;
+justify-content: space-between;
 }
 
 .filters-container input,
 .filters-container select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  flex: 1;
+padding: 10px;
+border: 1px solid #ddd;
+border-radius: 4px;
+flex: 1;
 }
 
 .table-container {
-  margin-top: 20px;
+margin-top: 20px;
 }
 
 .tabla-pedidos {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 1rem;
-  text-align: left;
+width: 100%;
+border-collapse: collapse;
+font-size: 1rem;
+text-align: left;
 }
 
 .tabla-pedidos th,
 .tabla-pedidos td {
-  border: 1px solid #ddd;
-  padding: 8px;
+border: 1px solid #ddd;
+padding: 8px;
 }
 
 .tabla-pedidos th {
-  background-color: #007bff;
-  color: white;
-  font-weight: bold;
+background-color: #007bff;
+color: white;
+font-weight: bold;
 }
 
 .tabla-pedidos tr:nth-child(even) {
-  background-color: #f2f2f2;
+background-color: #f2f2f2;
 }
 
 .tabla-pedidos tr:hover {
-  background-color: #ddd;
+background-color: #ddd;
 }
+
+.tabla-pedidos button {
+background-color: red;
+color: white;
+border: none;
+padding: 5px 10px;
+border-radius: 4px;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+.tabla-pedidos button:hover {
+background-color: darkred;
+}
+
+.low-stock {
+background-color: #ffcccc; /* Resaltar en rojo claro */
+}
+.tabla-inventario th,
+.tabla-inventario td {
+padding: 10px;
+border: 1px solid #ddd;
+}
+.tabla-inventario {
+width: 100%;
+border-collapse: collapse;
+margin: 20px 0;
+}
+

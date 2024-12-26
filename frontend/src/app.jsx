@@ -6,6 +6,7 @@ import Login from './components/login';
 import Menu from './components/menu';
 import PrivateRoute from './components/privateRoute';
 import Register from './components/register';
+import InventarioList from './components/inventarioList';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -50,6 +51,14 @@ function App() {
             element={
               <PrivateRoute>
                 <PedidoList pedidos={pedidos} setPedidos={setPedidos} />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/inventario"
+            element={
+              <PrivateRoute>
+                <InventarioList />
               </PrivateRoute>
             }
           />

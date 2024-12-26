@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs'); // Para hashear contraseñas
 const Pedido = require('./models/pedido'); // Modelo de Pedido
 const User = require('./models/user'); // Modelo de Usuario (nuevo)
 
+const Inventario = require('./models/inventario');
+
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
 
@@ -84,14 +86,38 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Crear un pedido (solo usuarios autenticados)
 app.post('/pedidos', authenticateToken, async (req, res) => {
   try {
-    const pedido = new Pedido(req.body); // Crear un nuevo pedido con los datos del cuerpo de la solicitud
-    await pedido.save(); // Guardar el pedido en MongoDB
-    res.status(201).json(pedido); // Responder con el pedido creado
+    const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
+
+    // Validar campos requeridos
+    if (!tiendaId || !productoId || !cantidadSolicitada || !estado) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    }
+
+    // Validar que el producto existe en el inventario
+    const producto = await Inventario.findOne({ productoId });
+    if (!producto) {
+      return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario' });
+    }
+
+    // Validar stock
+    if (producto.cantidad < cantidadSolicitada) {
+      return res.status(400).json({ message: 'Stock insuficiente para este producto' });
+    }
+
+    // Crear el pedido
+    const pedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado });
+    await pedido.save();
+
+    // Actualizar el inventario
+    producto.cantidad -= cantidadSolicitada;
+    await producto.save();
+
+    res.status(201).json(pedido);
   } catch (error) {
-    res.status(400).json({ error: error.message }); // Manejo de errores
+    console.error('Error al procesar el pedido:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -135,6 +161,38 @@ app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Pedido eliminado' }); // Responder con un mensaje de éxito
   } catch (error) {
     res.status(404).json({ error: error.message });
+  }
+});
+
+// Obtener todo el inventario
+app.get('/inventario', async (req, res) => {
+  try {
+    const inventarios = await Inventario.find();
+    res.json(inventarios);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Añadir un producto al inventario
+app.post('/inventario', async (req, res) => {
+  const { productoId, nombreProducto, cantidad, umbralMinimo } = req.body;
+  try {
+    const nuevoProducto = new Inventario({ productoId, nombreProducto, cantidad, umbralMinimo });
+    await nuevoProducto.save();
+    res.status(201).json(nuevoProducto);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Actualizar stock de un producto
+app.put('/inventario/:id', async (req, res) => {
+  try {
+    const producto = await Inventario.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(producto);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
