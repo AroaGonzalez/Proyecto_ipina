@@ -265,3 +265,77 @@ button:hover {
   font-size: 1rem;
   color: #999;
 }
+
+.tabla-pedidos {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.tabla-pedidos th,
+.tabla-pedidos td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.tabla-pedidos th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.tabla-pedidos tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.tabla-pedidos tr:hover {
+  background-color: #ddd;
+}
+
+.filters-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: space-between;
+}
+
+.filters-container input,
+.filters-container select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.table-container {
+  margin-top: 20px;
+}
+
+.tabla-pedidos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.tabla-pedidos th,
+.tabla-pedidos td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.tabla-pedidos th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.tabla-pedidos tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.tabla-pedidos tr:hover {
+  background-color: #ddd;
+}

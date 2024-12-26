@@ -26,7 +26,6 @@ mongoose.connect('mongodb://root:rootpassword@mongo:27017/tienda', {
   authSource: 'admin',
 });
 
-
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('Node.js service running!');
