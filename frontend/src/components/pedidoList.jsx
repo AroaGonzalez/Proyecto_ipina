@@ -6,12 +6,19 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 function PedidoList({ pedidos = [], setPedidos }) { // Asigna un array vacío como valor predeterminado
   // Obtener pedidos al cargar el componente
   useEffect(() => {
+    const token = localStorage.getItem('token'); // Obtén el token del almacenamiento local
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`, // Incluye el token en el encabezado
+      },
+    };
+  
     axios
-      .get(`${BASE_URL}/pedidos`)
-      .then((response) => setPedidos(response.data)) // Usa setPedidos del padre
+      .get(`${BASE_URL}/pedidos`, config) // Pasa la configuración con el token
+      .then((response) => setPedidos(response.data))
       .catch((error) => console.error('Error al obtener pedidos:', error));
-  }, [setPedidos]); // Asegúrate de incluir setPedidos como dependencia
-
+  }, [setPedidos]);
+    
   return (
     <div className="pedido-list">
       <h2>Lista de Pedidos</h2>

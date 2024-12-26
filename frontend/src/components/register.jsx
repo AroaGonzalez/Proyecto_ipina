@@ -14,7 +14,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/register', form); // Ruta del backend para registrar
+      const response = await axios.post('http://localhost:5000/register', form);
       localStorage.setItem('token', response.data.token); // Guarda el token
       navigate('/'); // Redirige al login
     } catch (error) {

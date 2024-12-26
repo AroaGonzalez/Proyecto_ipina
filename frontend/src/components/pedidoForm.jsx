@@ -20,13 +20,20 @@ function PedidoForm({ setPedidos }) { // Acepta setPedidos como prop
   // Enviar el formulario al backend
   const handleSubmit = (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('token'); // Obtén el token del almacenamiento local
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`, // Incluye el token en el encabezado
+      },
+    };
+  
     axios
-      .post(`${BASE_URL}/pedidos`, form)
+      .post(`${BASE_URL}/pedidos`, form, config) // Pasa la configuración con el token
       .then(() => {
         alert('Pedido creado con éxito');
         setForm({ tiendaId: '', productoId: '', cantidadSolicitada: 1, estado: 'Pendiente' });
         // Recargar la lista de pedidos
-        axios.get(`${BASE_URL}/pedidos`).then((response) => setPedidos(response.data));
+        axios.get(`${BASE_URL}/pedidos`, config).then((response) => setPedidos(response.data));
       })
       .catch((error) => console.error('Error al crear pedido:', error));
   };  

@@ -11,7 +11,7 @@ const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
 
 // Configurar CORS para permitir solicitudes desde otros dominios
 app.use(cors({
-  origin: 'http://localhost:3000', // Dirección del frontend
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -20,13 +20,9 @@ app.use(cors({
 app.use(express.json());
 
 // Conexión a MongoDB
-mongoose.connect('mongodb://localhost:27017/tienda', {
+mongoose.connect('mongodb://root:rootpassword@mongo:27017/tienda', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  auth: {
-    username: 'root',
-    password: 'rootpassword',
-  },
   authSource: 'admin',
 });
 
@@ -52,18 +48,21 @@ function authenticateToken(req, res, next) {
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
+      return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
   }
-
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // Hashea la contraseña
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-    res.status(201).json({ message: 'Usuario registrado exitosamente' });
+      const hashedPassword = await bcrypt.hash(password, 10); // Hashea la contraseña
+      const newUser = new User({ username, password: hashedPassword });
+      await newUser.save();
+      res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+      if (error.code === 11000) { // Código para error de clave duplicada en MongoDB
+          return res.status(400).json({ message: 'El usuario ya existe' });
+      }
+      res.status(500).json({ error: error.message });
   }
 });
+
 
 // Iniciar sesión y obtener token
 app.post('/login', async (req, res) => {
