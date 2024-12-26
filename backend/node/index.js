@@ -88,36 +88,36 @@ app.post('/login', async (req, res) => {
 
 app.post('/pedidos', authenticateToken, async (req, res) => {
   try {
-    const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
+      const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
 
-    // Validar campos requeridos
-    if (!tiendaId || !productoId || !cantidadSolicitada || !estado) {
-      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-    }
+      // Validar campos requeridos
+      if (!tiendaId || !productoId || !cantidadSolicitada || !estado) {
+          return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+      }
 
-    // Validar que el producto existe en el inventario
-    const producto = await Inventario.findOne({ productoId });
-    if (!producto) {
-      return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario' });
-    }
+      // Validar que el producto existe en el inventario
+      const producto = await Inventario.findOne({ productoId });
+      if (!producto) {
+          return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario' });
+      }
 
-    // Validar stock
-    if (producto.cantidad < cantidadSolicitada) {
-      return res.status(400).json({ message: 'Stock insuficiente para este producto' });
-    }
+      // Validar stock
+      if (producto.cantidad < cantidadSolicitada) {
+          return res.status(400).json({ message: 'Stock insuficiente para este producto' });
+      }
 
-    // Crear el pedido
-    const pedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado });
-    await pedido.save();
+      // Crear el pedido
+      const pedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado });
+      await pedido.save();
 
-    // Actualizar el inventario
-    producto.cantidad -= cantidadSolicitada;
-    await producto.save();
+      // Actualizar el inventario
+      producto.cantidad -= cantidadSolicitada;
+      await producto.save();
 
-    res.status(201).json(pedido);
+      res.status(201).json(pedido);
   } catch (error) {
-    console.error('Error al procesar el pedido:', error);
-    res.status(500).json({ error: error.message });
+      console.error('Error al procesar el pedido:', error);
+      res.status(500).json({ error: error.message });
   }
 });
 

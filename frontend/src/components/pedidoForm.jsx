@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const PedidoForm = () => {
   const [productoIds, setProductoIds] = useState([]);
   const [pedido, setPedido] = useState({
     tiendaId: "",
     productoId: "",
-    cantidad: 1,
+    cantidadSolicitada: 1, // Cambiar a cantidadSolicitada
     estado: "Pendiente",
   });
 
   useEffect(() => {
     // Obtener los productos disponibles del inventario
     axios
-      .get("http://localhost:5000/inventario")
+      .get(`${BASE_URL}/inventario`)
       .then((response) => {
         const productos = response.data.map((producto) => producto.productoId);
         setProductoIds(productos); // Guardar IDs disponibles
@@ -28,16 +29,26 @@ const PedidoForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
     axios
-      .post("http://localhost:5000/pedidos", pedido, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      .post(`${BASE_URL}/pedidos`, pedido, config) // Envía el objeto `pedido` al backend
+      .then(() => {
+        alert("Pedido creado con éxito");
+        setPedido({
+          tiendaId: "",
+          productoId: "",
+          cantidadSolicitada: 1,
+          estado: "Pendiente",
+        }); // Restablecer el formulario
       })
-      .then((response) => {
-        alert("Pedido creado exitosamente");
-      })
-      .catch((error) => {
-        console.error("Error al crear el pedido:", error);
-      });
+      .catch((error) =>
+        console.error("Error al crear pedido:", error.response?.data)
+      );
   };
 
   return (
@@ -69,12 +80,12 @@ const PedidoForm = () => {
         ))}
       </select>
 
-      <label htmlFor="cantidad">Cantidad:</label>
+      <label htmlFor="cantidadSolicitada">Cantidad:</label>
       <input
         type="number"
-        id="cantidad"
-        name="cantidad"
-        value={pedido.cantidad}
+        id="cantidadSolicitada"
+        name="cantidadSolicitada"
+        value={pedido.cantidadSolicitada}
         onChange={handleChange}
         min="1"
         required
