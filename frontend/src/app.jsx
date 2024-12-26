@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import PedidosPage from './components/pedidosPage';
 import Login from './components/login';
 import Menu from './components/menu';
+import PrivateRoute from './components/privateRoute'; // Importa el componente
+import Register from './components/register';
 
 function Home() {
   return (
@@ -15,11 +17,11 @@ function Home() {
 
 function Layout({ children }) {
   const location = useLocation();
-  const hideMenu = location.pathname === '/'; // Oculta el menú en la pantalla de login
+  const hideMenu = location.pathname === '/' || location.pathname === '/register'; // Oculta el menú en login y registro
 
   return (
     <div className="app">
-      {!hideMenu && <Menu />} {/* Muestra el menú solo si no estamos en la pantalla de login */}
+      {!hideMenu && <Menu />} {/* Muestra el menú solo si no estamos en login o registro */}
       <div className={hideMenu ? 'full-content' : 'content'}>{children}</div>
     </div>
   );
@@ -30,9 +32,27 @@ function App() {
     <Router>
       <Layout>
         <Routes>
+          {/* Rutas públicas */}
           <Route path="/" element={<Login />} /> {/* Pantalla principal es login */}
-          <Route path="/home" element={<Home />} />
-          <Route path="/pedidos" element={<PedidosPage />} />
+          <Route path="/register" element={<Register />} /> {/* Pantalla de registro */}
+
+          {/* Rutas privadas */}
+          <Route
+            path="/home"
+            element={
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pedidos"
+            element={
+              <PrivateRoute>
+                <PedidosPage />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Layout>
     </Router>

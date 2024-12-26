@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function Login() {
   const navigate = useNavigate();
@@ -10,13 +11,21 @@ function Login() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí puedes añadir lógica de autenticación si es necesario
-    if (form.username && form.password) {
-      navigate('/home'); // Redirige al inicio
-    } else {
-      alert('Por favor, ingresa usuario y contraseña');
+    try {
+      // Envía las credenciales al backend
+      const response = await axios.post('http://localhost:5000/login', form);
+
+      // Guarda el token en el almacenamiento local
+      localStorage.setItem('token', response.data.token);
+
+      // Redirige al inicio
+      navigate('/home');
+    } catch (error) {
+      // Si hay un error en la autenticación, muestra un mensaje y redirige al registro
+      alert('Usuario o contraseña incorrectos. Por favor, regístrate.');
+      navigate('/register'); // Redirige al registro
     }
   };
 
