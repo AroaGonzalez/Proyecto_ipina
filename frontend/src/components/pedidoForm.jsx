@@ -35,22 +35,22 @@ const PedidoForm = () => {
         Authorization: `Bearer ${token}`,
       },
     };
+  
     axios
-      .post(`${BASE_URL}/pedidos`, pedido, config) // Envía el objeto `pedido` al backend
+      .post(`${BASE_URL}/pedidos`, pedido, config)
       .then(() => {
         alert("Pedido creado con éxito");
-        setPedido({
-          tiendaId: "",
-          productoId: "",
-          cantidadSolicitada: 1,
-          estado: "Pendiente",
-        }); // Restablecer el formulario
+        setPedido({ tiendaId: "", productoId: "", cantidadSolicitada: 1, estado: "Pendiente" });
+  
+        // Recargar inventario
+        axios
+          .get(`${BASE_URL}/inventario`)
+          .then((response) => setInventario(response.data))
+          .catch((error) => console.error("Error al recargar el inventario:", error));
       })
-      .catch((error) =>
-        console.error("Error al crear pedido:", error.response?.data)
-      );
+      .catch((error) => console.error("Error al crear pedido:", error.response?.data));
   };
-
+  
   return (
     <form className="pedido-form" onSubmit={handleSubmit}>
       <h2>Crear Pedido</h2>
@@ -101,7 +101,6 @@ const PedidoForm = () => {
       >
         <option value="Pendiente">Pendiente</option>
         <option value="Completado">Completado</option>
-        <option value="Cancelado">Cancelado</option>
       </select>
 
       <button type="submit">Crear Pedido</button>

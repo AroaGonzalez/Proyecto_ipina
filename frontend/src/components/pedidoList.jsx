@@ -96,29 +96,41 @@ function PedidoList() {
 
   const handleEditSubmit = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        };
 
-      await axios.put(`${BASE_URL}/pedidos/${id}`, editForm, config);
-      alert('Pedido actualizado con éxito');
+        // Actualizar el pedido
+        await axios.put(`${BASE_URL}/pedidos/${id}`, editForm, config);
 
-      setPedidos((prevPedidos) =>
-        prevPedidos.map((pedido) =>
-          pedido._id === id ? { ...pedido, ...editForm } : pedido
-        )
-      );
+        // Actualizar el inventario asociado
+        const pedidoOriginal = pedidos.find((pedido) => pedido._id === id);
+        if (pedidoOriginal) {
+            const diferenciaCantidad = editForm.cantidadSolicitada - pedidoOriginal.cantidadSolicitada;
+            await axios.put(
+                `${BASE_URL}/inventario/${editForm.productoId}`,
+                { cantidad: -diferenciaCantidad }, // Restar o sumar diferencia
+                config
+            );
+        }
 
-      setEditingPedidoId(null); // Desactiva el modo de edición
+        alert('Pedido e inventario actualizados con éxito');
+
+        setPedidos((prevPedidos) =>
+            prevPedidos.map((pedido) =>
+                pedido._id === id ? { ...pedido, ...editForm } : pedido
+            )
+        );
+        setEditingPedidoId(null); // Desactiva el modo de edición
     } catch (error) {
-      console.error('Error al actualizar pedido:', error);
-      alert('No se pudo actualizar el pedido');
+        console.error('Error al actualizar pedido/inventario:', error);
+        alert('No se pudo actualizar el pedido/inventario');
     }
-  };
-
+};
+  
   return (
     <div className="pedido-list">
       <h2>Lista de Pedidos</h2>
