@@ -150,28 +150,50 @@ app.get('/pedidos/:id', authenticateToken, async (req, res) => {
 app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
     const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
+
+    // Obtener el pedido previo
     const pedidoAnterior = await Pedido.findById(req.params.id);
-    if (!pedidoAnterior) throw new Error('Pedido no encontrado');
-
-    // Actualizar inventario si cambia la cantidad o productoId
-    if (pedidoAnterior.productoId !== productoId || pedidoAnterior.cantidadSolicitada !== cantidadSolicitada) {
-      const productoAnterior = await Inventario.findOne({ productoId: pedidoAnterior.productoId });
-      if (productoAnterior) {
-        productoAnterior.cantidad += pedidoAnterior.cantidadSolicitada; // Revertir cantidad anterior
-        await productoAnterior.save();
-      }
-
-      const productoNuevo = await Inventario.findOne({ productoId });
-      if (productoNuevo) {
-        if (productoNuevo.cantidad < cantidadSolicitada) {
-          return res.status(400).json({ message: 'Stock insuficiente para este producto' });
-        }
-        productoNuevo.cantidad -= cantidadSolicitada; // Ajustar nueva cantidad
-        await productoNuevo.save();
-      }
+    if (!pedidoAnterior) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
-    // Actualizar pedido
+    // Obtener el producto del inventario correspondiente al pedido anterior
+    const productoInventarioAnterior = await Inventario.findOne({ productoId: pedidoAnterior.productoId });
+    if (!productoInventarioAnterior) {
+      return res.status(404).json({ message: 'Producto anterior no encontrado en inventario' });
+    }
+
+    // Revertir la cantidad previa al inventario
+    productoInventarioAnterior.cantidad += pedidoAnterior.cantidadSolicitada;
+    await productoInventarioAnterior.save();
+
+    // Verificar si el producto cambia
+    if (pedidoAnterior.productoId !== productoId) {
+      // Actualizar el inventario del nuevo producto
+      const productoInventarioNuevo = await Inventario.findOne({ productoId });
+      if (!productoInventarioNuevo) {
+        return res.status(404).json({ message: 'Producto nuevo no encontrado en inventario' });
+      }
+
+      // Validar que haya suficiente stock en el nuevo producto
+      if (productoInventarioNuevo.cantidad < cantidadSolicitada) {
+        return res.status(400).json({ message: 'Stock insuficiente para el nuevo producto' });
+      }
+
+      // Aplicar la nueva cantidad al nuevo producto
+      productoInventarioNuevo.cantidad -= cantidadSolicitada;
+      await productoInventarioNuevo.save();
+    } else {
+      // Si el producto no cambia, ajustar la nueva cantidad
+      if (productoInventarioAnterior.cantidad < cantidadSolicitada) {
+        return res.status(400).json({ message: 'Stock insuficiente para este producto' });
+      }
+
+      productoInventarioAnterior.cantidad -= cantidadSolicitada;
+      await productoInventarioAnterior.save();
+    }
+
+    // Actualizar el pedido con los nuevos datos
     const pedidoActualizado = await Pedido.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(pedidoActualizado);
   } catch (error) {
@@ -216,12 +238,31 @@ app.post('/inventario', async (req, res) => {
 // Actualizar stock de un producto
 app.put('/inventario/:id', async (req, res) => {
   try {
-    const producto = await Inventario.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { cantidad } = req.body; // Cantidad que se va a ajustar (puede ser positiva o negativa)
+    const productoId = req.params.id;
+
+    // Buscar el producto en el inventario
+    const producto = await Inventario.findOne({ productoId });
+    if (!producto) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    // Verificar que el nuevo stock no sea negativo
+    if (producto.cantidad + cantidad < 0) {
+      return res.status(400).json({ message: 'Stock insuficiente' });
+    }
+
+    // Ajustar la cantidad correctamente
+    producto.cantidad += cantidad;
+    await producto.save();
+
     res.json(producto);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error al actualizar inventario:', error);
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 // Iniciar el servidor
 app.listen(5000, () => {

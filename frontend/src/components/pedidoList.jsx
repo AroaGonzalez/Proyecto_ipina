@@ -108,11 +108,15 @@ function PedidoList() {
 
         // Actualizar el inventario asociado
         const pedidoOriginal = pedidos.find((pedido) => pedido._id === id);
-        if (pedidoOriginal) {
+        if (pedidoOriginal && editForm.cantidadSolicitada !== pedidoOriginal.cantidadSolicitada) {
             const diferenciaCantidad = editForm.cantidadSolicitada - pedidoOriginal.cantidadSolicitada;
+
+            // Convertir productoId al formato correcto (si es necesario)
+            const productoId = String(editForm.productoId); // Asegurar que sea string
+
             await axios.put(
-                `${BASE_URL}/inventario/${editForm.productoId}`,
-                { cantidad: -diferenciaCantidad }, // Restar o sumar diferencia
+                `${BASE_URL}/inventario/${productoId}`,
+                { cantidad: -diferenciaCantidad }, // Ajustar cantidad
                 config
             );
         }
@@ -126,11 +130,12 @@ function PedidoList() {
         );
         setEditingPedidoId(null); // Desactiva el modo de edición
     } catch (error) {
-        console.error('Error al actualizar pedido/inventario:', error);
+        console.error('Error al actualizar pedido/inventario:', error.response?.data || error);
         alert('No se pudo actualizar el pedido/inventario');
     }
-};
-  
+  };
+
+
   return (
     <div className="pedido-list">
       <h2>Lista de Pedidos</h2>
