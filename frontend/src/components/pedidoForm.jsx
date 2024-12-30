@@ -51,8 +51,13 @@ const PedidoForm = () => {
       },
     };
 
+    const adjustedPedido = {
+      ...pedido,
+      fechaFin: pedido.fechaFin ? new Date(pedido.fechaFin).toISOString() : null,
+    };
+
     axios
-      .post(`${BASE_URL}/pedidos`, pedido, config)
+      .post(`${BASE_URL}/pedidos`, adjustedPedido, config)
       .then(() => {
         alert("Pedido creado con éxito");
         setPedido({
@@ -150,7 +155,7 @@ const PedidoForm = () => {
             id="fechaFin"
             name="fechaFin"
             value={pedido.fechaFin}
-            onChange={handleChange}
+            onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })} // Asegura que se actualice correctamente
             required
           />
         </>

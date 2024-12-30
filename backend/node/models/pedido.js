@@ -6,8 +6,13 @@ const PedidoSchema = new mongoose.Schema({
     cantidadSolicitada: { type: Number, required: true },
     estado: { type: String, enum: ['Pendiente', 'Completado'], required: true },
     fechaPedido: { type: Date, default: Date.now },
-    fechaFinPendiente: { type: Date }, // Fecha límite para estado "Pendiente"
-});
-
+    fechaFin: {
+      type: Date,
+      required: function () {
+        return this.estado === 'Pendiente';
+      },
+    },
+  });
+  
 module.exports = mongoose.model('Pedido', PedidoSchema);
   

@@ -123,27 +123,39 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
 
     // Validar que el estado sea "Pendiente" o "Completado"
     if (!['Pendiente', 'Completado'].includes(estado)) {
-      return res.status(400).json({ message: 'Estado no permitido' });
+      return res.status(400).json({ message: 'Estado no permitido. Debe ser "Pendiente" o "Completado".' });
     }
 
     // Validar fechaFin para pedidos pendientes
     if (estado === 'Pendiente' && !fechaFin) {
-      return res.status(400).json({ message: 'La fecha de fin es obligatoria para pedidos pendientes' });
+      return res.status(400).json({ message: 'La fecha de fin es obligatoria para pedidos pendientes.' });
+    }
+
+    // Validar que el formato de fechaFin sea correcto
+    if (fechaFin && isNaN(Date.parse(fechaFin))) {
+      return res.status(400).json({ message: 'El formato de fecha no es válido. Debe ser una fecha válida.' });
     }
 
     // Validar que el producto existe en el inventario
     const producto = await Inventario.findOne({ productoId });
     if (!producto) {
-      return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario' });
+      return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario.' });
     }
 
     // Validar stock para pedidos completados
     if (estado === 'Completado' && producto.cantidad < cantidadSolicitada) {
-      return res.status(400).json({ message: 'Stock insuficiente para este producto' });
+      return res.status(400).json({ message: 'Stock insuficiente para este producto.' });
     }
 
     // Crear el pedido
-    const nuevoPedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado, fechaFin });
+    const nuevoPedido = new Pedido({
+      tiendaId,
+      productoId,
+      cantidadSolicitada,
+      estado,
+      fechaFin: fechaFin ? new Date(fechaFin) : null, // Asegurar que fechaFin sea un objeto Date
+    });
+
     await nuevoPedido.save();
 
     // Actualizar el inventario solo si el pedido está completado
@@ -155,7 +167,7 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
     res.status(201).json(nuevoPedido);
   } catch (error) {
     console.error('Error al procesar el pedido:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
 
@@ -312,6 +324,20 @@ app.post('/tiendas', async (req, res) => {
     res.status(201).json(nuevaTienda);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Eliminar un pedido pendiente por ID
+app.delete('/pedidos/pendientes/:id', async (req, res) => {
+  try {
+    const pedido = await Pedido.findByIdAndDelete(req.params.id); // Buscar y eliminar el pedido
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado' });
+    }
+    res.json({ message: 'Pedido eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar pedido:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
