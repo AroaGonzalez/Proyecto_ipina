@@ -1,12 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose'); // Importar mongoose para MongoDB
-const cors = require('cors'); // Importar cors
+const cors = require('cors'); 
 const jwt = require('jsonwebtoken'); // Para generar tokens
 const bcrypt = require('bcryptjs'); // Para hashear contraseñas
-const Pedido = require('./models/pedido'); // Modelo de Pedido
+const Pedido = require('./models/pedido'); 
 const User = require('./models/user'); // Modelo de Usuario (nuevo)
-
 const Inventario = require('./models/inventario');
+const Tienda = require('./models/tienda'); // Importar modelo
 
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
@@ -260,6 +260,31 @@ app.put('/inventario/:id', async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar inventario:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Obtener todas las tiendas (elimina autenticación temporalmente para pruebas)
+app.get('/tiendas', async (req, res) => {
+  try {
+    const tiendas = await Tienda.find();
+    res.json(tiendas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Crear una tienda nueva
+app.post('/tiendas', async (req, res) => {
+  const { tiendaId, nombre, direccion } = req.body;
+  if (!tiendaId || !nombre || !direccion) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+  }
+  try {
+    const nuevaTienda = new Tienda({ tiendaId, nombre, direccion });
+    await nuevaTienda.save();
+    res.status(201).json(nuevaTienda);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

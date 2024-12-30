@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const PedidoForm = () => {
-  const [productoIds, setProductoIds] = useState([]);
+  const [productoIds, setProductoIds] = useState([]); // Estado para productos
+  const [tiendas, setTiendas] = useState([]); // Estado para tiendas
   const [pedido, setPedido] = useState({
     tiendaId: "",
     productoId: "",
@@ -21,6 +23,16 @@ const PedidoForm = () => {
         setProductoIds(productos); // Guardar IDs disponibles
       })
       .catch((error) => console.error("Error al obtener el inventario:", error));
+  }, []);
+
+  // Carga inicial de las tiendas
+  useEffect(() => {
+    axios
+      .get(`${BASE_URL}/tiendas`)
+      .then((response) => {
+        setTiendas(response.data); // Guardar tiendas disponibles
+      })
+      .catch((error) => console.error("Error al obtener tiendas:", error));
   }, []);
 
   // Manejar cambios en los campos del formulario
@@ -56,25 +68,37 @@ const PedidoForm = () => {
           .then((response) => {
             console.log("Inventario actualizado:", response.data);
           })
-          .catch((error) => console.error("Error al recargar el inventario:", error));
+          .catch((error) =>
+            console.error("Error al recargar el inventario:", error)
+          );
       })
-      .catch((error) => console.error("Error al crear pedido:", error.response?.data));
+      .catch((error) =>
+        console.error("Error al crear pedido:", error.response?.data)
+      );
   };
 
   return (
     <form className="pedido-form" onSubmit={handleSubmit}>
       <h2>Crear Pedido</h2>
 
+      {/* Campo para seleccionar Tienda */}
       <label htmlFor="tiendaId">Tienda ID:</label>
-      <input
-        type="text"
+      <select
         id="tiendaId"
         name="tiendaId"
         value={pedido.tiendaId}
         onChange={handleChange}
         required
-      />
+      >
+        <option value="">Seleccionar Tienda</option>
+        {tiendas.map((tienda) => (
+          <option key={tienda.tiendaId} value={tienda.tiendaId}>
+            {tienda.nombre}
+          </option>
+        ))}
+      </select>
 
+      {/* Campo para seleccionar Producto */}
       <label htmlFor="productoId">Producto ID:</label>
       <select
         id="productoId"
@@ -91,6 +115,7 @@ const PedidoForm = () => {
         ))}
       </select>
 
+      {/* Campo para ingresar la cantidad */}
       <label htmlFor="cantidadSolicitada">Cantidad:</label>
       <input
         type="number"
@@ -102,6 +127,7 @@ const PedidoForm = () => {
         required
       />
 
+      {/* Campo para seleccionar el estado del pedido */}
       <label htmlFor="estado">Estado:</label>
       <select
         id="estado"

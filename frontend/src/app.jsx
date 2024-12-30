@@ -7,6 +7,7 @@ import Menu from './components/menu';
 import PrivateRoute from './components/privateRoute';
 import Register from './components/register';
 import InventarioList from './components/inventarioList';
+import TiendaList from './components/tiendaList';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -59,6 +60,14 @@ function App() {
             element={
               <PrivateRoute>
                 <InventarioList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/consultar-tiendas"
+            element={
+              <PrivateRoute>
+                <TiendaList />
               </PrivateRoute>
             }
           />

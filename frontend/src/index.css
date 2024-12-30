@@ -48,13 +48,13 @@ text-align: center;
 display: flex;
 justify-content: center;
 align-items: center;
-height: 100vh; /* Pantalla completa */
-width: 100vw; /* Ancho completo */
+height: 100vh;
+width: 100vw;
 background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Cambia esta ruta por la de tu imagen */
-background-size: cover; /* Asegura que la imagen cubra toda el área */
-background-position: center; /* Centra la imagen */
-background-repeat: no-repeat; /* Evita que se repita */
-margin: 0; /* Elimina cualquier margen sobrante */
+background-size: cover; 
+background-position: center;
+background-repeat: no-repeat;
+margin: 0;
 }
 
 /* Formulario de pedidos */
@@ -97,24 +97,23 @@ button:hover {
 background-color: #0056b3;
 }
 
-/* Estilos para el login */
 .login {
 display: flex;
 flex-direction: column;
 justify-content: center;
 align-items: center;
-color: white; /* Texto blanco */
+color: white;
 text-align: center;
 }
 
 .login h2 {
-font-size: 2.5rem; /* Tamaño mayor para el título */
+font-size: 2.5rem;
 margin-bottom: 30px;
 text-transform: uppercase;
 font-weight: bold;
 text-align: center;
-color: white; /* Cambia el color del texto a blanco */
-text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Añade una sombra negra suave */
+color: white;
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .login form {
@@ -164,11 +163,11 @@ transition: background-color 0.3s ease, transform 0.2s ease;
 
 .login button:hover {
 background-color: #1a5bb8;
-transform: scale(1.03); /* Efecto de agrandamiento */
+transform: scale(1.03); 
 }
 
 .login button:active {
-transform: scale(0.98); /* Efecto al presionar */
+transform: scale(0.98);
 }
 
 .login small {
@@ -183,13 +182,13 @@ display: flex;
 flex-direction: column;
 justify-content: center;
 align-items: center;
-height: 100vh; /* Ocupa toda la pantalla */
-width: 100vw; /* Asegúrate de cubrir todo el ancho */
+height: 100vh;
+width: 100vw;
 background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Ruta de tu imagen */
-background-size: cover; /* Asegura que la imagen cubra toda el área */
-background-position: center; /* Centra la imagen */
-background-repeat: no-repeat; /* Evita que se repita */
-color: white; /* Texto blanco */
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+color: white;
 text-align: center;
 }
 
@@ -310,49 +309,49 @@ flex: 1;
 }
 
 .table-container {
-    width: 100%;
-    overflow-x: auto;
+width: 100%;
+overflow-x: auto;
 }
 
 .tabla-pedidos {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem; /* Reducir tamaño de fuente */
-    text-align: center;
-    table-layout: fixed; /* Ajusta el ancho de las columnas */
+width: 100%;
+border-collapse: collapse;
+font-size: 0.9rem; /* Reducir tamaño de fuente */
+text-align: center;
+table-layout: fixed; /* Ajusta el ancho de las columnas */
 }
 
 .tabla-pedidos th,
 .tabla-pedidos td {
-    border: 0.8px solid #ddd;
-    padding: 6px; /* Reducir el padding */
-    word-wrap: break-word; /* Ajusta el contenido largo */
+border: 0.8px solid #ddd;
+padding: 6px; /* Reducir el padding */
+word-wrap: break-word; /* Ajusta el contenido largo */
 }
 
 .tabla-pedidos th {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
+background-color: #007bff;
+color: white;
+font-weight: bold;
 }
 
 .tabla-pedidos th:nth-child(4), /* Columna de Estado */
 .tabla-pedidos td:nth-child(4) {
-  width: 16%; 
+width: 16%; 
 }
 
 .tabla-pedidos th:nth-child(1), /* Columna de Estado */
 .tabla-pedidos td:nth-child(1) {
-  width: 10%; 
+width: 10%; 
 }
 
 .tabla-pedidos th:nth-child(2), /* Columna de Estado */
 .tabla-pedidos td:nth-child(2) {
-  width: 13%; 
+width: 13%; 
 }
 
 .tabla-pedidos th:nth-child(3), /* Columna de Estado */
 .tabla-pedidos td:nth-child(3) {
-  width: 13%; 
+width: 13%; 
 }
 
 .tabla-pedidos tr:nth-child(even) {
@@ -391,3 +390,36 @@ border-collapse: collapse;
 margin: 20px 0;
 }
 
+.inventario-container {
+margin: 20px auto;
+padding: 20px;
+width: 80%;
+border: 1px solid #ddd;
+border-radius: 8px;
+background-color: #f9f9f9;
+}
+
+.inventario-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.inventario-table th,
+.inventario-table td {
+padding: 12px;
+text-align: left;
+border-bottom: 1px solid #ddd;
+}
+
+.inventario-table th {
+background-color: #007bff;
+color: white;
+}
+
+.inventario-table tr:nth-child(even) {
+background-color: #f2f2f2;
+}
+
+.inventario-table tr:hover {
+background-color: #e9e9e9;
+}
