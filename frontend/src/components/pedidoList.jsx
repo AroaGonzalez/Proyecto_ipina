@@ -8,8 +8,8 @@ function PedidoList() {
   const [filteredPedidos, setFilteredPedidos] = useState([]);
   const [filters, setFilters] = useState({
     tiendaId: '',
-    estado: '',
     fecha: '',
+    productoId: '',
   });
   const [editingPedidoId, setEditingPedidoId] = useState(null); // ID del pedido que se está editando
   const [editForm, setEditForm] = useState({}); // Datos de edición
@@ -41,15 +41,12 @@ function PedidoList() {
 
   useEffect(() => {
     let filtered = pedidos;
-
+  
     if (filters.tiendaId) {
+      // Cambiar de includes a una comparación exacta
       filtered = filtered.filter((pedido) =>
-        pedido.tiendaId.toString().includes(filters.tiendaId)
+        pedido.tiendaId.toString() === filters.tiendaId
       );
-    }
-
-    if (filters.estado) {
-      filtered = filtered.filter((pedido) => pedido.estado === filters.estado);
     }
 
     if (filters.fecha) {
@@ -59,9 +56,15 @@ function PedidoList() {
           .includes(filters.fecha)
       );
     }
-
+  
+    if (filters.productoId) {
+      filtered = filtered.filter((pedido) =>
+        pedido.productoId.toString() === filters.productoId // Cambiar también a comparación exacta si es necesario
+      );
+    }
+  
     setFilteredPedidos(filtered);
-  }, [filters, pedidos]);
+  }, [filters, pedidos]);  
 
   const handleDelete = async (id) => {
     try {
@@ -137,7 +140,7 @@ function PedidoList() {
 
 
   return (
-    <div className="pedido-list">
+    <div className="pendientes-container">
       <h2>Lista de Pedidos</h2>
 
       {/* Sección de Filtros */}
@@ -149,16 +152,13 @@ function PedidoList() {
           value={filters.tiendaId}
           onChange={handleFilterChange}
         />
-        <select
-          name="estado"
-          value={filters.estado}
+        <input
+          type="text"
+          placeholder="Filtrar por Producto ID"
+          name="productoId"
+          value={filters.productoId}
           onChange={handleFilterChange}
-        >
-          <option value="">Todos los Estados</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Completado">Completado</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
+        />
         <input
           type="text"
           placeholder="Filtrar por Fecha (DD/MM/YYYY)"
@@ -170,7 +170,7 @@ function PedidoList() {
 
       {/* Tabla de Pedidos */}
       <div className="table-container">
-        <table className="tabla-pedidos">
+        <table className="pendiente-table">
           <thead>
             <tr>
               <th>Tienda ID</th>
@@ -249,7 +249,7 @@ function PedidoList() {
                         <button onClick={() => handleEditClick(pedido)}>
                           Editar
                         </button>
-                        <button onClick={() => handleDelete(pedido._id)}>
+                        <button onClick={() => handleDelete(pedido._id)} className="delete-button">
                           Eliminar
                         </button>
                       </td>

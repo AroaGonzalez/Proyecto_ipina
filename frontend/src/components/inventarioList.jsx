@@ -26,14 +26,28 @@ function InventarioList() {
           </tr>
         </thead>
         <tbody>
-          {inventarios.map((item) => (
-            <tr key={item._id} className={item.cantidad < item.umbralMinimo ? 'low-stock' : ''}>
-              <td>{item.productoId}</td>
-              <td>{item.nombreProducto}</td>
-              <td>{item.cantidad}</td>
-              <td>{item.cantidad < item.umbralMinimo ? 'Bajo Stock' : 'Suficiente'}</td>
-            </tr>
-          ))}
+          {inventarios.map((item) => {
+            // Determinar la clase CSS según la cantidad
+            let claseCantidad = '';
+            if (item.cantidad > 50) {
+              claseCantidad = 'cantidad-verde';
+            } else if (item.cantidad > 20) {
+              claseCantidad = 'cantidad-amarillo';
+            } else if (item.cantidad > 0) {
+              claseCantidad = 'cantidad-rojo-claro';
+            } else {
+              claseCantidad = 'cantidad-rojo-oscuro';
+            }
+
+            return (
+              <tr key={item._id}>
+                <td>{item.productoId}</td>
+                <td>{item.nombreProducto}</td>
+                <td className={claseCantidad}>{item.cantidad}</td>
+                <td>{item.cantidad > 0 ? 'Suficiente' : 'Agotado'}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
