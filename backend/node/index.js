@@ -28,6 +28,31 @@ mongoose.connect('mongodb://root:rootpassword@mongo:27017/tienda', {
   authSource: 'admin',
 });
 
+// Coloca el cron aquí, después de la conexión a MongoDB
+cron.schedule('* * * * *', async () => {
+  try {
+    const now = new Date();
+    const pendientes = await Pedido.find({ estado: 'Pendiente', fechaFin: { $lte: now } });
+
+    for (const pedido of pendientes) {
+      pedido.estado = 'Completado';
+
+      // Actualizar inventario al completar el pedido
+      const producto = await Inventario.findOne({ productoId: pedido.productoId });
+      if (producto) {
+        producto.cantidad -= pedido.cantidadSolicitada;
+        await producto.save();
+      }
+
+      await pedido.save();
+    }
+
+    console.log('Pedidos pendientes actualizados automáticamente.');
+  } catch (error) {
+    console.error('Error al actualizar pedidos pendientes automáticamente:', error);
+  }
+});
+
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('Node.js service running!');
@@ -88,7 +113,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/pedidos', authenticateToken, async (req, res) => {
   try {
-    const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
+    const { tiendaId, productoId, cantidadSolicitada, estado, fechaFin } = req.body;
 
     // Validar campos requeridos
     if (!tiendaId || !productoId || !cantidadSolicitada || !estado) {
@@ -100,26 +125,33 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Estado no permitido' });
     }
 
+    // Validar fechaFin para pedidos pendientes
+    if (estado === 'Pendiente' && !fechaFin) {
+      return res.status(400).json({ message: 'La fecha de fin es obligatoria para pedidos pendientes' });
+    }
+
     // Validar que el producto existe en el inventario
     const producto = await Inventario.findOne({ productoId });
     if (!producto) {
       return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario' });
     }
 
-    // Validar stock
-    if (producto.cantidad < cantidadSolicitada) {
+    // Validar stock para pedidos completados
+    if (estado === 'Completado' && producto.cantidad < cantidadSolicitada) {
       return res.status(400).json({ message: 'Stock insuficiente para este producto' });
     }
 
     // Crear el pedido
-    const pedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado });
-    await pedido.save();
+    const nuevoPedido = new Pedido({ tiendaId, productoId, cantidadSolicitada, estado, fechaFin });
+    await nuevoPedido.save();
 
-    // Actualizar el inventario
-    producto.cantidad -= cantidadSolicitada; // Restar del stock actual
-    await producto.save();
+    // Actualizar el inventario solo si el pedido está completado
+    if (estado === 'Completado') {
+      producto.cantidad -= cantidadSolicitada;
+      await producto.save();
+    }
 
-    res.status(201).json(pedido);
+    res.status(201).json(nuevoPedido);
   } catch (error) {
     console.error('Error al procesar el pedido:', error);
     res.status(500).json({ error: error.message });
@@ -129,8 +161,17 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
 // Obtener todos los pedidos (solo usuarios autenticados)
 app.get('/pedidos', authenticateToken, async (req, res) => {
   try {
-    const pedidos = await Pedido.find(); // Obtener todos los pedidos
-    res.json(pedidos); // Responder con los pedidos
+    const pedidos = await Pedido.find({ estado: 'Completado' }); // Solo pedidos completados
+    res.json(pedidos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/pedidos/pendientes', authenticateToken, async (req, res) => {
+  try {
+    const pendientes = await Pedido.find({ estado: 'Pendiente' }); // Solo pedidos pendientes
+    res.json(pendientes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -149,7 +190,7 @@ app.get('/pedidos/:id', authenticateToken, async (req, res) => {
 
 app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
-    const { tiendaId, productoId, cantidadSolicitada, estado } = req.body;
+    const { tiendaId, productoId, cantidadSolicitada, estado, fechaFin } = req.body;
 
     // Obtener el pedido previo
     const pedidoAnterior = await Pedido.findById(req.params.id);
@@ -157,45 +198,30 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
-    // Obtener el producto del inventario correspondiente al pedido anterior
-    const productoInventarioAnterior = await Inventario.findOne({ productoId: pedidoAnterior.productoId });
-    if (!productoInventarioAnterior) {
-      return res.status(404).json({ message: 'Producto anterior no encontrado en inventario' });
-    }
-
-    // Revertir la cantidad previa al inventario
-    productoInventarioAnterior.cantidad += pedidoAnterior.cantidadSolicitada;
-    await productoInventarioAnterior.save();
-
-    // Verificar si el producto cambia
-    if (pedidoAnterior.productoId !== productoId) {
-      // Actualizar el inventario del nuevo producto
-      const productoInventarioNuevo = await Inventario.findOne({ productoId });
-      if (!productoInventarioNuevo) {
-        return res.status(404).json({ message: 'Producto nuevo no encontrado en inventario' });
+    // Si el estado cambia a completado, validar stock y actualizar inventario
+    if (estado === 'Completado' && pedidoAnterior.estado === 'Pendiente') {
+      const producto = await Inventario.findOne({ productoId });
+      if (!producto) {
+        return res.status(404).json({ message: 'Producto no encontrado en inventario' });
       }
 
-      // Validar que haya suficiente stock en el nuevo producto
-      if (productoInventarioNuevo.cantidad < cantidadSolicitada) {
-        return res.status(400).json({ message: 'Stock insuficiente para el nuevo producto' });
+      if (producto.cantidad < cantidadSolicitada) {
+        return res.status(400).json({ message: 'Stock insuficiente para completar el pedido' });
       }
 
-      // Aplicar la nueva cantidad al nuevo producto
-      productoInventarioNuevo.cantidad -= cantidadSolicitada;
-      await productoInventarioNuevo.save();
-    } else {
-      // Si el producto no cambia, ajustar la nueva cantidad
-      if (productoInventarioAnterior.cantidad < cantidadSolicitada) {
-        return res.status(400).json({ message: 'Stock insuficiente para este producto' });
-      }
-
-      productoInventarioAnterior.cantidad -= cantidadSolicitada;
-      await productoInventarioAnterior.save();
+      producto.cantidad -= cantidadSolicitada;
+      await producto.save();
     }
 
     // Actualizar el pedido con los nuevos datos
-    const pedidoActualizado = await Pedido.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(pedidoActualizado);
+    pedidoAnterior.tiendaId = tiendaId || pedidoAnterior.tiendaId;
+    pedidoAnterior.productoId = productoId || pedidoAnterior.productoId;
+    pedidoAnterior.cantidadSolicitada = cantidadSolicitada || pedidoAnterior.cantidadSolicitada;
+    pedidoAnterior.estado = estado || pedidoAnterior.estado;
+    pedidoAnterior.fechaFin = fechaFin || pedidoAnterior.fechaFin;
+
+    await pedidoAnterior.save();
+    res.json(pedidoAnterior);
   } catch (error) {
     console.error('Error al actualizar pedido:', error);
     res.status(500).json({ error: error.message });

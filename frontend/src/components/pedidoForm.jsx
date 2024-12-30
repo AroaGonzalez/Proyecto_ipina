@@ -11,11 +11,11 @@ const PedidoForm = () => {
     productoId: "",
     cantidadSolicitada: 1,
     estado: "Pendiente",
+    fechaFin: "", // Agregar el campo fecha de fin
   });
 
   // Carga inicial del inventario
   useEffect(() => {
-    // Obtener los productos disponibles del inventario
     axios
       .get(`${BASE_URL}/inventario`)
       .then((response) => {
@@ -60,6 +60,7 @@ const PedidoForm = () => {
           productoId: "",
           cantidadSolicitada: 1,
           estado: "Pendiente",
+          fechaFin: "", // Reiniciar la fecha
         });
 
         // Recargar inventario si es necesario
@@ -139,6 +140,21 @@ const PedidoForm = () => {
         <option value="Pendiente">Pendiente</option>
         <option value="Completado">Completado</option>
       </select>
+
+      {/* Campo para seleccionar la fecha de fin si el estado es "Pendiente" */}
+      {pedido.estado === "Pendiente" && (
+        <>
+          <label htmlFor="fechaFin">Fecha Fin:</label>
+          <input
+            type="datetime-local"
+            id="fechaFin"
+            name="fechaFin"
+            value={pedido.fechaFin}
+            onChange={handleChange}
+            required
+          />
+        </>
+      )}
 
       <button type="submit">Crear Pedido</button>
     </form>

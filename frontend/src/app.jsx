@@ -8,6 +8,7 @@ import PrivateRoute from './components/privateRoute';
 import Register from './components/register';
 import InventarioList from './components/inventarioList';
 import TiendaList from './components/tiendaList';
+import PendientesList from './components/pendienteList';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -68,6 +69,14 @@ function App() {
             element={
               <PrivateRoute>
                 <TiendaList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pedidos-pendientes"
+            element={
+              <PrivateRoute>
+                <PendientesList />
               </PrivateRoute>
             }
           />
