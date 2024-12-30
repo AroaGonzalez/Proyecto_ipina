@@ -7,6 +7,7 @@ const Pedido = require('./models/pedido');
 const User = require('./models/user'); // Modelo de Usuario (nuevo)
 const Inventario = require('./models/inventario');
 const Tienda = require('./models/tienda'); // Importar modelo
+const cron = require('node-cron');
 
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
@@ -168,10 +169,10 @@ app.get('/pedidos', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/pedidos/pendientes', authenticateToken, async (req, res) => {
+app.get('/pedidos/pendientes', async (req, res) => {
   try {
-    const pendientes = await Pedido.find({ estado: 'Pendiente' }); // Solo pedidos pendientes
-    res.json(pendientes);
+    const pedidosPendientes = await Pedido.find({ estado: "Pendiente" });
+    res.json(pedidosPendientes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

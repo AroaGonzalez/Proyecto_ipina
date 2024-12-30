@@ -3,6 +3,7 @@
     "express": "^4.21.1",
     "mongoose": "^8.9.2",
     "mysql2": "^3.11.5",
+    "node-cron": "^3.0.3",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
   }
