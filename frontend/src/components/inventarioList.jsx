@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function InventarioList() {
   const [inventarios, setInventarios] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -12,6 +13,10 @@ function InventarioList() {
       .then((response) => setInventarios(response.data))
       .catch((error) => console.error('Error al obtener inventario:', error));
   }, []);
+
+  const handleCreatePedido = (productoId) => {
+    navigate(`/pedidos?productoId=${productoId}`);
+  };  
 
   return (
     <div className="inventario-list">
@@ -23,6 +28,7 @@ function InventarioList() {
             <th>Nombre</th>
             <th>Cantidad</th>
             <th>Estado</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -45,6 +51,14 @@ function InventarioList() {
                 <td>{item.nombreProducto}</td>
                 <td className={claseCantidad}>{item.cantidad}</td>
                 <td>{item.cantidad > 0 ? 'Suficiente' : 'Agotado'}</td>
+                <td>
+                  <button
+                    className="crear-pedido-btn"
+                    onClick={() => handleCreatePedido(item.productoId)}
+                  >
+                    Crear Pedido
+                  </button>
+                </td>
               </tr>
             );
           })}

@@ -1,26 +1,35 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const PedidoForm = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const preselectedProductoId = queryParams.get("productoId"); // Obtenemos el productoId de la URL
+
   const [productoIds, setProductoIds] = useState([]); // Estado para productos
   const [tiendas, setTiendas] = useState([]); // Estado para tiendas
   const [pedido, setPedido] = useState({
     tiendaId: "",
-    productoId: "",
+    productoId: preselectedProductoId || "", // Preseleccionar productoId si está disponible
     cantidadSolicitada: 1,
     estado: "Pendiente",
-    fechaFin: "", // Agregar el campo fecha de fin
+    fechaFin: "", // Campo fecha de fin
   });
+  const [errorMessage, setErrorMessage] = useState(""); // Estado para mensajes de error
 
   // Carga inicial del inventario
   useEffect(() => {
     axios
       .get(`${BASE_URL}/inventario`)
       .then((response) => {
-        const productos = response.data.map((producto) => producto.productoId);
-        setProductoIds(productos); // Guardar IDs disponibles
+        const productos = response.data.map((producto) => ({
+          id: producto.productoId,
+          nombre: producto.nombreProducto,
+        }));
+        setProductoIds(productos); // Guardar productos disponibles
       })
       .catch((error) => console.error("Error al obtener el inventario:", error));
   }, []);
@@ -67,28 +76,24 @@ const PedidoForm = () => {
           estado: "Pendiente",
           fechaFin: "", // Reiniciar la fecha
         });
-
-        // Recargar inventario si es necesario
-        axios
-          .get(`${BASE_URL}/inventario`, config)
-          .then((response) => {
-            console.log("Inventario actualizado:", response.data);
-          })
-          .catch((error) =>
-            console.error("Error al recargar el inventario:", error)
-          );
+        setErrorMessage(""); // Limpiar mensaje de error
       })
-      .catch((error) =>
-        console.error("Error al crear pedido:", error.response?.data)
-      );
+      .catch((error) => {
+        const errorMsg =
+          error.response?.data?.message || "Error al crear el pedido.";
+        setErrorMessage(errorMsg); // Mostrar mensaje de error
+      });
   };
 
   return (
     <form className="pedido-form" onSubmit={handleSubmit}>
       <h2>Crear Pedido</h2>
 
+      {/* Mostrar mensaje de error */}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+
       {/* Campo para seleccionar Tienda */}
-      <label htmlFor="tiendaId">Tienda ID:</label>
+      <label htmlFor="tiendaId">Tienda:</label>
       <select
         id="tiendaId"
         name="tiendaId"
@@ -105,7 +110,7 @@ const PedidoForm = () => {
       </select>
 
       {/* Campo para seleccionar Producto */}
-      <label htmlFor="productoId">Producto ID:</label>
+      <label htmlFor="productoId">Producto:</label>
       <select
         id="productoId"
         name="productoId"
@@ -114,9 +119,9 @@ const PedidoForm = () => {
         required
       >
         <option value="">Seleccionar Producto</option>
-        {productoIds.map((id) => (
-          <option key={id} value={id}>
-            {id}
+        {productoIds.map((producto) => (
+          <option key={producto.id} value={producto.id}>
+            {producto.nombre} (ID: {producto.id})
           </option>
         ))}
       </select>
@@ -155,7 +160,7 @@ const PedidoForm = () => {
             id="fechaFin"
             name="fechaFin"
             value={pedido.fechaFin}
-            onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })} // Asegura que se actualice correctamente
+            onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })}
             required
           />
         </>
