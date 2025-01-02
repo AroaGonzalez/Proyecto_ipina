@@ -23,11 +23,10 @@ app.use(cors({
 // Middleware para parsear JSON
 app.use(express.json());
 
-// Conexión a MongoDB
 mongoose.connect('mongodb://root:rootpassword@mongo:27017/tienda', {
+  authSource: 'admin',
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  authSource: 'admin',
 });
 
 // Coloca el cron aquí, después de la conexión a MongoDB
