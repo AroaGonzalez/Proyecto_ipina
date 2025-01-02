@@ -8,6 +8,7 @@ const User = require('./models/user'); // Modelo de Usuario (nuevo)
 const Inventario = require('./models/inventario');
 const Tienda = require('./models/tienda'); // Importar modelo
 const cron = require('node-cron');
+const PedidoEliminado = require('./models/pedidoEliminado');
 
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
@@ -257,14 +258,36 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Eliminar un pedido (solo usuarios autenticados)
 app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
-    const pedido = await Pedido.findByIdAndDelete(req.params.id); // Eliminar el pedido
+    const pedido = await Pedido.findById(req.params.id);
     if (!pedido) throw new Error('Pedido no encontrado');
-    res.json({ message: 'Pedido eliminado' }); // Responder con un mensaje de éxito
+
+    // Registrar el pedido eliminado
+    const pedidoEliminado = new PedidoEliminado({
+      tiendaId: pedido.tiendaId,
+      productoId: pedido.productoId,
+      cantidadSolicitada: pedido.cantidadSolicitada,
+      estado: pedido.estado,
+      fechaPedido: pedido.fechaPedido,
+    });
+    await pedidoEliminado.save();
+
+    // Eliminar el pedido original
+    await pedido.deleteOne();
+    res.json({ message: 'Pedido eliminado y registrado correctamente' });
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Nueva ruta para obtener los pedidos eliminados
+app.get('/pedidos-eliminados',  async (req, res) => {
+  try {
+    const pedidosEliminados = await PedidoEliminado.find();
+    res.json(pedidosEliminados);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

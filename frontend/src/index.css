@@ -515,3 +515,15 @@ border: 1px solid #ddd;
   background-color: #007bff;
   color: white;
 }
+
+.eliminar-pedidos {
+  font-family: Arial, sans-serif;
+  margin: 20px auto;
+  width: 80%;
+  text-align: center;
+}
+
+.eliminar-pedidos h2 {
+  color: #333;
+  margin-bottom: 20px;
+}

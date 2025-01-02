@@ -11,6 +11,7 @@ function Menu() {
         <li><Link to="/lista-pedidos">Pedidos completados</Link></li>
         <li><Link to="/inventario">Inventario</Link></li>
         <li><Link to="/consultar-tiendas">Consultar Tiendas</Link></li>
+        <li><Link to="/pedidos-eliminados">Pedidos Eliminados</Link></li>
         <li><Link to="/">Iniciar Sesión</Link></li>
       </ul>
     </nav>
