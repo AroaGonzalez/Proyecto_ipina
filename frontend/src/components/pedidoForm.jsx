@@ -151,7 +151,6 @@ const PedidoForm = () => {
         <option value="Completado">Completado</option>
       </select>
 
-      {/* Campo para seleccionar la fecha de fin si el estado es "Pendiente" */}
       {pedido.estado === "Pendiente" && (
         <>
           <label htmlFor="fechaFin">Fecha Fin:</label>

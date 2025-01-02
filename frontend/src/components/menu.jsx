@@ -12,7 +12,7 @@ function Menu() {
         <li><Link to="/inventario">Inventario</Link></li>
         <li><Link to="/consultar-tiendas">Consultar Tiendas</Link></li>
         <li><Link to="/pedidos-eliminados">Pedidos Eliminados</Link></li>
-        <li><Link to="/">Iniciar Sesión</Link></li>
+        <li><Link to="/">Cerrar Sesión</Link></li>
       </ul>
     </nav>
   );
