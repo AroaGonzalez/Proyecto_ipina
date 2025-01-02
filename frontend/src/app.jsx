@@ -11,6 +11,7 @@ import TiendaList from './components/tiendaList';
 import PendientesList from './components/pendienteList';
 import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
+import UserOptions from './components/userOptions';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -19,6 +20,7 @@ function Layout({ children }) {
   return (
     <div className="app">
       {!hideMenu && <Menu />}
+      {!hideMenu && <UserOptions />}
       <div className={hideMenu ? 'full-content' : 'content'}>{children}</div>
     </div>
   );
