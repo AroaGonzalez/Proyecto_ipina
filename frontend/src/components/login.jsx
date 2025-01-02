@@ -11,28 +11,27 @@ function Login() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Envía las credenciales al backend
+      // Envía las credenciales al backend para iniciar sesión
       const response = await axios.post('http://localhost:5000/login', form);
-
-      // Guarda el token en el almacenamiento local
-      localStorage.setItem('token', response.data.token);
-
-      // Redirige al inicio
-      navigate('/home');
+      localStorage.setItem('token', response.data.token); // Guarda el token
+      navigate('/home'); // Redirige al inicio
     } catch (error) {
-      // Si hay un error en la autenticación, muestra un mensaje y redirige al registro
-      alert('Usuario o contraseña incorrectos. Por favor, regístrate.');
-      navigate('/register'); // Redirige al registro
+      alert('Usuario o contraseña incorrectos.');
     }
+  };
+
+  const handleRegisterRedirect = () => {
+    // Redirige a la página de registro
+    navigate('/register');
   };
 
   return (
     <div className="login">
       <h2>BIENVENIDO A INDITEX</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleLogin}>
         <label>Usuario o correo corporativo:</label>
         <input
           type="text"
@@ -49,7 +48,12 @@ function Login() {
           onChange={handleChange}
           required
         />
-        <button type="submit">Continuar</button>
+        <div className="buttons-container">
+          <button type="submit">Iniciar Sesión</button>
+          <button type="button" onClick={handleRegisterRedirect}>
+            Registrarse
+          </button>
+        </div>
       </form>
     </div>
   );

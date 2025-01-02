@@ -178,28 +178,23 @@ color: #666;
 }
 
 .register {
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-height: 100vh;
-width: 100vw;
-background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Ruta de tu imagen */
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-color: white;
-text-align: center;
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
 }
 
 .register h2 {
-font-size: 3rem; /* Tamaño mayor para el título */
-margin-bottom: 30px;
-text-transform: uppercase;
-font-weight: bold;
-text-align: center;
-color: #ffd700; /* Texto dorado para diferenciar */
-text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9); /* Sombra más destacada */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.register .error {
+  color: red;
+  text-align: center;
+  margin-top: 10px;
 }
 
 .register form {
@@ -499,4 +494,24 @@ border: 1px solid #ddd;
 .cantidad-rojo-oscuro {
   background-color: #dc3545;
   color: #ffffff;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.buttons-container button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.buttons-container button:hover {
+  background-color: #007bff;
+  color: white;
 }

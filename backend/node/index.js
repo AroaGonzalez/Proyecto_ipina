@@ -90,8 +90,24 @@ app.post('/register', async (req, res) => {
   }
 });
 
+app.post('/checkUser', async (req, res) => {
+  const { username } = req.body;
+  if (!username) {
+    return res.status(400).json({ message: 'El nombre de usuario es requerido' });
+  }
 
-// Iniciar sesión y obtener token
+  try {
+    const user = await User.findOne({ username });
+    if (user) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
