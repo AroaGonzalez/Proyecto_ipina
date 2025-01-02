@@ -379,6 +379,40 @@ app.delete('/pedidos/pendientes/:id', async (req, res) => {
   }
 });
 
+app.get('/profile', authenticateToken, async (req, res) => {
+  try {
+      const user = await User.findOne({ username: req.user.username });
+      if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+      res.json({
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          address: user.address,
+      });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, address } = req.body; // Campos a actualizar
+    const user = await User.findOneAndUpdate(
+      { username: req.user.username }, // Buscar por el usuario autenticado
+      { name, email, address }, // Actualizar los campos
+      { new: true } // Retornar el usuario actualizado
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json(user); // Retornar el usuario actualizado
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Iniciar el servidor
 app.listen(5000, () => {

@@ -10,6 +10,7 @@ import InventarioList from './components/inventarioList';
 import TiendaList from './components/tiendaList';
 import PendientesList from './components/pendienteList';
 import PedidosEliminadosList from './components/pedidosEliminadosList';
+import Profile from './components/profile';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -89,6 +90,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/profile"
+            element={
+                <PrivateRoute>
+                    <Profile />
+                </PrivateRoute>
+            }
+        />
         </Routes>
       </Layout>
     </Router>
