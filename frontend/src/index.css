@@ -573,3 +573,16 @@ border: 1px solid #ddd;
 .dropdown-options a:hover {
   background-color: #0056b3;
 }
+
+.maps-button {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.maps-button:hover {
+  background-color: #357ae8;
+}
