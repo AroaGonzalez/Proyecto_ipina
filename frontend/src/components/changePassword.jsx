@@ -61,7 +61,10 @@ const ChangePassword = () => {
             onChange={handlePasswordChange}
           />
         </label>
-        <button onClick={changePassword}>Actualizar Contraseña</button>
+        <div className="button-group">
+          <button onClick={changePassword} className="update-button">Actualizar Contraseña</button>
+          <button onClick={() => navigate('/profile')} className="cancel-button">Cancelar</button>
+        </div>
       </div>
     </div>
   );

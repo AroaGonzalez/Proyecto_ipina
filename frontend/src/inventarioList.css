@@ -14,7 +14,6 @@
     font-size: 24px;
     font-weight: bold;
 }
-  
 
 .tabla-inventario {
     width: 100%;
@@ -87,16 +86,16 @@
 }
   
 .crear-pedido-btn {
-    background-color: #007bff;
+    background-color: #a52c2c;
 }
   
 .crear-pedido-btn:hover {
-    background-color: #0056b3;
+    background-color: #176613;
     transform: scale(1.05);
 }
   
 .recargar-btn {
-    background-color: #28a745;
+    background-color: #711a57;
 }
   
 .recargar-btn:hover {

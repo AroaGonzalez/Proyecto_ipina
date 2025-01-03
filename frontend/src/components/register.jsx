@@ -18,34 +18,18 @@ function Register() {
     try {
       const response = await axios.post('http://localhost:5000/register', form);
 
-      if (response.data.message === 'El usuario ya existe') {
-        setErrorMessage('El usuario ya existe, inicie sesión.');
-      } else {
-        alert('Registro exitoso. Te redirigiremos a la página de inicio.');
-        navigate('/home');
-      }
+      // Registro exitoso: redirige al login
+      alert('Registro exitoso. Redirigiendo al inicio de sesión...');
+      navigate('/');
     } catch (error) {
-      if (error.response && error.response.data.message) {
-        setErrorMessage(error.response.data.message);
+      if (error.response && error.response.status === 400) {
+        // Usuario ya existe: redirige al login
+        alert('Este usuario ya está registrado. Redirigiendo al inicio de sesión...');
+        navigate('/');
       } else {
+        // Otros errores
         setErrorMessage('Hubo un error al procesar tu registro. Por favor, inténtalo de nuevo.');
       }
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      const response = await axios.post('http://localhost:5000/checkUser', {
-        username: form.username,
-      });
-
-      if (response.data.exists) {
-        navigate('/login');
-      } else {
-        setErrorMessage('El usuario no existe. Por favor, regístrese primero.');
-      }
-    } catch (error) {
-      setErrorMessage('Hubo un error al verificar el usuario. Por favor, inténtalo de nuevo.');
     }
   };
 
@@ -72,16 +56,7 @@ function Register() {
             onChange={handleChange}
             required
           />
-          <div className="button-group">
-            <button type="submit" className="register-button">Registrarse</button>
-            <button
-              type="button"
-              className="login-button"
-              onClick={handleLogin}
-            >
-              Iniciar sesión
-            </button>
-          </div>
+          <button type="submit" className="register-button">Registrarse</button>
         </form>
         {errorMessage && <p className="error-message">{errorMessage}</p>}
       </div>

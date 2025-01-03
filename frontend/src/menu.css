@@ -32,7 +32,7 @@
 }
 
 .menu ul li a:hover {
-  background-color: #5865f2; /* Nuevo color más suave */
+  background-color: #176613;/* Nuevo color más suave */
   color: #fff;
   transform: scale(1.02); /* Menor efecto de escala */
 }
@@ -51,7 +51,7 @@
 
 .footer-options a,
 .footer-options button {
-  background-color: #5865f2;
+  background-color: #176613;
   color: #fff;
   border: none;
   padding: 6px 8px; /* Reducir tamaño de los botones */
@@ -62,5 +62,5 @@
 }
 
 .footer-options button:hover {
-  background-color: #4a53b6;
+  background-color: #176613;
 }
