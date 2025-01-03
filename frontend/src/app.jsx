@@ -12,6 +12,7 @@ import PendientesList from './components/pendienteList';
 import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
 import UserOptions from './components/userOptions';
+import Home from './components/home';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -40,7 +41,7 @@ function App() {
             path="/home"
             element={
               <PrivateRoute>
-                <h1>Bienvenido a la Gestión de Inventarios</h1>
+                <Home />
               </PrivateRoute>
             }
           />

@@ -414,6 +414,22 @@ app.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/stats', async (req, res) => {
+  try {
+    const pedidosPendientes = await Pedido.countDocuments({ estado: 'Pendiente' });
+    const productosInventario = await Inventario.countDocuments();
+    const tiendasRegistradas = await Tienda.countDocuments();
+
+    res.json({
+      pedidosPendientes,
+      productosInventario,
+      tiendasRegistradas,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Iniciar el servidor
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
