@@ -430,6 +430,33 @@ app.get('/stats', async (req, res) => {
   }
 });
 
+app.post('/recargar-producto/:id', async (req, res) => {
+  try {
+    const { id } = req.params; 
+    const { cantidadSolicitada } = req.body; 
+
+    if (!cantidadSolicitada || cantidadSolicitada <= 0) {
+      return res.status(400).json({ message: 'Cantidad solicitada no válida.' });
+    }
+
+    const producto = await Inventario.findOne({ productoId: id });
+
+    if (!producto) {
+      return res.status(404).json({ message: 'Producto no encontrado.' });
+    }
+
+    console.log(
+      `Solicitud de recarga recibida para el producto ${producto.nombreProducto} (ID: ${id}). Cantidad solicitada: ${cantidadSolicitada}`
+    );
+
+    res.status(200).json({
+      message: `Solicitud de recarga para "${producto.nombreProducto}" enviada exitosamente.`,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
 // Iniciar el servidor
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

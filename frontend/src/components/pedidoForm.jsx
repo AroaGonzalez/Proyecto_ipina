@@ -7,20 +7,19 @@ const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const PedidoForm = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const preselectedProductoId = queryParams.get("productoId"); // Obtenemos el productoId de la URL
+  const preselectedProductoId = queryParams.get("productoId");
 
-  const [productoIds, setProductoIds] = useState([]); // Estado para productos
-  const [tiendas, setTiendas] = useState([]); // Estado para tiendas
+  const [productoIds, setProductoIds] = useState([]); 
+  const [tiendas, setTiendas] = useState([]);
   const [pedido, setPedido] = useState({
     tiendaId: "",
-    productoId: preselectedProductoId || "", // Preseleccionar productoId si está disponible
+    productoId: preselectedProductoId || "", 
     cantidadSolicitada: 1,
     estado: "Pendiente",
-    fechaFin: "", // Campo fecha de fin
+    fechaFin: "",
   });
-  const [errorMessage, setErrorMessage] = useState(""); // Estado para mensajes de error
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // Carga inicial del inventario
   useEffect(() => {
     axios
       .get(`${BASE_URL}/inventario`)
@@ -29,28 +28,25 @@ const PedidoForm = () => {
           id: producto.productoId,
           nombre: producto.nombreProducto,
         }));
-        setProductoIds(productos); // Guardar productos disponibles
+        setProductoIds(productos);
       })
       .catch((error) => console.error("Error al obtener el inventario:", error));
   }, []);
 
-  // Carga inicial de las tiendas
   useEffect(() => {
     axios
       .get(`${BASE_URL}/tiendas`)
       .then((response) => {
-        setTiendas(response.data); // Guardar tiendas disponibles
+        setTiendas(response.data); 
       })
       .catch((error) => console.error("Error al obtener tiendas:", error));
   }, []);
 
-  // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPedido({ ...pedido, [name]: value });
   };
 
-  // Manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -74,100 +70,98 @@ const PedidoForm = () => {
           productoId: "",
           cantidadSolicitada: 1,
           estado: "Pendiente",
-          fechaFin: "", // Reiniciar la fecha
+          fechaFin: "",
         });
-        setErrorMessage(""); // Limpiar mensaje de error
+        setErrorMessage("");
       })
       .catch((error) => {
         const errorMsg =
           error.response?.data?.message || "Error al crear el pedido.";
-        setErrorMessage(errorMsg); // Mostrar mensaje de error
+        setErrorMessage(errorMsg);
       });
   };
 
   return (
-    <form className="pedido-form" onSubmit={handleSubmit}>
-      <h2>Crear Pedido</h2>
-
-      {/* Mostrar mensaje de error */}
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-
-      {/* Campo para seleccionar Tienda */}
-      <label htmlFor="tiendaId">Tienda:</label>
-      <select
-        id="tiendaId"
-        name="tiendaId"
-        value={pedido.tiendaId}
-        onChange={handleChange}
-        required
-      >
-        <option value="">Seleccionar Tienda</option>
-        {tiendas.map((tienda) => (
-          <option key={tienda.tiendaId} value={tienda.tiendaId}>
-            {tienda.nombre}
-          </option>
-        ))}
-      </select>
-
-      {/* Campo para seleccionar Producto */}
-      <label htmlFor="productoId">Producto:</label>
-      <select
-        id="productoId"
-        name="productoId"
-        value={pedido.productoId}
-        onChange={handleChange}
-        required
-      >
-        <option value="">Seleccionar Producto</option>
-        {productoIds.map((producto) => (
-          <option key={producto.id} value={producto.id}>
-            {producto.nombre} (ID: {producto.id})
-          </option>
-        ))}
-      </select>
-
-      {/* Campo para ingresar la cantidad */}
-      <label htmlFor="cantidadSolicitada">Cantidad:</label>
-      <input
-        type="number"
-        id="cantidadSolicitada"
-        name="cantidadSolicitada"
-        value={pedido.cantidadSolicitada}
-        onChange={handleChange}
-        min="1"
-        required
-      />
-
-      {/* Campo para seleccionar el estado del pedido */}
-      <label htmlFor="estado">Estado:</label>
-      <select
-        id="estado"
-        name="estado"
-        value={pedido.estado}
-        onChange={handleChange}
-        required
-      >
-        <option value="Pendiente">Pendiente</option>
-        <option value="Completado">Completado</option>
-      </select>
-
-      {pedido.estado === "Pendiente" && (
-        <>
-          <label htmlFor="fechaFin">Fecha Fin:</label>
-          <input
-            type="datetime-local"
-            id="fechaFin"
-            name="fechaFin"
-            value={pedido.fechaFin}
-            onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })}
-            required
-          />
-        </>
-      )}
-
-      <button type="submit">Crear Pedido</button>
-    </form>
-  );
+    <div className="form-background">
+      <h1 className="pedido-title">Gestión de Pedidos</h1> {/* Añadir el título aquí */}
+      <form className="pedido-form" onSubmit={handleSubmit}>
+        <h2>Crear Pedido</h2>
+  
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
+  
+        <label htmlFor="tiendaId">Tienda:</label>
+        <select
+          id="tiendaId"
+          name="tiendaId"
+          value={pedido.tiendaId}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Seleccionar Tienda</option>
+          {tiendas.map((tienda) => (
+            <option key={tienda.tiendaId} value={tienda.tiendaId}>
+              {tienda.nombre}
+            </option>
+          ))}
+        </select>
+  
+        <label htmlFor="productoId">Producto:</label>
+        <select
+          id="productoId"
+          name="productoId"
+          value={pedido.productoId}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Seleccionar Producto</option>
+          {productoIds.map((producto) => (
+            <option key={producto.id} value={producto.id}>
+              {producto.nombre} (ID: {producto.id})
+            </option>
+          ))}
+        </select>
+  
+        <label htmlFor="cantidadSolicitada">Cantidad:</label>
+        <input
+          type="number"
+          id="cantidadSolicitada"
+          name="cantidadSolicitada"
+          value={pedido.cantidadSolicitada}
+          onChange={handleChange}
+          min="1"
+          required
+        />
+  
+        <label htmlFor="estado">Estado:</label>
+        <select
+          id="estado"
+          name="estado"
+          value={pedido.estado}
+          onChange={handleChange}
+          required
+        >
+          <option value="Pendiente">Pendiente</option>
+          <option value="Completado">Completado</option>
+        </select>
+  
+        {pedido.estado === "Pendiente" && (
+          <>
+            <label htmlFor="fechaFin">Fecha Fin:</label>
+            <input
+              type="datetime-local"
+              id="fechaFin"
+              name="fechaFin"
+              value={pedido.fechaFin}
+              onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })}
+              required
+            />
+          </>
+        )}
+  
+        <button type="submit">Crear Pedido</button>
+      </form>
+    </div>
+  );  
 };
 
 export default PedidoForm;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import PedidosPage from './components/pedidosPage';
+import PedidosForm from './components/pedidoForm';
 import PedidoList from './components/pedidoList';
 import Login from './components/login';
 import Menu from './components/menu';
@@ -49,7 +49,7 @@ function App() {
             path="/pedidos"
             element={
               <PrivateRoute>
-                <PedidosPage pedidos={pedidos} setPedidos={setPedidos} />
+                <PedidosForm pedidos={pedidos} setPedidos={setPedidos} />
               </PrivateRoute>
             }
           />

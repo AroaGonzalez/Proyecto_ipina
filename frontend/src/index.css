@@ -1,40 +1,58 @@
 body {
-font-family: Arial, sans-serif;
-margin: 0;
-padding: 0;
-background-color: #f0f0f0; /* Fondo claro */
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #333; /* Color del texto para que sea legible */
+}
+
+.form-background::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(182, 110, 110, 0.5);
+  backdrop-filter: blur(2px); /* Difumina el fondo */
+  z-index: 0; 
+}
+
+.form-background {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/gestionPedido.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.pedido-title {
+  position: relative;
+  z-index: 2; /* Mantenerlo por encima del fondo */
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Sombra para mayor legibilidad */
+}
+
+.pedido-form {
+  position: relative;
+  z-index: 2; /* Mantener el formulario por encima del fondo */
+  background: rgba(212, 211, 209, 0.85); /* Fondo semi-transparente */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
 }
 
 .app {
 display: flex; /* Flexbox para el menú y contenido */
-}
-
-.menu {
-width: 200px;
-background: #333;
-color: white;
-position: fixed;
-height: 100%;
-padding: 20px;
-}
-
-.menu ul {
-list-style: none;
-padding: 0;
-}
-
-.menu ul li {
-margin: 15px 0;
-}
-
-.menu ul li a {
-color: white;
-text-decoration: none;
-font-weight: bold;
-}
-
-.menu ul li a:hover {
-text-decoration: underline;
 }
 
 .content {
@@ -50,15 +68,14 @@ justify-content: center;
 align-items: center;
 height: 100vh;
 width: 100vw;
-background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg'); /* Cambia esta ruta por la de tu imagen */
+background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg');
 background-size: cover; 
 background-position: center;
 background-repeat: no-repeat;
 margin: 0;
 }
 
-/* Formulario de pedidos */
-.pedido-form, .pedido-list {
+.pedido-list {
 margin: 20px auto;
 padding: 20px;
 max-width: 500px;
@@ -67,7 +84,27 @@ border-radius: 8px;
 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.pedido-form h2, .pedido-list h2 {
+.pedido-form h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.pedido-form input,
+.pedido-form select,
+.pedido-form button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.pedido-form button:hover {
+  background-color: #0056b3;
+}
+
+.pedido-list h2 {
 margin-bottom: 15px;
 }
 

@@ -1,0 +1,115 @@
+.inventario-list {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 1000px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.inventario-list h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+  
+
+.tabla-inventario {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+  
+.tabla-inventario th,
+.tabla-inventario td {
+    text-align: center;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+  
+.tabla-inventario th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+  
+.tabla-inventario tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+  
+.tabla-inventario tr:hover {
+    background-color: #e9f7ff;
+}
+
+.cantidad-verde {
+    background-color: #d4edda;
+    color: #155724;
+    font-weight: bold;
+}
+  
+.cantidad-amarillo {
+    background-color: #fff3cd;
+    color: #856404;
+    font-weight: bold;
+}
+  
+.cantidad-rojo-claro {
+    background-color: #f8d7da;
+    color: #721c24;
+    font-weight: bold;
+}
+  
+.cantidad-rojo-oscuro {
+    background-color: #f5c6cb;
+    color: #721c24;
+    font-weight: bold;
+}
+  
+.acciones-container {
+    display: flex;
+    justify-content: center;
+}
+
+.crear-pedido-btn,
+.recargar-btn {
+    display: inline-block;
+    width: 120px;
+    padding: 4px 10px;
+    font-size: 14px;
+    color: white;
+    text-align: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+  
+.crear-pedido-btn {
+    background-color: #007bff;
+}
+  
+.crear-pedido-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+  
+.recargar-btn {
+    background-color: #28a745;
+}
+  
+.recargar-btn:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+  
+.tabla-inventario td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.tabla-inventario td button {
+    margin: auto;
+}
+  
