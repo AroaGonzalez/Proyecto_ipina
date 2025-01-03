@@ -66,7 +66,7 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token.split(' ')[1], JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
-    req.user = user;
+    req.user = user; // Aquí se asigna el usuario al objeto `req.user`
     next();
   });
 }
@@ -454,6 +454,42 @@ app.post('/recargar-producto/:id', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.put('/profile/change-password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Ambas contraseñas son requeridas.' });
+  }
+
+  try {
+    // Aquí se asegura que `req.user` existe
+    if (!req.user || !req.user.username) {
+      return res.status(401).json({ message: 'Usuario no autenticado.' });
+    }
+
+    const user = await User.findOne({ username: req.user.username });
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+    }
+
+    // Verificar la contraseña actual
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Contraseña actualizada exitosamente.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

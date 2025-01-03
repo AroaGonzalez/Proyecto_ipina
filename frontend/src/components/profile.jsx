@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../profile.css'; // Asegúrate de tener el CSS
 
@@ -7,6 +8,7 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', address: '' });
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -100,6 +102,7 @@ const Profile = () => {
             <p><strong>Correo Electrónico:</strong> {profile.email || 'No disponible'}</p>
             <p><strong>Dirección:</strong> {profile.address || 'No disponible'}</p>
             <button onClick={() => setIsEditing(true)}>Editar Perfil</button>
+            <button onClick={() => navigate('/change-password')}>Cambiar Contraseña</button>
           </div>
         )}
       </div>

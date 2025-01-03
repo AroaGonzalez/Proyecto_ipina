@@ -13,6 +13,7 @@ import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
 import UserOptions from './components/userOptions';
 import Home from './components/home';
+import ChangePassword from './components/changePassword'; // Importar el componente
 
 function Layout({ children }) {
   const location = useLocation();
@@ -96,11 +97,19 @@ function App() {
           <Route
             path="/profile"
             element={
-                <PrivateRoute>
-                    <Profile />
-                </PrivateRoute>
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
             }
-        />
+          />
+          <Route
+            path="/change-password" // Nueva ruta para el cambio de contraseña
+            element={
+              <PrivateRoute>
+                <ChangePassword />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Layout>
     </Router>
