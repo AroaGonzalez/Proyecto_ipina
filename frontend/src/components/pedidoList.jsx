@@ -143,7 +143,6 @@ function PedidoList() {
     <div className="pendientes-container">
       <h2>Lista de Pedidos</h2>
 
-      {/* Sección de Filtros */}
       <div className="filters-container">
         <input
           type="text"

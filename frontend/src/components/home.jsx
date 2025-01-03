@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import '../home.css'; // Asegúrate de tener un CSS para el diseño.
+import '../home.css';
 
 const Home = () => {
   const [stats, setStats] = useState({

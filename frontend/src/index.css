@@ -51,14 +51,14 @@ body {
 }
 
 .app {
-display: flex; /* Flexbox para el menú y contenido */
+  display: flex; 
 }
 
 .content {
-margin-left: 220px; /* Espacio para el menú */
-padding: 20px;
-flex: 1;
-text-align: center;
+  margin-left: 220px; 
+  padding: 20px;
+  flex: 1;
+  text-align: center;
 }
 
 .full-content {
