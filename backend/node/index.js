@@ -427,13 +427,10 @@ app.get('/tiendas', async (req, res) => {
     const tiendas = await Tienda.findAll();
     res.json(tiendas);
   } catch (error) {
-    console.error('Error al obtener tiendas:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-
-// Crear una tienda nueva
 app.post('/tiendas', async (req, res) => {
   const { tiendaId, nombre, direccion } = req.body;
   if (!tiendaId || !nombre || !direccion) {
@@ -499,9 +496,14 @@ app.put('/profile', authenticateToken, async (req, res) => {
 
 app.get('/stats', async (req, res) => {
   try {
+    // Conteo de pedidos pendientes (MongoDB)
     const pedidosPendientes = await Pedido.countDocuments({ estado: 'Pendiente' });
-    const productosInventario = await Inventario.countDocuments();
-    const tiendasRegistradas = await Tienda.countDocuments();
+
+    // Conteo de productos en inventario (MySQL con Sequelize)
+    const productosInventario = await Inventario.count(); // Cambiado de MongoDB a Sequelize
+
+    // Conteo de tiendas registradas (MySQL con Sequelize)
+    const tiendasRegistradas = await Tienda.count(); // Cambiado de MongoDB a Sequelize
 
     res.json({
       pedidosPendientes,
@@ -512,6 +514,7 @@ app.get('/stats', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 app.post('/recargar-producto/:id', async (req, res) => {
   try {

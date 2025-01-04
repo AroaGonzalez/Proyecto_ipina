@@ -15,6 +15,7 @@ const Home = () => {
     const fetchStats = async () => {
       try {
         const response = await axios.get('http://localhost:5000/stats');
+        console.log('Estadísticas recibidas:', response.data); // Verifica los datos recibidos
         setStats(response.data);
         setLoading(false);
       } catch (error) {
@@ -22,9 +23,9 @@ const Home = () => {
         setLoading(false);
       }
     };
-
+  
     fetchStats();
-  }, []);
+  }, []);  
 
   if (loading) {
     return <p>Cargando estadísticas...</p>;
