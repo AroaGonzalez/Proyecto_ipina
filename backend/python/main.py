@@ -2,13 +2,23 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine, Column, Integer, String, TIMESTAMP
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
+import time
 
 # Configuración de la base de datos
 DATABASE_URL = "mysql+mysqlconnector://root:root@mysqldb:3306/tienda"
 
-engine = create_engine(DATABASE_URL)
-Base = declarative_base()
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Bucle para reintentar la conexión con la base de datos
+while True:
+    try:
+        engine = create_engine(DATABASE_URL)
+        Base = declarative_base()
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        print("Conexión exitosa a la base de datos.")
+        break
+    except OperationalError:
+        print("MySQL no está listo, reintentando en 5 segundos...")
+        time.sleep(5)
 
 # Modelo de la tabla inventario
 class Inventario(Base):
