@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../inventarioList.css';
 
-const BASE_URL = process.env.REACT_APP_PYTHON_API_URL || 'http://localhost:8000';
+const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 function InventarioList() {
   const [inventarios, setInventarios] = useState([]);
@@ -34,17 +34,17 @@ function InventarioList() {
     const cantidadSolicitada = prompt(
       '¿Cuántas unidades deseas solicitar para recargar?'
     );
-
+  
     if (!cantidadSolicitada || isNaN(cantidadSolicitada) || cantidadSolicitada <= 0) {
       alert('Cantidad no válida.');
       return;
     }
-
+  
     try {
       const response = await axios.post(`${BASE_URL}/recargar-producto/${productoId}`, {
         cantidadSolicitada: parseInt(cantidadSolicitada, 10),
       });
-      alert(response.data.message);
+      alert(response.data.message); // Mensaje del backend
     } catch (error) {
       console.error('Error al solicitar recarga:', error);
       alert('No se pudo realizar la solicitud de recarga.');

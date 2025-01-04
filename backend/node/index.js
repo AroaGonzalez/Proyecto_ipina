@@ -518,28 +518,32 @@ app.get('/stats', async (req, res) => {
 
 app.post('/recargar-producto/:id', async (req, res) => {
   try {
-    const { id } = req.params; 
-    const { cantidadSolicitada } = req.body; 
+      const { id } = req.params; // ID del producto desde el parámetro
+      const { cantidadSolicitada } = req.body; // Cantidad solicitada desde el cuerpo de la solicitud
 
-    if (!cantidadSolicitada || cantidadSolicitada <= 0) {
-      return res.status(400).json({ message: 'Cantidad solicitada no válida.' });
-    }
+      if (!cantidadSolicitada || cantidadSolicitada <= 0) {
+          return res.status(400).json({ message: 'Cantidad solicitada no válida.' });
+      }
 
-    const producto = await Inventario.findOne({ productoId: id });
+      // Buscar el producto en el inventario (tabla MySQL con Sequelize)
+      const producto = await Inventario.findOne({ where: { productoId: Number(id) } });
 
-    if (!producto) {
-      return res.status(404).json({ message: 'Producto no encontrado.' });
-    }
+      if (!producto) {
+          return res.status(404).json({ message: 'Producto no encontrado.' });
+      }
 
-    console.log(
-      `Solicitud de recarga recibida para el producto ${producto.nombreProducto} (ID: ${id}). Cantidad solicitada: ${cantidadSolicitada}`
-    );
+      // Simulación: registrar el evento
+      console.log(
+          `Solicitud de recarga recibida para el producto ${producto.nombreProducto} (ID: ${id}). Cantidad solicitada: ${cantidadSolicitada}`
+      );
 
-    res.status(200).json({
-      message: `Solicitud de recarga para "${producto.nombreProducto}" enviada exitosamente.`,
-    });
+      // Devuelve una respuesta ficticia
+      res.status(200).json({
+          message: `Solicitud de recarga para "${producto.nombreProducto}" aceptada. Se recargará cuando el proveedor lo apruebe.`,
+      });
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor.' });
+      console.error('Error al procesar la solicitud de recarga:', error);
+      res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
 
