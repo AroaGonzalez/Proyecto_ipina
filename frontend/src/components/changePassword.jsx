@@ -27,7 +27,6 @@ const ChangePassword = () => {
       setError('');
       setPasswordForm({ currentPassword: '', newPassword: '' });
 
-      // Redirigir al perfil después de 2 segundos
       setTimeout(() => {
         navigate('/profile');
       }, 2000);
@@ -38,13 +37,13 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="change-password-container">
-      <div className="change-password-card">
+    <div className="profile-container">
+      <div className="profile-card">
         <h2>Cambiar Contraseña</h2>
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
         <label>
-          Contraseña Actual:
+        <p>Contraseña Actual:</p>
           <input
             type="password"
             name="currentPassword"
@@ -53,7 +52,7 @@ const ChangePassword = () => {
           />
         </label>
         <label>
-          Nueva Contraseña:
+        <p>Nueva Contraseña:</p>
           <input
             type="password"
             name="newPassword"

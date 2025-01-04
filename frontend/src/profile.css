@@ -3,9 +3,23 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f7f9fc;
-  font-family: 'Arial', sans-serif;
-  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.profile-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/ropa.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(1.5px);
+  z-index: -1; 
 }
 
 .profile-card {
@@ -16,6 +30,17 @@
   text-align: left;
   max-width: 400px;
   width: 100%;
+}
+
+.profile-card h2 {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+  text-transform: uppercase; /* Asegura que el texto esté en mayúsculas */
+  white-space: nowrap; /* Evita que el texto se corte */
+  overflow: hidden; /* Evita desbordamientos si el texto es muy largo */
 }
 
 .profile-title {
@@ -39,7 +64,7 @@
 }
 
 .loading-message {
-  color: #5bc0de;
+  color: #5cadc5;
   text-align: center;
   font-weight: bold;
 }
@@ -86,75 +111,6 @@
 .profile-card input:focus {
   border-color: #007bff;
   outline: none;
-}
-
-.change-password-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  padding: 20px;
-  background-color: #f7f9fc;
-  font-family: 'Arial', sans-serif;
-}
-
-.change-password-card {
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px 30px;
-  max-width: 400px;
-  width: 100%;
-  text-align: center;
-}
-
-.change-password-card h2 {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.change-password-card label {
-  display: block;
-  text-align: left;
-  margin-bottom: 5px;
-  font-weight: bold;
-  font-size: 14px;
-  color: #555;
-}
-
-.change-password-card input {
-  width: 100%;
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.change-password-card input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-.change-password-card button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.change-password-card button:hover {
-  background-color: #0056b3;
-  transform: scale(1.02);
 }
 
 .error-message {

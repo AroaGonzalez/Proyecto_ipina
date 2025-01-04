@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import '../inventarioList.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -20,9 +21,9 @@ const TiendaList = () => {
   };
 
   return (
-    <div className="inventario-container">
+    <div className="inventario-list">
       <h2>Lista de Tiendas</h2>
-      <table className="inventario-table">
+      <table className="tabla-inventario">
         <thead>
           <tr>
             <th>ID</th>
