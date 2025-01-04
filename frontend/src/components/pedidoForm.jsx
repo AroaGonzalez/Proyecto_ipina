@@ -2,27 +2,31 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// URLs separadas para los backends Python y Node.js
+const BASE_URL_PYTHON = process.env.REACT_APP_PYTHON_API_URL || "http://localhost:8000";
+const BASE_URL_NODE = process.env.REACT_APP_NODE_API_URL || "http://localhost:5000";
 
 const PedidoForm = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const preselectedProductoId = queryParams.get("productoId");
 
-  const [productoIds, setProductoIds] = useState([]); 
+  const [productoIds, setProductoIds] = useState([]);
   const [tiendas, setTiendas] = useState([]);
   const [pedido, setPedido] = useState({
     tiendaId: "",
-    productoId: preselectedProductoId || "", 
+    productoId: preselectedProductoId || "",
     cantidadSolicitada: 1,
     estado: "Pendiente",
     fechaFin: "",
   });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
+  // Cargar productos del inventario desde el backend Python
   useEffect(() => {
     axios
-      .get(`${BASE_URL}/inventario`)
+      .get(`${BASE_URL_PYTHON}/inventario`)
       .then((response) => {
         const productos = response.data.map((producto) => ({
           id: producto.productoId,
@@ -33,11 +37,12 @@ const PedidoForm = () => {
       .catch((error) => console.error("Error al obtener el inventario:", error));
   }, []);
 
+  // Cargar tiendas desde el backend Python
   useEffect(() => {
     axios
-      .get(`${BASE_URL}/tiendas`)
+      .get(`${BASE_URL_PYTHON}/tiendas`)
       .then((response) => {
-        setTiendas(response.data); 
+        setTiendas(response.data);
       })
       .catch((error) => console.error("Error al obtener tiendas:", error));
   }, []);
@@ -49,6 +54,9 @@ const PedidoForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
     const token = localStorage.getItem("token");
     const config = {
       headers: {
@@ -58,13 +66,17 @@ const PedidoForm = () => {
 
     const adjustedPedido = {
       ...pedido,
-      fechaFin: pedido.fechaFin ? new Date(pedido.fechaFin).toISOString() : null,
+      fechaFin:
+        pedido.estado === "Pendiente" && pedido.fechaFin
+          ? new Date(pedido.fechaFin).toISOString()
+          : null,
     };
 
+    // Crear pedido usando el backend Node.js
     axios
-      .post(`${BASE_URL}/pedidos`, adjustedPedido, config)
+      .post(`${BASE_URL_NODE}/pedidos`, adjustedPedido, config)
       .then(() => {
-        alert("Pedido creado con éxito");
+        setSuccessMessage("Pedido creado con éxito");
         setPedido({
           tiendaId: "",
           productoId: "",
@@ -72,7 +84,6 @@ const PedidoForm = () => {
           estado: "Pendiente",
           fechaFin: "",
         });
-        setErrorMessage("");
       })
       .catch((error) => {
         const errorMsg =
@@ -83,12 +94,13 @@ const PedidoForm = () => {
 
   return (
     <div className="form-background">
-      <h1 className="pedido-title">Gestión de Pedidos</h1> {/* Añadir el título aquí */}
+      <h1 className="pedido-title">Gestión de Pedidos</h1>
       <form className="pedido-form" onSubmit={handleSubmit}>
         <h2>Crear Pedido</h2>
-  
+
         {errorMessage && <p className="error-message">{errorMessage}</p>}
-  
+        {successMessage && <p className="success-message">{successMessage}</p>}
+
         <label htmlFor="tiendaId">Tienda:</label>
         <select
           id="tiendaId"
@@ -104,7 +116,7 @@ const PedidoForm = () => {
             </option>
           ))}
         </select>
-  
+
         <label htmlFor="productoId">Producto:</label>
         <select
           id="productoId"
@@ -120,7 +132,7 @@ const PedidoForm = () => {
             </option>
           ))}
         </select>
-  
+
         <label htmlFor="cantidadSolicitada">Cantidad:</label>
         <input
           type="number"
@@ -131,7 +143,7 @@ const PedidoForm = () => {
           min="1"
           required
         />
-  
+
         <label htmlFor="estado">Estado:</label>
         <select
           id="estado"
@@ -143,7 +155,7 @@ const PedidoForm = () => {
           <option value="Pendiente">Pendiente</option>
           <option value="Completado">Completado</option>
         </select>
-  
+
         {pedido.estado === "Pendiente" && (
           <>
             <label htmlFor="fechaFin">Fecha Fin:</label>
@@ -152,16 +164,18 @@ const PedidoForm = () => {
               id="fechaFin"
               name="fechaFin"
               value={pedido.fechaFin}
-              onChange={(e) => setPedido({ ...pedido, fechaFin: e.target.value })}
+              onChange={(e) =>
+                setPedido({ ...pedido, fechaFin: e.target.value })
+              }
               required
             />
           </>
         )}
-  
+
         <button type="submit">Crear Pedido</button>
       </form>
     </div>
-  );  
+  );
 };
 
 export default PedidoForm;

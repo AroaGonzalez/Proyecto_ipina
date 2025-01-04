@@ -3,17 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../inventarioList.css';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const BASE_URL = process.env.REACT_APP_PYTHON_API_URL || 'http://localhost:8000';
 
 function InventarioList() {
   const [inventarios, setInventarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
     axios
       .get(`${BASE_URL}/inventario`)
-      .then((response) => setInventarios(response.data))
-      .catch((error) => console.error('Error al obtener inventario:', error));
+      .then((response) => {
+        setInventarios(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error al obtener inventario:', error);
+        setError('No se pudo cargar el inventario. Inténtalo más tarde.');
+        setLoading(false);
+      });
   }, []);
 
   const handleCreatePedido = (productoId) => {
@@ -41,6 +51,9 @@ function InventarioList() {
     }
   };
 
+  if (loading) return <p>Cargando inventario...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
     <div className="inventario-list">
       <h2>Inventario Actual</h2>
@@ -63,7 +76,7 @@ function InventarioList() {
             else claseCantidad = 'cantidad-rojo-oscuro';
 
             return (
-              <tr key={item._id}>
+              <tr key={item.productoId}>
                 <td>{item.productoId}</td>
                 <td>{item.nombreProducto}</td>
                 <td className={claseCantidad}>{item.cantidad}</td>
@@ -91,7 +104,6 @@ function InventarioList() {
       </table>
     </div>
   );
-
 }
 
 export default InventarioList;

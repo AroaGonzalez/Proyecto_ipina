@@ -5,13 +5,86 @@ const jwt = require('jsonwebtoken'); // Para generar tokens
 const bcrypt = require('bcryptjs'); // Para hashear contraseñas
 const Pedido = require('./models/pedido'); 
 const User = require('./models/user'); // Modelo de Usuario (nuevo)
-const Inventario = require('./models/inventario');
-const Tienda = require('./models/tienda'); // Importar modelo
 const cron = require('node-cron');
 const PedidoEliminado = require('./models/pedidoEliminado');
+const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
+// Configurar Sequelize con la conexión a MySQL
+const sequelize = new Sequelize(
+  process.env.MYSQL_DATABASE || 'tienda',
+  process.env.MYSQL_USER || 'root',
+  process.env.MYSQL_PASSWORD || 'root',
+  {
+    host: process.env.MYSQL_HOST || 'mysqldb', // Cambiar si es necesario a '127.0.0.1'
+    dialect: 'mysql',
+    logging: console.log, // Habilitar logs para depuración
+  }
+);
+
+async function connectToMongoDB() {
+  try {
+    console.log('Intentando conectar a MongoDB...');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://root:rootpassword@mongodb:27017/tienda', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Conexión a MongoDB establecida.');
+  } catch (error) {
+    console.error('Error al conectar a MongoDB:', error.message);
+    process.exit(1); // Finaliza el proceso si la conexión falla
+  }
+}
+
+connectToMongoDB();
+
+
+async function connectWithRetry() {
+  let retries = 10; // Aumentar el número de intentos
+  while (retries > 0) {
+    try {
+      await sequelize.sync({ alter: true }); // Sincroniza tablas, ajusta si es necesario
+      console.log('Conexión a MySQL establecida y tablas sincronizadas.');
+      break;
+    } catch (error) {
+      console.error('Error al conectar o sincronizar con MySQL:', error.message);
+      retries -= 1;
+      console.log(`Reintentando conexión en 10 segundos (${retries} intentos restantes)...`);
+      await new Promise((resolve) => setTimeout(resolve, 10000)); // Espera más tiempo entre intentos
+    }
+  }
+  if (retries === 0) {
+    console.error('No se pudo conectar a MySQL después de varios intentos.');
+    process.exit(1);
+  }
+}
+
+connectWithRetry();
+
+// Definir el modelo para "inventario" (MySQL)
+const Inventario = sequelize.define(
+  'Inventario',
+  {
+    productoId: { type: DataTypes.INTEGER, primaryKey: true },
+    nombreProducto: { type: DataTypes.STRING },
+    cantidad: { type: DataTypes.INTEGER },
+    umbralMinimo: { type: DataTypes.INTEGER },
+    ultimaActualizacion: { type: DataTypes.DATE },
+  },
+  { tableName: 'inventario', timestamps: false }
+);
+
+// Definir el modelo para "tiendas" (MySQL)
+const Tienda = sequelize.define(
+  'Tienda',
+  {
+    tiendaId: { type: DataTypes.INTEGER, primaryKey: true },
+    nombre: { type: DataTypes.STRING },
+    direccion: { type: DataTypes.STRING },
+  },
+  { tableName: 'tiendas', timestamps: false }
+);
 
 // Configurar CORS para permitir solicitudes desde otros dominios
 app.use(cors({
@@ -23,13 +96,6 @@ app.use(cors({
 // Middleware para parsear JSON
 app.use(express.json());
 
-mongoose.connect('mongodb://root:rootpassword@mongo:27017/tienda', {
-  authSource: 'admin',
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Coloca el cron aquí, después de la conexión a MongoDB
 cron.schedule('* * * * *', async () => {
   try {
     const now = new Date();
@@ -39,10 +105,13 @@ cron.schedule('* * * * *', async () => {
       pedido.estado = 'Completado';
 
       // Actualizar inventario al completar el pedido
-      const producto = await Inventario.findOne({ productoId: pedido.productoId });
+      const producto = await Inventario.findOne({ where: { productoId: pedido.productoId } });
       if (producto) {
         producto.cantidad -= pedido.cantidadSolicitada;
+        if (producto.cantidad < 0) producto.cantidad = 0; // Asegurar que no sea negativo
         await producto.save();
+      } else {
+        console.error(`Producto con ID ${pedido.productoId} no encontrado en el inventario`);
       }
 
       await pedido.save();
@@ -152,8 +221,8 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'El formato de fecha no es válido. Debe ser una fecha válida.' });
     }
 
-    // Validar que el producto existe en el inventario
-    const producto = await Inventario.findOne({ productoId });
+    // Validar que el producto existe en el inventario (usando MySQL con Sequelize)
+    const producto = await Inventario.findOne({ where: { productoId: Number(productoId) } });
     if (!producto) {
       return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario.' });
     }
@@ -163,7 +232,7 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Stock insuficiente para este producto.' });
     }
 
-    // Crear el pedido
+    // Crear el pedido en MongoDB o la base de datos correspondiente
     const nuevoPedido = new Pedido({
       tiendaId,
       productoId,
@@ -174,7 +243,7 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
 
     await nuevoPedido.save();
 
-    // Actualizar el inventario solo si el pedido está completado
+    // Actualizar el inventario en MySQL solo si el pedido está completado
     if (estado === 'Completado') {
       producto.cantidad -= cantidadSolicitada;
       await producto.save();
@@ -227,25 +296,36 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
-    // Si el estado cambia a completado, validar stock y actualizar inventario
-    if (estado === 'Completado' && pedidoAnterior.estado === 'Pendiente') {
-      const producto = await Inventario.findOne({ productoId });
-      if (!producto) {
-        return res.status(404).json({ message: 'Producto no encontrado en inventario' });
+    // Verificar si el producto o la cantidad han cambiado
+    const productoPrevioId = pedidoAnterior.productoId;
+    const cantidadPrevia = pedidoAnterior.cantidadSolicitada;
+
+    if (productoPrevioId !== productoId || cantidadPrevia !== cantidadSolicitada) {
+      // Revertir inventario del producto anterior
+      const productoAnterior = await Inventario.findOne({ where: { productoId: productoPrevioId } });
+      if (productoAnterior) {
+        productoAnterior.cantidad += cantidadPrevia; // Revertir cantidad previa
+        await productoAnterior.save();
       }
 
-      if (producto.cantidad < cantidadSolicitada) {
-        return res.status(400).json({ message: 'Stock insuficiente para completar el pedido' });
+      // Actualizar inventario del producto nuevo
+      const productoNuevo = await Inventario.findOne({ where: { productoId } });
+      if (!productoNuevo) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
       }
 
-      producto.cantidad -= cantidadSolicitada;
-      await producto.save();
+      if (productoNuevo.cantidad < cantidadSolicitada) {
+        return res.status(400).json({ message: 'Stock insuficiente' });
+      }
+
+      productoNuevo.cantidad -= cantidadSolicitada; // Descontar nueva cantidad
+      await productoNuevo.save();
     }
 
-    // Actualizar el pedido con los nuevos datos
+    // Actualizar el pedido
     pedidoAnterior.tiendaId = tiendaId || pedidoAnterior.tiendaId;
-    pedidoAnterior.productoId = productoId || pedidoAnterior.productoId;
-    pedidoAnterior.cantidadSolicitada = cantidadSolicitada || pedidoAnterior.cantidadSolicitada;
+    pedidoAnterior.productoId = productoId;
+    pedidoAnterior.cantidadSolicitada = cantidadSolicitada;
     pedidoAnterior.estado = estado || pedidoAnterior.estado;
     pedidoAnterior.fechaFin = fechaFin || pedidoAnterior.fechaFin;
 
@@ -290,22 +370,24 @@ app.get('/pedidos-eliminados',  async (req, res) => {
   }
 });
 
-// Obtener todo el inventario
 app.get('/inventario', async (req, res) => {
   try {
-    const inventarios = await Inventario.find();
+    const inventarios = await Inventario.findAll();
     res.json(inventarios);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Añadir un producto al inventario
 app.post('/inventario', async (req, res) => {
   const { productoId, nombreProducto, cantidad, umbralMinimo } = req.body;
   try {
-    const nuevoProducto = new Inventario({ productoId, nombreProducto, cantidad, umbralMinimo });
-    await nuevoProducto.save();
+    const nuevoProducto = await Inventario.create({
+      productoId,
+      nombreProducto,
+      cantidad,
+      umbralMinimo,
+    });
     res.status(201).json(nuevoProducto);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -340,15 +422,16 @@ app.put('/inventario/:id', async (req, res) => {
   }
 });
 
-// Obtener todas las tiendas (elimina autenticación temporalmente para pruebas)
 app.get('/tiendas', async (req, res) => {
   try {
-    const tiendas = await Tienda.find();
+    const tiendas = await Tienda.findAll();
     res.json(tiendas);
   } catch (error) {
+    console.error('Error al obtener tiendas:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Crear una tienda nueva
 app.post('/tiendas', async (req, res) => {

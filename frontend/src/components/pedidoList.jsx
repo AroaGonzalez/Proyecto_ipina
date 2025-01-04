@@ -99,45 +99,30 @@ function PedidoList() {
 
   const handleEditSubmit = async (id) => {
     try {
-        const token = localStorage.getItem('token');
-        const config = {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        };
-
-        // Actualizar el pedido
-        await axios.put(`${BASE_URL}/pedidos/${id}`, editForm, config);
-
-        // Actualizar el inventario asociado
-        const pedidoOriginal = pedidos.find((pedido) => pedido._id === id);
-        if (pedidoOriginal && editForm.cantidadSolicitada !== pedidoOriginal.cantidadSolicitada) {
-            const diferenciaCantidad = editForm.cantidadSolicitada - pedidoOriginal.cantidadSolicitada;
-
-            // Convertir productoId al formato correcto (si es necesario)
-            const productoId = String(editForm.productoId); // Asegurar que sea string
-
-            await axios.put(
-                `${BASE_URL}/inventario/${productoId}`,
-                { cantidad: -diferenciaCantidad }, // Ajustar cantidad
-                config
-            );
-        }
-
-        alert('Pedido e inventario actualizados con éxito');
-
-        setPedidos((prevPedidos) =>
-            prevPedidos.map((pedido) =>
-                pedido._id === id ? { ...pedido, ...editForm } : pedido
-            )
-        );
-        setEditingPedidoId(null); // Desactiva el modo de edición
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+  
+      // Envía solo la solicitud de actualización al pedido
+      await axios.put(`${BASE_URL}/pedidos/${id}`, editForm, config);
+  
+      alert('Pedido actualizado con éxito');
+  
+      // Actualiza el estado local de los pedidos
+      setPedidos((prevPedidos) =>
+        prevPedidos.map((pedido) =>
+          pedido._id === id ? { ...pedido, ...editForm } : pedido
+        )
+      );
+      setEditingPedidoId(null); // Salir del modo de edición
     } catch (error) {
-        console.error('Error al actualizar pedido/inventario:', error.response?.data || error);
-        alert('No se pudo actualizar el pedido/inventario');
+      console.error('Error al actualizar pedido:', error.response?.data || error);
+      alert('No se pudo actualizar el pedido');
     }
-  };
-
+  };  
 
   return (
     <div className="pendientes-container">

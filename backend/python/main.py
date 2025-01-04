@@ -8,51 +8,116 @@ import time
 # Configuración de la base de datos
 DATABASE_URL = "mysql+mysqlconnector://root:root@mysqldb:3306/tienda"
 
+# Declarar la base y crear el motor fuera del bucle para evitar problemas de duplicación
+Base = declarative_base()
+engine = None
+SessionLocal = None
+
 # Bucle para reintentar la conexión con la base de datos
 while True:
     try:
+        print("Intentando conectar a la base de datos...")
         engine = create_engine(DATABASE_URL)
-        Base = declarative_base()
-        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        # Probar la conexión
+        connection = engine.connect()
         print("Conexión exitosa a la base de datos.")
+        connection.close()
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         break
-    except OperationalError:
-        print("MySQL no está listo, reintentando en 5 segundos...")
+    except OperationalError as e:
+        print(f"MySQL no está listo ({e}). Reintentando en 5 segundos...")
         time.sleep(5)
 
-# Modelo de la tabla inventario
+# Modelo para la tabla Tiendas
+class Tienda(Base):
+    __tablename__ = "tiendas"
+    tiendaId = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(255), nullable=False)
+    direccion = Column(String(255), nullable=False)
+
+# Modelo para la tabla Inventario
 class Inventario(Base):
     __tablename__ = "inventario"
-    id = Column(Integer, primary_key=True, index=True)
-    nombre_producto = Column(String(255), nullable=False)
+    productoId = Column(Integer, primary_key=True, index=True)
+    nombreProducto = Column(String(255), nullable=False)
     cantidad = Column(Integer, nullable=False)
-    ultima_actualizacion = Column(TIMESTAMP, nullable=False)
+    umbralMinimo = Column(Integer, nullable=False)
+    ultimaActualizacion = Column(TIMESTAMP, nullable=False)
 
 # Crear las tablas si no existen
+print("Creando tablas si no existen...")
 Base.metadata.create_all(bind=engine)
 
-# FastAPI app
+# Inicializar FastAPI
 app = FastAPI()
 
-# Ruta para obtener el inventario
+# Habilitar CORS para permitir que el frontend acceda a la API
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Cambia "*" por el dominio del frontend si es necesario
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Ruta para obtener todos los registros del inventario
 @app.get("/inventario/")
 async def get_inventario():
     session = SessionLocal()
-    inventario = session.query(Inventario).all()
-    session.close()
-    return [{"id": item.id, "nombre_producto": item.nombre_producto, "cantidad": item.cantidad} for item in inventario]
+    try:
+        inventario = session.query(Inventario).all()
+        return [
+            {
+                "productoId": item.productoId,
+                "nombreProducto": item.nombreProducto,
+                "cantidad": item.cantidad,
+                "umbralMinimo": item.umbralMinimo,
+                "ultimaActualizacion": item.ultimaActualizacion,
+            }
+            for item in inventario
+        ]
+    finally:
+        session.close()
 
 # Ruta para crear un nuevo registro en el inventario
 @app.post("/inventario/")
-async def create_inventario(nombre_producto: str, cantidad: int):
+async def create_inventario(nombreProducto: str, cantidad: int, umbralMinimo: int):
     session = SessionLocal()
-    nuevo_item = Inventario(nombre_producto=nombre_producto, cantidad=cantidad)
-    session.add(nuevo_item)
-    session.commit()
-    session.refresh(nuevo_item)
-    session.close()
-    return {"id": nuevo_item.id, "nombre_producto": nuevo_item.nombre_producto, "cantidad": nuevo_item.cantidad}
+    try:
+        nuevo_item = Inventario(
+            nombreProducto=nombreProducto,
+            cantidad=cantidad,
+            umbralMinimo=umbralMinimo,
+        )
+        session.add(nuevo_item)
+        session.commit()
+        session.refresh(nuevo_item)
+        return {
+            "productoId": nuevo_item.productoId,
+            "nombreProducto": nuevo_item.nombreProducto,
+            "cantidad": nuevo_item.cantidad,
+            "umbralMinimo": nuevo_item.umbralMinimo,
+            "ultimaActualizacion": nuevo_item.ultimaActualizacion,
+        }
+    finally:
+        session.close()
 
+# Ruta para obtener todas las tiendas
+@app.get("/tiendas/")
+async def get_tiendas():
+    session = SessionLocal()
+    try:
+        tiendas = session.query(Tienda).all()
+        return [
+            {"tiendaId": tienda.tiendaId, "nombre": tienda.nombre, "direccion": tienda.direccion}
+            for tienda in tiendas
+        ]
+    finally:
+        session.close()
+
+# Ruta raíz para verificar el servicio
 @app.get("/")
 async def root():
     return {"message": "Python service is running!"}
