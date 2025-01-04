@@ -56,17 +56,11 @@ function InventarioList() {
         </thead>
         <tbody>
           {inventarios.map((item) => {
-            // Determinar la clase CSS según la cantidad
             let claseCantidad = '';
-            if (item.cantidad > 50) {
-              claseCantidad = 'cantidad-verde';
-            } else if (item.cantidad > 20) {
-              claseCantidad = 'cantidad-amarillo';
-            } else if (item.cantidad > 0) {
-              claseCantidad = 'cantidad-rojo-claro';
-            } else {
-              claseCantidad = 'cantidad-rojo-oscuro';
-            }
+            if (item.cantidad > 50) claseCantidad = 'cantidad-verde';
+            else if (item.cantidad > 20) claseCantidad = 'cantidad-amarillo';
+            else if (item.cantidad > 0) claseCantidad = 'cantidad-rojo-claro';
+            else claseCantidad = 'cantidad-rojo-oscuro';
 
             return (
               <tr key={item._id}>
@@ -82,12 +76,12 @@ function InventarioList() {
                     >
                       Crear Pedido
                     </button>
-                    <button
-                      className="recargar-btn"
-                      onClick={() => solicitarRecarga(item.productoId)}
-                    >
-                      Solicitar Recarga
-                    </button>
+                      <button
+                        className="recargar-btn"
+                        onClick={() => solicitarRecarga(item.productoId)}
+                      >
+                        Solicitar Recarga
+                      </button>
                   </div>
                 </td>
               </tr>
@@ -97,6 +91,7 @@ function InventarioList() {
       </table>
     </div>
   );
+
 }
 
 export default InventarioList;

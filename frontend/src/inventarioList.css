@@ -1,45 +1,71 @@
 .inventario-list {
-    margin: 20px auto;
-    padding: 20px;
-    max-width: 1000px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    content: "";
+    background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/ropa.jpg');
+}
+
+.inventario-list::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    opacity: 0.5;
+    z-index: -1; 
 }
 
 .inventario-list h2 {
     text-align: center;
-    color: #333;
+    color: #f9f5f5;
     margin-bottom: 20px;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .tabla-inventario {
+    position: relative;
+    z-index: 2; 
+    background: rgba(212, 211, 209, 0.85);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+    box-sizing: border-box;
 }
-  
+
 .tabla-inventario th,
 .tabla-inventario td {
     text-align: center;
-    padding: 12px;
+    padding: 14px;
     border: 1px solid #ddd;
+    font-size: 16px;
 }
-  
+
 .tabla-inventario th {
-    background-color: #007bff;
+    background-color: #bc3131;
     color: white;
     font-weight: bold;
+    text-transform: uppercase;
 }
-  
+
 .tabla-inventario tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #f9f9f9;
 }
-  
+
 .tabla-inventario tr:hover {
-    background-color: #e9f7ff;
+    background-color: rgba(0, 123, 255, 0.1);
+    transition: background-color 0.3s ease;
 }
 
 .cantidad-verde {
@@ -47,62 +73,64 @@
     color: #155724;
     font-weight: bold;
 }
-  
+
 .cantidad-amarillo {
     background-color: #fff3cd;
     color: #856404;
     font-weight: bold;
 }
-  
+
 .cantidad-rojo-claro {
     background-color: #f8d7da;
     color: #721c24;
     font-weight: bold;
 }
-  
+
 .cantidad-rojo-oscuro {
     background-color: #f5c6cb;
     color: #721c24;
     font-weight: bold;
 }
-  
+
 .acciones-container {
     display: flex;
     justify-content: center;
+    gap: 10px;
 }
 
 .crear-pedido-btn,
 .recargar-btn {
     display: inline-block;
     width: 120px;
-    padding: 4px 10px;
+    padding: 8px 12px;
     font-size: 14px;
     color: white;
     text-align: center;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave */
 }
-  
+
 .crear-pedido-btn {
     background-color: #a52c2c;
 }
-  
+
 .crear-pedido-btn:hover {
     background-color: #176613;
     transform: scale(1.05);
 }
-  
+
 .recargar-btn {
     background-color: #711a57;
 }
-  
+
 .recargar-btn:hover {
     background-color: #218838;
     transform: scale(1.05);
 }
-  
+
 .tabla-inventario td {
     vertical-align: middle;
     text-align: center;
@@ -111,4 +139,3 @@
 .tabla-inventario td button {
     margin: auto;
 }
-  
