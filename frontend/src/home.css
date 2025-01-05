@@ -22,7 +22,7 @@
 }
 
 .home-header {
-  background-color: #c16e6be6; /* Fondo semitransparente */
+  background-color: #c16e6be6;
   color: white;
   padding: 20px;
   border-radius: 8px;
@@ -36,7 +36,7 @@
 }
 
 .stat-card {
-  background: rgba(176, 174, 174, 0.9); /* Fondo semitransparente */
+  background: rgba(176, 174, 174, 0.9);
   border: 1px solid #aa1f1f;
   border-radius: 8px;
   padding: 20px;

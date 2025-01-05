@@ -38,9 +38,9 @@
   margin-bottom: 20px;
   text-align: center;
   color: #333;
-  text-transform: uppercase; /* Asegura que el texto esté en mayúsculas */
-  white-space: nowrap; /* Evita que el texto se corte */
-  overflow: hidden; /* Evita desbordamientos si el texto es muy largo */
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .profile-title {
