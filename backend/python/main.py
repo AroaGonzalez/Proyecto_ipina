@@ -15,7 +15,6 @@ while True:
     try:
         print("Intentando conectar a la base de datos...")
         engine = create_engine(DATABASE_URL)
-        # Probar la conexión
         connection = engine.connect()
         print("Conexión exitosa a la base de datos.")
         connection.close()
