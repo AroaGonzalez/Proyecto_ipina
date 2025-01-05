@@ -1756,6 +1756,69 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /pedidos-eliminados/{id}:
+ *   delete:
+ *     summary: Eliminar un pedido eliminado definitivamente.
+ *     description: Permite eliminar un pedido de la lista de pedidos eliminados de forma permanente.
+ *     tags:
+ *       - Pedidos Eliminados
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del pedido eliminado que se desea eliminar definitivamente.
+ *         schema:
+ *           type: string
+ *           example: 64b3f5e7b6d3b9c9a4a1b123
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Pedido eliminado definitivamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Pedido eliminado definitivamente.
+ *       404:
+ *         description: Pedido no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Pedido no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor.
+ */
+app.delete('/pedidos-eliminados/:id', async (req, res) => {
+  try {
+    const pedido = await PedidoEliminado.findByIdAndDelete(req.params.id);
+    if (!pedido) {
+      return res.status(404).json({ message: 'Pedido no encontrado.' });
+    }
+    res.json({ message: 'Pedido eliminado definitivamente.' });
+  } catch (error) {
+    console.error('Error al eliminar pedido:', error);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
 // Iniciar el servidor
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

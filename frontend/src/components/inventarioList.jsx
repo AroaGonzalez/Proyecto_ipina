@@ -7,6 +7,12 @@ const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 function InventarioList() {
   const [inventarios, setInventarios] = useState([]);
+  const [filteredInventarios, setFilteredInventarios] = useState([]);
+  const [filters, setFilters] = useState({
+    productoId: '',
+    nombreProducto: '',
+    estado: '',
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -17,6 +23,7 @@ function InventarioList() {
       .get(`${BASE_URL}/inventario`)
       .then((response) => {
         setInventarios(response.data);
+        setFilteredInventarios(response.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -26,6 +33,46 @@ function InventarioList() {
       });
   }, []);
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
+  };
+
+  useEffect(() => {
+    let filtered = inventarios;
+
+    if (filters.productoId) {
+      filtered = filtered.filter((item) =>
+        item.productoId.toString().includes(filters.productoId)
+      );
+    }
+
+    if (filters.nombreProducto) {
+      filtered = filtered.filter((item) =>
+        item.nombreProducto.toLowerCase().includes(filters.nombreProducto.toLowerCase())
+      );
+    }
+
+    if (filters.estado) {
+      filtered = filtered.filter((item) => {
+        const estado =
+          item.cantidad > 50
+            ? 'Suficiente'
+            : item.cantidad > 20
+            ? 'Bajo'
+            : item.cantidad > 0
+            ? 'Crítico'
+            : 'Agotado';
+        return estado === filters.estado;
+      });
+    }
+
+    setFilteredInventarios(filtered);
+  }, [filters, inventarios]);
+
   const handleCreatePedido = (productoId) => {
     navigate(`/pedidos?productoId=${productoId}`);
   };
@@ -34,17 +81,17 @@ function InventarioList() {
     const cantidadSolicitada = prompt(
       '¿Cuántas unidades deseas solicitar para recargar?'
     );
-  
+
     if (!cantidadSolicitada || isNaN(cantidadSolicitada) || cantidadSolicitada <= 0) {
       alert('Cantidad no válida.');
       return;
     }
-  
+
     try {
       const response = await axios.post(`${BASE_URL}/recargar-producto/${productoId}`, {
         cantidadSolicitada: parseInt(cantidadSolicitada, 10),
       });
-      alert(response.data.message); // Mensaje del backend
+      alert(response.data.message);
     } catch (error) {
       console.error('Error al solicitar recarga:', error);
       alert('No se pudo realizar la solicitud de recarga.');
@@ -57,6 +104,35 @@ function InventarioList() {
   return (
     <div className="inventario-list">
       <h2>Inventario Actual</h2>
+
+      <div className="filters-container">
+        <input
+          type="text"
+          placeholder="Filtrar por Producto ID"
+          name="productoId"
+          value={filters.productoId}
+          onChange={handleFilterChange}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por Nombre"
+          name="nombreProducto"
+          value={filters.nombreProducto}
+          onChange={handleFilterChange}
+        />
+        <select
+          name="estado"
+          value={filters.estado}
+          onChange={handleFilterChange}
+        >
+          <option value="">Filtrar por Estado</option>
+          <option value="Suficiente">Suficiente</option>
+          <option value="Bajo">Bajo</option>
+          <option value="Crítico">Crítico</option>
+          <option value="Agotado">Agotado</option>
+        </select>
+      </div>
+
       <table className="tabla-inventario">
         <thead>
           <tr>
@@ -68,19 +144,29 @@ function InventarioList() {
           </tr>
         </thead>
         <tbody>
-          {inventarios.map((item) => {
+          {filteredInventarios.map((item) => {
+            let estado = '';
             let claseCantidad = '';
-            if (item.cantidad > 50) claseCantidad = 'cantidad-verde';
-            else if (item.cantidad > 20) claseCantidad = 'cantidad-amarillo';
-            else if (item.cantidad > 0) claseCantidad = 'cantidad-rojo-claro';
-            else claseCantidad = 'cantidad-rojo-oscuro';
+            if (item.cantidad > 50) {
+              estado = 'Suficiente';
+              claseCantidad = 'cantidad-verde';
+            } else if (item.cantidad > 20) {
+              estado = 'Bajo';
+              claseCantidad = 'cantidad-amarillo';
+            } else if (item.cantidad > 0) {
+              estado = 'Crítico';
+              claseCantidad = 'cantidad-rojo-claro';
+            } else {
+              estado = 'Agotado';
+              claseCantidad = 'cantidad-rojo-oscuro';
+            }
 
             return (
               <tr key={item.productoId}>
                 <td>{item.productoId}</td>
                 <td>{item.nombreProducto}</td>
                 <td className={claseCantidad}>{item.cantidad}</td>
-                <td>{item.cantidad > 0 ? 'Suficiente' : 'Agotado'}</td>
+                <td>{estado}</td>
                 <td>
                   <div className="acciones-container">
                     <button
@@ -89,12 +175,12 @@ function InventarioList() {
                     >
                       Crear Pedido
                     </button>
-                      <button
-                        className="recargar-btn"
-                        onClick={() => solicitarRecarga(item.productoId)}
-                      >
-                        Solicitar Recarga
-                      </button>
+                    <button
+                      className="recargar-btn"
+                      onClick={() => solicitarRecarga(item.productoId)}
+                    >
+                      Solicitar Recarga
+                    </button>
                   </div>
                 </td>
               </tr>

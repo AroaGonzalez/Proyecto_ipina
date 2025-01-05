@@ -5,13 +5,21 @@ const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const PendienteList = () => {
   const [pedidosPendientes, setPedidosPendientes] = useState([]);
+  const [filteredPedidos, setFilteredPedidos] = useState([]);
+  const [filters, setFilters] = useState({
+    tiendaId: "",
+    productoId: "",
+    cantidad: "",
+    fechaFin: "",
+  });
 
   // Cargar los pedidos pendientes desde el backend
   useEffect(() => {
     axios
       .get(`${BASE_URL}/pedidos/pendientes`) // Ruta del backend para pedidos pendientes
       .then((response) => {
-        setPedidosPendientes(response.data); // Actualizar estado con los pedidos recibidos
+        setPedidosPendientes(response.data);
+        setFilteredPedidos(response.data); // Inicializar pedidos filtrados
       })
       .catch((error) =>
         console.error(
@@ -20,6 +28,49 @@ const PendienteList = () => {
         )
       );
   }, []);
+
+  // Actualizar filtros
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
+  };
+
+  // Filtrar los pedidos cuando cambian los filtros
+  useEffect(() => {
+    let filtered = pedidosPendientes;
+
+    if (filters.tiendaId) {
+      filtered = filtered.filter((pedido) =>
+        pedido.tiendaId.toString().includes(filters.tiendaId)
+      );
+    }
+
+    if (filters.productoId) {
+      filtered = filtered.filter((pedido) =>
+        pedido.productoId.toString().includes(filters.productoId)
+      );
+    }
+
+    if (filters.cantidad) {
+      filtered = filtered.filter((pedido) =>
+        pedido.cantidadSolicitada.toString().includes(filters.cantidad)
+      );
+    }
+
+    if (filters.fechaFin) {
+      filtered = filtered.filter((pedido) =>
+        pedido.fechaFin &&
+        new Date(pedido.fechaFin)
+          .toLocaleDateString("es-ES")
+          .includes(filters.fechaFin)
+      );
+    }
+
+    setFilteredPedidos(filtered);
+  }, [filters, pedidosPendientes]);
 
   // Manejar la eliminación de un pedido
   const handleDelete = (id) => {
@@ -35,8 +86,10 @@ const PendienteList = () => {
         .delete(`${BASE_URL}/pedidos/pendientes/${id}`, config)
         .then(() => {
           alert("Pedido eliminado exitosamente");
-          // Actualizar la lista eliminando el pedido eliminado
           setPedidosPendientes((prevPedidos) =>
+            prevPedidos.filter((pedido) => pedido._id !== id)
+          );
+          setFilteredPedidos((prevPedidos) =>
             prevPedidos.filter((pedido) => pedido._id !== id)
           );
         })
@@ -53,7 +106,41 @@ const PendienteList = () => {
   return (
     <div className="pendientes-container">
       <h2>Lista de Pedidos Pendientes</h2>
-      {pedidosPendientes.length > 0 ? (
+
+      {/* Filtros */}
+      <div className="filters-container">
+        <input
+          type="text"
+          placeholder="Filtrar por Tienda ID"
+          name="tiendaId"
+          value={filters.tiendaId}
+          onChange={handleFilterChange}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por Producto ID"
+          name="productoId"
+          value={filters.productoId}
+          onChange={handleFilterChange}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por Cantidad"
+          name="cantidad"
+          value={filters.cantidad}
+          onChange={handleFilterChange}
+        />
+        <input
+          type="text"
+          placeholder="Filtrar por Fecha Fin (DD/MM/YYYY)"
+          name="fechaFin"
+          value={filters.fechaFin}
+          onChange={handleFilterChange}
+        />
+      </div>
+
+      {/* Tabla de pedidos */}
+      {filteredPedidos.length > 0 ? (
         <table className="pendiente-table">
           <thead>
             <tr>
@@ -65,13 +152,13 @@ const PendienteList = () => {
             </tr>
           </thead>
           <tbody>
-            {pedidosPendientes.map((pedido) => (
+            {filteredPedidos.map((pedido) => (
               <tr key={pedido._id}>
                 <td>{pedido.tiendaId}</td>
                 <td>{pedido.productoId}</td>
                 <td>{pedido.cantidadSolicitada}</td>
                 <td>
-                {pedido.fechaFin
+                  {pedido.fechaFin
                     ? new Date(pedido.fechaFin).toLocaleString("es-ES", {
                         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                         year: "numeric",
@@ -79,13 +166,14 @@ const PendienteList = () => {
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
-                    })
+                      })
                     : "Sin fecha asignada"}
                 </td>
                 <td>
                   <button
                     onClick={() => handleDelete(pedido._id)}
-                    className="delete-button">
+                    className="delete-button"
+                  >
                     Eliminar
                   </button>
                 </td>
