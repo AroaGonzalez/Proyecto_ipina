@@ -535,6 +535,16 @@ button:hover {
   overflow: hidden;
 }
 
+.pendiente-table input {
+  width: 90%;
+  max-width: 150px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
 .pendiente-table th,
 .pendiente-table td {
   border: 1px solid #ddd;

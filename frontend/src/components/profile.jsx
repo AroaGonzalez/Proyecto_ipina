@@ -66,7 +66,7 @@ const Profile = () => {
         {isEditing ? (
           <div>
             <label>
-              <strong>Nombre:</strong>
+              <p>Nombre:</p>
               <input
                 type="text"
                 name="name"
@@ -75,7 +75,7 @@ const Profile = () => {
               />
             </label>
             <label>
-              <strong>Correo Electrónico:</strong>
+              <p>Correo Electrónico:</p>
               <input
                 type="email"
                 name="email"
@@ -84,7 +84,7 @@ const Profile = () => {
               />
             </label>
             <label>
-              <strong>Dirección:</strong>
+              <p>Dirección:</p>
               <input
                 type="text"
                 name="address"

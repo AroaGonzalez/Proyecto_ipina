@@ -43,7 +43,6 @@ function PedidoList() {
     let filtered = pedidos;
   
     if (filters.tiendaId) {
-      // Cambiar de includes a una comparación exacta
       filtered = filtered.filter((pedido) =>
         pedido.tiendaId.toString() === filters.tiendaId
       );
@@ -59,7 +58,7 @@ function PedidoList() {
   
     if (filters.productoId) {
       filtered = filtered.filter((pedido) =>
-        pedido.productoId.toString() === filters.productoId // Cambiar también a comparación exacta si es necesario
+        pedido.productoId.toString() === filters.productoId
       );
     }
   
@@ -86,7 +85,11 @@ function PedidoList() {
 
   const handleEditClick = (pedido) => {
     setEditingPedidoId(pedido._id); // Activa la edición para este pedido
-    setEditForm(pedido); // Copia los datos del pedido actual
+    setEditForm({
+      tiendaId: pedido.tiendaId,
+      productoId: pedido.productoId,
+      cantidadSolicitada: pedido.cantidadSolicitada,
+    });
   };
 
   const handleEditChange = (e) => {
@@ -106,12 +109,10 @@ function PedidoList() {
         },
       };
   
-      // Envía solo la solicitud de actualización al pedido
       await axios.put(`${BASE_URL}/pedidos/${id}`, editForm, config);
   
       alert('Pedido actualizado con éxito');
   
-      // Actualiza el estado local de los pedidos
       setPedidos((prevPedidos) =>
         prevPedidos.map((pedido) =>
           pedido._id === id ? { ...pedido, ...editForm } : pedido
@@ -152,7 +153,6 @@ function PedidoList() {
         />
       </div>
 
-      {/* Tabla de Pedidos */}
       <div className="table-container">
         <table className="pendiente-table">
           <thead>
@@ -195,17 +195,7 @@ function PedidoList() {
                           onChange={handleEditChange}
                         />
                       </td>
-                      <td>
-                        <select
-                          name="estado"
-                          value={editForm.estado}
-                          onChange={handleEditChange}
-                        >
-                          <option value="Pendiente">Pendiente</option>
-                          <option value="Completado">Completado</option>
-                          <option value="Cancelado">Cancelado</option>
-                        </select>
-                      </td>
+                      <td>{pedido.estado}</td>
                       <td>
                         {new Date(pedido.fechaPedido).toLocaleDateString()}{" "}
                         {new Date(pedido.fechaPedido).toLocaleTimeString()}

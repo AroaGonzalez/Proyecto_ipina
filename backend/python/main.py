@@ -5,15 +5,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 import time
 
-# Configuración de la base de datos
 DATABASE_URL = "mysql+mysqlconnector://root:root@mysqldb:3306/tienda"
 
-# Declarar la base y crear el motor fuera del bucle para evitar problemas de duplicación
 Base = declarative_base()
 engine = None
 SessionLocal = None
 
-# Bucle para reintentar la conexión con la base de datos
 while True:
     try:
         print("Intentando conectar a la base de datos...")
@@ -28,14 +25,12 @@ while True:
         print(f"MySQL no está listo ({e}). Reintentando en 5 segundos...")
         time.sleep(5)
 
-# Modelo para la tabla Tiendas
 class Tienda(Base):
     __tablename__ = "tiendas"
     tiendaId = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255), nullable=False)
     direccion = Column(String(255), nullable=False)
 
-# Modelo para la tabla Inventario
 class Inventario(Base):
     __tablename__ = "inventario"
     productoId = Column(Integer, primary_key=True, index=True)
@@ -44,25 +39,21 @@ class Inventario(Base):
     umbralMinimo = Column(Integer, nullable=False)
     ultimaActualizacion = Column(TIMESTAMP, nullable=False)
 
-# Crear las tablas si no existen
 print("Creando tablas si no existen...")
 Base.metadata.create_all(bind=engine)
 
-# Inicializar FastAPI
 app = FastAPI()
 
-# Habilitar CORS para permitir que el frontend acceda a la API
 from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambia "*" por el dominio del frontend si es necesario
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Ruta para obtener todos los registros del inventario
 @app.get("/inventario/")
 async def get_inventario():
     session = SessionLocal()
@@ -81,7 +72,6 @@ async def get_inventario():
     finally:
         session.close()
 
-# Ruta para crear un nuevo registro en el inventario
 @app.post("/inventario/")
 async def create_inventario(nombreProducto: str, cantidad: int, umbralMinimo: int):
     session = SessionLocal()
@@ -104,7 +94,6 @@ async def create_inventario(nombreProducto: str, cantidad: int, umbralMinimo: in
     finally:
         session.close()
 
-# Ruta para obtener todas las tiendas
 @app.get("/tiendas/")
 async def get_tiendas():
     session = SessionLocal()
@@ -117,7 +106,6 @@ async def get_tiendas():
     finally:
         session.close()
 
-# Ruta raíz para verificar el servicio
 @app.get("/")
 async def root():
     return {"message": "Python service is running!"}
