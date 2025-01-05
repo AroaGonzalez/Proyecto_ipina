@@ -1,17 +1,40 @@
 const express = require('express');
-const mongoose = require('mongoose'); // Importar mongoose para MongoDB
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const mongoose = require('mongoose');
 const cors = require('cors'); 
-const jwt = require('jsonwebtoken'); // Para generar tokens
-const bcrypt = require('bcryptjs'); // Para hashear contraseñas
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const Pedido = require('./models/pedido'); 
-const User = require('./models/user'); // Modelo de Usuario (nuevo)
+const User = require('./models/user');
 const cron = require('node-cron');
 const PedidoEliminado = require('./models/pedidoEliminado');
 const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
-const JWT_SECRET = 'your_jwt_secret'; // Clave secreta para firmar tokens
-// Configurar Sequelize con la conexión a MySQL
+const JWT_SECRET = 'your_jwt_secret'; 
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API de Gestión de Inventario y Pedidos',
+      version: '1.0.0',
+      description: 'Documentación de la API RESTful para la gestión de inventario, pedidos y usuarios.',
+    },
+    servers: [
+      {
+        url: 'http://localhost:5000',
+      },
+    ],
+  },
+  apis: ['./routes/*.js', './index.js'], 
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 const sequelize = new Sequelize(
   process.env.MYSQL_DATABASE || 'tienda',
   process.env.MYSQL_USER || 'root',
@@ -123,42 +146,145 @@ cron.schedule('* * * * *', async () => {
   }
 });
 
-// Ruta de prueba
+
 app.get('/', (req, res) => {
   res.send('Node.js service running!');
 });
 
-// Middleware para verificar autenticación
 function authenticateToken(req, res, next) {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).json({ message: 'Token requerido' });
 
   jwt.verify(token.split(' ')[1], JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
-    req.user = user; // Aquí se asigna el usuario al objeto `req.user`
+    req.user = user;
     next();
   });
 }
 
-// Crear un nuevo usuario (registro)
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Registro de un nuevo usuario.
+ *     description: Permite registrar un nuevo usuario proporcionando un nombre de usuario y una contraseña. La contraseña se almacena de manera segura usando hashing.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nombre de usuario único.
+ *                 example: usuario123
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del usuario.
+ *                 example: password123
+ *     responses:
+ *       201:
+ *         description: Usuario registrado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario registrado exitosamente
+ *       400:
+ *         description: Faltan datos o el usuario ya existe.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario y contraseña requeridos
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error inesperado en el servidor
+ */
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
       return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
   }
   try {
-      const hashedPassword = await bcrypt.hash(password, 10); // Hashea la contraseña
+      const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = new User({ username, password: hashedPassword });
       await newUser.save();
       res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
-      if (error.code === 11000) { // Código para error de clave duplicada en MongoDB
+      if (error.code === 11000) { 
           return res.status(400).json({ message: 'El usuario ya existe' });
       }
       res.status(500).json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * /checkUser:
+ *   post:
+ *     summary: Verifica si un usuario existe.
+ *     description: Comprueba si un nombre de usuario específico ya está registrado en el sistema.
+ *     tags:
+ *       - Usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: El nombre de usuario a verificar.
+ *                 example: usuario123
+ *     responses:
+ *       200:
+ *         description: Verificación exitosa.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   description: Indica si el usuario existe o no.
+ *                   example: true
+ *       400:
+ *         description: Nombre de usuario faltante en la solicitud.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: El nombre de usuario es requerido
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
 app.post('/checkUser', async (req, res) => {
   const { username } = req.body;
   if (!username) {
@@ -177,6 +303,82 @@ app.post('/checkUser', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Iniciar sesión en el sistema.
+ *     description: Permite a un usuario autenticarse proporcionando un nombre de usuario y contraseña válidos. Devuelve un token JWT para acceder a los recursos protegidos.
+ *     tags:
+ *       - Autenticación
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: El nombre de usuario registrado.
+ *                 example: usuario123
+ *               password:
+ *                 type: string
+ *                 description: La contraseña correspondiente al usuario.
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: Token JWT generado para el usuario autenticado.
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Faltan datos requeridos en la solicitud.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario y contraseña requeridos
+ *       401:
+ *         description: Contraseña incorrecta.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña incorrecta
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error inesperado en el servidor
+ */
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -197,53 +399,112 @@ app.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /pedidos:
+ *   post:
+ *     summary: Crear un nuevo pedido.
+ *     description: Permite a un usuario autenticado crear un nuevo pedido con información de la tienda, producto, cantidad y estado.
+ *     tags:
+ *       - Pedidos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tiendaId:
+ *                 type: string
+ *                 description: ID de la tienda donde se realiza el pedido.
+ *                 example: "1"
+ *               productoId:
+ *                 type: string
+ *                 description: ID del producto solicitado.
+ *                 example: "101"
+ *               cantidadSolicitada:
+ *                 type: number
+ *                 description: Cantidad del producto solicitado.
+ *                 example: 10
+ *               estado:
+ *                 type: string
+ *                 description: Estado del pedido, que puede ser "Pendiente" o "Completado".
+ *                 enum: ["Pendiente", "Completado"]
+ *                 example: "Pendiente"
+ *               fechaFin:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Fecha límite para completar el pedido (solo para pedidos "Pendientes").
+ *                 example: "2025-01-15T12:00:00Z"
+ *     responses:
+ *       201:
+ *         description: Pedido creado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Pedido'
+ *       400:
+ *         description: Error en la validación de datos.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Todos los campos son obligatorios"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.post('/pedidos', authenticateToken, async (req, res) => {
   try {
     const { tiendaId, productoId, cantidadSolicitada, estado, fechaFin } = req.body;
 
-    // Validar campos requeridos
     if (!tiendaId || !productoId || !cantidadSolicitada || !estado) {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
-    // Validar que el estado sea "Pendiente" o "Completado"
     if (!['Pendiente', 'Completado'].includes(estado)) {
       return res.status(400).json({ message: 'Estado no permitido. Debe ser "Pendiente" o "Completado".' });
     }
 
-    // Validar fechaFin para pedidos pendientes
     if (estado === 'Pendiente' && !fechaFin) {
       return res.status(400).json({ message: 'La fecha de fin es obligatoria para pedidos pendientes.' });
     }
 
-    // Validar que el formato de fechaFin sea correcto
     if (fechaFin && isNaN(Date.parse(fechaFin))) {
       return res.status(400).json({ message: 'El formato de fecha no es válido. Debe ser una fecha válida.' });
     }
 
-    // Validar que el producto existe en el inventario (usando MySQL con Sequelize)
     const producto = await Inventario.findOne({ where: { productoId: Number(productoId) } });
     if (!producto) {
       return res.status(400).json({ message: 'Producto no válido o no disponible en el inventario.' });
     }
 
-    // Validar stock para pedidos completados
     if (estado === 'Completado' && producto.cantidad < cantidadSolicitada) {
       return res.status(400).json({ message: 'Stock insuficiente para este producto.' });
     }
 
-    // Crear el pedido en MongoDB o la base de datos correspondiente
     const nuevoPedido = new Pedido({
       tiendaId,
       productoId,
       cantidadSolicitada,
       estado,
-      fechaFin: fechaFin ? new Date(fechaFin) : null, // Asegurar que fechaFin sea un objeto Date
+      fechaFin: fechaFin ? new Date(fechaFin) : null,
     });
 
     await nuevoPedido.save();
 
-    // Actualizar el inventario en MySQL solo si el pedido está completado
     if (estado === 'Completado') {
       producto.cantidad -= cantidadSolicitada;
       await producto.save();
@@ -256,7 +517,36 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
   }
 });
 
-// Obtener todos los pedidos (solo usuarios autenticados)
+/**
+ * @swagger
+ * /pedidos:
+ *   get:
+ *     summary: Obtener todos los pedidos completados.
+ *     description: Devuelve una lista de todos los pedidos cuyo estado sea "Completado". Requiere autenticación.
+ *     tags:
+ *       - Pedidos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de pedidos completados.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pedido'
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.get('/pedidos', authenticateToken, async (req, res) => {
   try {
     const pedidos = await Pedido.find({ estado: 'Completado' }); // Solo pedidos completados
@@ -266,6 +556,34 @@ app.get('/pedidos', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /pedidos/pendientes:
+ *   get:
+ *     summary: Obtener todos los pedidos pendientes.
+ *     description: Devuelve una lista de todos los pedidos cuyo estado sea "Pendiente".
+ *     tags:
+ *       - Pedidos
+ *     responses:
+ *       200:
+ *         description: Lista de pedidos pendientes.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Pedido'
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.get('/pedidos/pendientes', async (req, res) => {
   try {
     const pedidosPendientes = await Pedido.find({ estado: "Pendiente" });
@@ -275,17 +593,92 @@ app.get('/pedidos/pendientes', async (req, res) => {
   }
 });
 
-// Obtener un pedido por ID (solo usuarios autenticados)
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Pedido:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID único del pedido generado por MongoDB.
+ *           example: "641c5f2b45e8e5a1c6f4d5e3"
+ *         tiendaId:
+ *           type: string
+ *           description: ID de la tienda donde se realizó el pedido.
+ *           example: "1"
+ *         productoId:
+ *           type: string
+ *           description: ID del producto solicitado.
+ *           example: "101"
+ *         cantidadSolicitada:
+ *           type: number
+ *           description: Cantidad del producto solicitado.
+ *           example: 10
+ *         estado:
+ *           type: string
+ *           description: Estado del pedido, que puede ser "Pendiente" o "Completado".
+ *           example: "Pendiente"
+ *         fechaPedido:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha en que se realizó el pedido.
+ *           example: "2025-01-01T12:00:00Z"
+ *         fechaFin:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha límite para completar el pedido (solo para pedidos "Pendiente").
+ *           example: "2025-01-15T12:00:00Z"
+ */
 app.get('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
-    const pedido = await Pedido.findById(req.params.id); // Buscar un pedido por ID
+    const pedido = await Pedido.findById(req.params.id); 
     if (!pedido) throw new Error('Pedido no encontrado');
-    res.json(pedido); // Responder con el pedido encontrado
+    res.json(pedido); 
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Pedido:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID único del pedido generado por MongoDB.
+ *           example: "641c5f2b45e8e5a1c6f4d5e3"
+ *         tiendaId:
+ *           type: string
+ *           description: ID de la tienda donde se realizó el pedido.
+ *           example: "1"
+ *         productoId:
+ *           type: string
+ *           description: ID del producto solicitado.
+ *           example: "101"
+ *         cantidadSolicitada:
+ *           type: number
+ *           description: Cantidad del producto solicitado.
+ *           example: 10
+ *         estado:
+ *           type: string
+ *           description: Estado del pedido, que puede ser "Pendiente" o "Completado".
+ *           example: "Pendiente"
+ *         fechaPedido:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha en que se realizó el pedido.
+ *           example: "2025-01-01T12:00:00Z"
+ *         fechaFin:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha límite para completar el pedido (solo para pedidos "Pendiente").
+ *           example: "2025-01-15T12:00:00Z"
+ */
 app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
     const { tiendaId, productoId, cantidadSolicitada, estado, fechaFin } = req.body;
@@ -337,6 +730,76 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /pedidos/{id}:
+ *   delete:
+ *     summary: Eliminar un pedido por ID.
+ *     description: Elimina un pedido específico de la base de datos y registra la información del pedido eliminado en una colección separada.
+ *     tags:
+ *       - Pedidos
+ *     security:
+ *       - bearerAuth: []  # Requiere autenticación con token.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: ID único del pedido.
+ *           example: "641c5f2b45e8e5a1c6f4d5e3"
+ *     responses:
+ *       200:
+ *         description: Pedido eliminado y registrado correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pedido eliminado y registrado correctamente."
+ *       404:
+ *         description: Pedido no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pedido no encontrado."
+ *       401:
+ *         description: No autorizado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Token requerido."
+ *       403:
+ *         description: Token inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Token inválido."
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
     const pedido = await Pedido.findById(req.params.id);
@@ -360,7 +823,60 @@ app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Nueva ruta para obtener los pedidos eliminados
+/**
+ * @swagger
+ * /pedidos-eliminados:
+ *   get:
+ *     summary: Obtener todos los pedidos eliminados.
+ *     description: Recupera una lista de todos los pedidos que han sido eliminados y registrados en la colección `PedidoEliminado`.
+ *     tags:
+ *       - Pedidos
+ *     responses:
+ *       200:
+ *         description: Lista de pedidos eliminados recuperada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                     description: ID único del registro.
+ *                     example: "641c5f2b45e8e5a1c6f4d5e3"
+ *                   tiendaId:
+ *                     type: string
+ *                     description: ID de la tienda asociada al pedido.
+ *                     example: "1"
+ *                   productoId:
+ *                     type: string
+ *                     description: ID del producto asociado al pedido.
+ *                     example: "101"
+ *                   cantidadSolicitada:
+ *                     type: number
+ *                     description: Cantidad solicitada en el pedido.
+ *                     example: 50
+ *                   estado:
+ *                     type: string
+ *                     description: Estado del pedido antes de ser eliminado.
+ *                     example: "Completado"
+ *                   fechaPedido:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Fecha en que se realizó el pedido.
+ *                     example: "2023-01-01T12:00:00.000Z"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.get('/pedidos-eliminados',  async (req, res) => {
   try {
     const pedidosEliminados = await PedidoEliminado.find();
@@ -370,6 +886,56 @@ app.get('/pedidos-eliminados',  async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /inventario:
+ *   get:
+ *     summary: Obtener todos los productos en el inventario.
+ *     description: Recupera una lista de todos los productos registrados en el inventario desde la base de datos MySQL.
+ *     tags:
+ *       - Inventario
+ *     responses:
+ *       200:
+ *         description: Lista de productos en el inventario recuperada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   productoId:
+ *                     type: integer
+ *                     description: ID único del producto.
+ *                     example: 1
+ *                   nombreProducto:
+ *                     type: string
+ *                     description: Nombre del producto.
+ *                     example: "Camisa"
+ *                   cantidad:
+ *                     type: integer
+ *                     description: Cantidad disponible del producto.
+ *                     example: 100
+ *                   umbralMinimo:
+ *                     type: integer
+ *                     description: Nivel mínimo del producto en el inventario.
+ *                     example: 10
+ *                   ultimaActualizacion:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Fecha y hora de la última actualización del producto.
+ *                     example: "2025-01-05T12:34:56.789Z"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error interno del servidor."
+ */
 app.get('/inventario', async (req, res) => {
   try {
     const inventarios = await Inventario.findAll();
@@ -379,6 +945,72 @@ app.get('/inventario', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /inventario:
+ *   post:
+ *     summary: Crear un nuevo producto en el inventario.
+ *     description: Añade un nuevo producto al inventario con los detalles proporcionados.
+ *     tags:
+ *       - Inventario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productoId:
+ *                 type: integer
+ *                 description: ID único del producto.
+ *                 example: 1
+ *               nombreProducto:
+ *                 type: string
+ *                 description: Nombre del producto.
+ *                 example: "Camisa"
+ *               cantidad:
+ *                 type: integer
+ *                 description: Cantidad disponible del producto.
+ *                 example: 100
+ *               umbralMinimo:
+ *                 type: integer
+ *                 description: Cantidad mínima requerida para el inventario.
+ *                 example: 10
+ *     responses:
+ *       201:
+ *         description: Producto creado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 productoId:
+ *                   type: integer
+ *                   description: ID único del producto.
+ *                   example: 1
+ *                 nombreProducto:
+ *                   type: string
+ *                   description: Nombre del producto.
+ *                   example: "Camisa"
+ *                 cantidad:
+ *                   type: integer
+ *                   description: Cantidad disponible del producto.
+ *                   example: 100
+ *                 umbralMinimo:
+ *                   type: integer
+ *                   description: Cantidad mínima requerida para el inventario.
+ *                   example: 10
+ *       400:
+ *         description: Error de validación o de entrada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "El producto ya existe en el inventario."
+ */
 app.post('/inventario', async (req, res) => {
   const { productoId, nombreProducto, cantidad, umbralMinimo } = req.body;
   try {
@@ -394,24 +1026,102 @@ app.post('/inventario', async (req, res) => {
   }
 });
 
-// Actualizar stock de un producto
+/**
+ * @swagger
+ * /inventario/{id}:
+ *   put:
+ *     summary: Actualizar la cantidad de un producto en el inventario.
+ *     description: Ajusta la cantidad disponible de un producto en el inventario. La cantidad puede ser positiva o negativa.
+ *     tags:
+ *       - Inventario
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID único del producto en el inventario.
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cantidad:
+ *                 type: integer
+ *                 description: Cantidad a ajustar (puede ser positiva o negativa).
+ *                 example: -10
+ *     responses:
+ *       200:
+ *         description: Producto actualizado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 productoId:
+ *                   type: integer
+ *                   description: ID único del producto.
+ *                   example: 1
+ *                 nombreProducto:
+ *                   type: string
+ *                   description: Nombre del producto.
+ *                   example: "Camisa"
+ *                 cantidad:
+ *                   type: integer
+ *                   description: Cantidad disponible después de la actualización.
+ *                   example: 90
+ *                 umbralMinimo:
+ *                   type: integer
+ *                   description: Cantidad mínima requerida para el inventario.
+ *                   example: 10
+ *       404:
+ *         description: Producto no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Producto no encontrado"
+ *       400:
+ *         description: Stock insuficiente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Stock insuficiente"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error al actualizar inventario"
+ */
 app.put('/inventario/:id', async (req, res) => {
   try {
-    const { cantidad } = req.body; // Cantidad que se va a ajustar (puede ser positiva o negativa)
+    const { cantidad } = req.body; 
     const productoId = req.params.id;
 
-    // Buscar el producto en el inventario
     const producto = await Inventario.findOne({ productoId });
     if (!producto) {
       return res.status(404).json({ message: 'Producto no encontrado' });
     }
 
-    // Verificar que el nuevo stock no sea negativo
     if (producto.cantidad + cantidad < 0) {
       return res.status(400).json({ message: 'Stock insuficiente' });
     }
 
-    // Ajustar la cantidad correctamente
     producto.cantidad += cantidad;
     await producto.save();
 
@@ -422,6 +1132,47 @@ app.put('/inventario/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tiendas:
+ *   get:
+ *     summary: Obtiene todas las tiendas registradas.
+ *     description: Devuelve una lista de todas las tiendas disponibles en la base de datos.
+ *     tags:
+ *       - Tiendas
+ *     responses:
+ *       200:
+ *         description: Lista de tiendas obtenida exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   tiendaId:
+ *                     type: integer
+ *                     description: ID único de la tienda.
+ *                     example: 1
+ *                   nombre:
+ *                     type: string
+ *                     description: Nombre de la tienda.
+ *                     example: "Zara Gran Vía"
+ *                   direccion:
+ *                     type: string
+ *                     description: Dirección de la tienda.
+ *                     example: "Gran Vía 32, Madrid"
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error al obtener las tiendas"
+ */
 app.get('/tiendas', async (req, res) => {
   try {
     const tiendas = await Tienda.findAll();
@@ -431,6 +1182,67 @@ app.get('/tiendas', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tiendas:
+ *   post:
+ *     summary: Registra una nueva tienda.
+ *     description: Crea una nueva tienda en la base de datos con la información proporcionada.
+ *     tags:
+ *       - Tiendas
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tiendaId:
+ *                 type: integer
+ *                 description: ID único de la tienda.
+ *                 example: 41
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre de la tienda.
+ *                 example: "Zara Sevilla"
+ *               direccion:
+ *                 type: string
+ *                 description: Dirección de la tienda.
+ *                 example: "Calle Sierpes 10, Sevilla"
+ *     responses:
+ *       201:
+ *         description: Tienda registrada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tiendaId:
+ *                   type: integer
+ *                   description: ID único de la tienda.
+ *                   example: 41
+ *                 nombre:
+ *                   type: string
+ *                   description: Nombre de la tienda.
+ *                   example: "Zara Sevilla"
+ *                 direccion:
+ *                   type: string
+ *                   description: Dirección de la tienda.
+ *                   example: "Calle Sierpes 10, Sevilla"
+ *       400:
+ *         description: Error en la solicitud (falta de campos requeridos o error al guardar).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Todos los campos son obligatorios"
+ *                 error:
+ *                   type: string
+ *                   example: "Error al guardar la tienda en la base de datos"
+ */
 app.post('/tiendas', async (req, res) => {
   const { tiendaId, nombre, direccion } = req.body;
   if (!tiendaId || !nombre || !direccion) {
@@ -445,10 +1257,57 @@ app.post('/tiendas', async (req, res) => {
   }
 });
 
-// Eliminar un pedido pendiente por ID
+/**
+ * @swagger
+ * /pedidos/pendientes/{id}:
+ *   delete:
+ *     summary: Elimina un pedido pendiente por su ID.
+ *     description: Permite eliminar un pedido pendiente de la base de datos utilizando su ID.
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del pedido pendiente a eliminar.
+ *         example: 63f3b7f67e7d4b0012345678
+ *     responses:
+ *       200:
+ *         description: Pedido eliminado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Pedido eliminado exitosamente
+ *       404:
+ *         description: Pedido no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Pedido no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
 app.delete('/pedidos/pendientes/:id', async (req, res) => {
   try {
-    const pedido = await Pedido.findByIdAndDelete(req.params.id); // Buscar y eliminar el pedido
+    const pedido = await Pedido.findByIdAndDelete(req.params.id); 
     if (!pedido) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
@@ -459,6 +1318,71 @@ app.delete('/pedidos/pendientes/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     summary: Obtiene el perfil del usuario autenticado.
+ *     description: Devuelve la información del perfil del usuario que realizó la solicitud, siempre y cuando esté autenticado correctamente.
+ *     tags:
+ *       - Perfil
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil del usuario autenticado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario.
+ *                   example: usuario123
+ *                 name:
+ *                   type: string
+ *                   description: Nombre del usuario.
+ *                   example: Juan Pérez
+ *                 email:
+ *                   type: string
+ *                   description: Correo electrónico del usuario.
+ *                   example: juan.perez@example.com
+ *                 address:
+ *                   type: string
+ *                   description: Dirección del usuario.
+ *                   example: Calle Falsa 123, Ciudad Ejemplo
+ *       401:
+ *         description: Token de autenticación faltante o inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Token inválido
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
 app.get('/profile', authenticateToken, async (req, res) => {
   try {
       const user = await User.findOne({ username: req.user.username });
@@ -475,35 +1399,145 @@ app.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /profile:
+ *   put:
+ *     summary: Actualizar el perfil del usuario autenticado.
+ *     description: Permite a un usuario autenticado actualizar su nombre, correo electrónico o dirección.
+ *     tags:
+ *       - Perfil
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nombre del usuario.
+ *                 example: Juan Pérez
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico del usuario.
+ *                 example: juan.perez@example.com
+ *               address:
+ *                 type: string
+ *                 description: Dirección del usuario.
+ *                 example: Calle Falsa 123, Ciudad Ejemplo
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                   description: Nombre de usuario.
+ *                   example: usuario123
+ *                 name:
+ *                   type: string
+ *                   description: Nombre del usuario actualizado.
+ *                   example: Juan Pérez
+ *                 email:
+ *                   type: string
+ *                   description: Correo electrónico actualizado.
+ *                   example: juan.perez@example.com
+ *                 address:
+ *                   type: string
+ *                   description: Dirección actualizada.
+ *                   example: Calle Falsa 123, Ciudad Ejemplo
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no encontrado
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
 app.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { name, email, address } = req.body; // Campos a actualizar
+    const { name, email, address } = req.body;
     const user = await User.findOneAndUpdate(
-      { username: req.user.username }, // Buscar por el usuario autenticado
-      { name, email, address }, // Actualizar los campos
-      { new: true } // Retornar el usuario actualizado
+      { username: req.user.username },
+      { name, email, address },
+      { new: true }
     );
 
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    res.json(user); // Retornar el usuario actualizado
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+/**
+ * @swagger
+ * /stats:
+ *   get:
+ *     summary: Obtiene estadísticas generales del sistema.
+ *     description: Devuelve estadísticas sobre pedidos pendientes, productos en inventario y tiendas registradas.
+ *     tags:
+ *       - Estadísticas
+ *     responses:
+ *       200:
+ *         description: Estadísticas obtenidas con éxito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 pedidosPendientes:
+ *                   type: integer
+ *                   description: Número total de pedidos en estado pendiente.
+ *                   example: 15
+ *                 productosInventario:
+ *                   type: integer
+ *                   description: Número total de productos registrados en el inventario.
+ *                   example: 200
+ *                 tiendasRegistradas:
+ *                   type: integer
+ *                   description: Número total de tiendas registradas.
+ *                   example: 40
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor
+ */
 app.get('/stats', async (req, res) => {
   try {
-    // Conteo de pedidos pendientes (MongoDB)
     const pedidosPendientes = await Pedido.countDocuments({ estado: 'Pendiente' });
 
-    // Conteo de productos en inventario (MySQL con Sequelize)
-    const productosInventario = await Inventario.count(); // Cambiado de MongoDB a Sequelize
+    const productosInventario = await Inventario.count();
 
-    // Conteo de tiendas registradas (MySQL con Sequelize)
-    const tiendasRegistradas = await Tienda.count(); // Cambiado de MongoDB a Sequelize
+    const tiendasRegistradas = await Tienda.count();
 
     res.json({
       pedidosPendientes,
@@ -515,29 +1549,94 @@ app.get('/stats', async (req, res) => {
   }
 });
 
-
+/**
+ * @swagger
+ * /recargar-producto/{id}:
+ *   post:
+ *     summary: Solicita recarga de stock para un producto específico.
+ *     description: Permite realizar una solicitud de recarga para un producto del inventario, especificando la cantidad requerida.
+ *     tags:
+ *       - Inventario
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del producto que requiere recarga.
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cantidadSolicitada:
+ *                 type: integer
+ *                 description: Cantidad solicitada para la recarga.
+ *                 example: 50
+ *     responses:
+ *       200:
+ *         description: Solicitud de recarga procesada con éxito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Solicitud de recarga para "Camisa" aceptada. Se recargará cuando el proveedor lo apruebe.
+ *       400:
+ *         description: Solicitud inválida (datos faltantes o erróneos).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Cantidad solicitada no válida.
+ *       404:
+ *         description: Producto no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Producto no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error interno del servidor.
+ */
 app.post('/recargar-producto/:id', async (req, res) => {
   try {
-      const { id } = req.params; // ID del producto desde el parámetro
-      const { cantidadSolicitada } = req.body; // Cantidad solicitada desde el cuerpo de la solicitud
+      const { id } = req.params; 
+      const { cantidadSolicitada } = req.body;
 
       if (!cantidadSolicitada || cantidadSolicitada <= 0) {
           return res.status(400).json({ message: 'Cantidad solicitada no válida.' });
       }
 
-      // Buscar el producto en el inventario (tabla MySQL con Sequelize)
       const producto = await Inventario.findOne({ where: { productoId: Number(id) } });
 
       if (!producto) {
           return res.status(404).json({ message: 'Producto no encontrado.' });
       }
 
-      // Simulación: registrar el evento
       console.log(
           `Solicitud de recarga recibida para el producto ${producto.nombreProducto} (ID: ${id}). Cantidad solicitada: ${cantidadSolicitada}`
       );
 
-      // Devuelve una respuesta ficticia
       res.status(200).json({
           message: `Solicitud de recarga para "${producto.nombreProducto}" aceptada. Se recargará cuando el proveedor lo apruebe.`,
       });
@@ -547,6 +1646,83 @@ app.post('/recargar-producto/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /profile/change-password:
+ *   put:
+ *     summary: Cambiar la contraseña del usuario autenticado.
+ *     description: Permite a un usuario autenticado cambiar su contraseña proporcionando la contraseña actual y la nueva.
+ *     tags:
+ *       - Perfil
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Contraseña actual del usuario.
+ *                 example: password123
+ *               newPassword:
+ *                 type: string
+ *                 description: Nueva contraseña que desea establecer el usuario.
+ *                 example: newpassword456
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña actualizada exitosamente.
+ *       400:
+ *         description: Solicitud inválida (datos faltantes o contraseña incorrecta).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Ambas contraseñas son requeridas.
+ *       401:
+ *         description: Usuario no autenticado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no autenticado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error inesperado en el servidor.
+ */
 app.put('/profile/change-password', authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
@@ -555,7 +1731,6 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Aquí se asegura que `req.user` existe
     if (!req.user || !req.user.username) {
       return res.status(401).json({ message: 'Usuario no autenticado.' });
     }
@@ -565,13 +1740,11 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    // Verificar la contraseña actual
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
     }
 
-    // Hashear la nueva contraseña
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
 
