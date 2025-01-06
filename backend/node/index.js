@@ -217,17 +217,15 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-      // Verificar si el usuario ya existe
-      const existingUser = await User.findOne({ username }); // Busca un usuario con ese nombre de usuario
+      const existingUser = await User.findOne({ username });
       if (existingUser) {
           return res.status(400).json({ message: 'El usuario ya está registrado' });
       }
 
-      // Crear un nuevo usuario
-      const hashedPassword = await bcrypt.hash(password, 10); // Encriptar la contraseña
+      const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = new User({ username, password: hashedPassword });
 
-      await newUser.save(); // Guardar el nuevo usuario
+      await newUser.save();
       res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
       console.error(error);
