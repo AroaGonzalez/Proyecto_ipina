@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../pedidosEliminadosList.css'; // Archivo CSS para estilos
+import '../pedidosEliminadosList.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -109,7 +109,6 @@ const PedidosEliminadosList = () => {
     <div className="pedidos-eliminados">
       <h2>Pedidos Eliminados</h2>
 
-      {/* Filtros */}
       <div className="filters-container">
         <input
           type="text"
@@ -148,7 +147,6 @@ const PedidosEliminadosList = () => {
         />
       </div>
 
-      {/* Tabla */}
       {filteredPedidos.length > 0 ? (
         <table className="custom-table">
           <thead>

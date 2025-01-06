@@ -1,10 +1,7 @@
--- Crear base de datos si no existe
 CREATE DATABASE IF NOT EXISTS tienda;
 
--- Usar la base de datos
 USE tienda;
 
--- Crear la tabla "tiendas"
 CREATE TABLE IF NOT EXISTS tiendas (
     tiendaId INT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
@@ -54,7 +51,6 @@ VALUES
     (39, 'Pull&Bear San Fernando', 'Calle Real 132, San Fernando'),
     (40, 'Oysho Getafe', 'Calle Madrid 3, Getafe');
 
--- Crear la tabla "inventario"
 CREATE TABLE IF NOT EXISTS inventario (
     productoId INT PRIMARY KEY,
     nombreProducto VARCHAR(255) NOT NULL,
@@ -63,7 +59,6 @@ CREATE TABLE IF NOT EXISTS inventario (
     ultimaActualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Insertar datos iniciales en "inventario" con IDs del 1 al 20
 INSERT INTO inventario (productoId, nombreProducto, cantidad, umbralMinimo)
 VALUES
     (1, 'Camisa', 100, 10),
@@ -87,6 +82,5 @@ VALUES
     (19, 'Reloj', 100, 10),
     (20, 'Bolso', 100, 15);
 
--- Crear índices para optimizar consultas
 CREATE INDEX idx_productoId ON inventario (productoId);
 CREATE INDEX idx_nombreProducto ON inventario (nombreProducto);

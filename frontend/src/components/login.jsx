@@ -14,17 +14,15 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Envía las credenciales al backend para iniciar sesión
       const response = await axios.post('http://localhost:5000/login', form);
-      localStorage.setItem('token', response.data.token); // Guarda el token
-      navigate('/home'); // Redirige al inicio
+      localStorage.setItem('token', response.data.token);
+      navigate('/home');
     } catch (error) {
       alert('Usuario o contraseña incorrectos.');
     }
   };
 
   const handleRegisterRedirect = () => {
-    // Redirige a la página de registro
     navigate('/register');
   };
 

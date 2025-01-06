@@ -40,9 +40,9 @@ const sequelize = new Sequelize(
   process.env.MYSQL_USER || 'root',
   process.env.MYSQL_PASSWORD || 'root',
   {
-    host: process.env.MYSQL_HOST || 'mysqldb', // Cambiar si es necesario a '127.0.0.1'
+    host: process.env.MYSQL_HOST || 'mysqldb',
     dialect: 'mysql',
-    logging: console.log, // Habilitar logs para depuración
+    logging: console.log,
   }
 );
 
@@ -56,25 +56,24 @@ async function connectToMongoDB() {
     console.log('Conexión a MongoDB establecida.');
   } catch (error) {
     console.error('Error al conectar a MongoDB:', error.message);
-    process.exit(1); // Finaliza el proceso si la conexión falla
+    process.exit(1);
   }
 }
 
 connectToMongoDB();
 
-
 async function connectWithRetry() {
-  let retries = 10; // Aumentar el número de intentos
+  let retries = 10;
   while (retries > 0) {
     try {
-      await sequelize.sync({ alter: true }); // Sincroniza tablas, ajusta si es necesario
+      await sequelize.sync({ alter: true });
       console.log('Conexión a MySQL establecida y tablas sincronizadas.');
       break;
     } catch (error) {
       console.error('Error al conectar o sincronizar con MySQL:', error.message);
       retries -= 1;
       console.log(`Reintentando conexión en 10 segundos (${retries} intentos restantes)...`);
-      await new Promise((resolve) => setTimeout(resolve, 10000)); // Espera más tiempo entre intentos
+      await new Promise((resolve) => setTimeout(resolve, 10000));
     }
   }
   if (retries === 0) {
@@ -85,7 +84,6 @@ async function connectWithRetry() {
 
 connectWithRetry();
 
-// Definir el modelo para "inventario" (MySQL)
 const Inventario = sequelize.define(
   'Inventario',
   {
@@ -98,7 +96,6 @@ const Inventario = sequelize.define(
   { tableName: 'inventario', timestamps: false }
 );
 
-// Definir el modelo para "tiendas" (MySQL)
 const Tienda = sequelize.define(
   'Tienda',
   {
@@ -109,14 +106,12 @@ const Tienda = sequelize.define(
   { tableName: 'tiendas', timestamps: false }
 );
 
-// Configurar CORS para permitir solicitudes desde otros dominios
 app.use(cors({
   origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Middleware para parsear JSON
 app.use(express.json());
 
 cron.schedule('* * * * *', async () => {
@@ -127,11 +122,10 @@ cron.schedule('* * * * *', async () => {
     for (const pedido of pendientes) {
       pedido.estado = 'Completado';
 
-      // Actualizar inventario al completar el pedido
       const producto = await Inventario.findOne({ where: { productoId: pedido.productoId } });
       if (producto) {
         producto.cantidad -= pedido.cantidadSolicitada;
-        if (producto.cantidad < 0) producto.cantidad = 0; // Asegurar que no sea negativo
+        if (producto.cantidad < 0) producto.cantidad = 0;
         await producto.save();
       } else {
         console.error(`Producto con ID ${pedido.productoId} no encontrado en el inventario`);
@@ -217,19 +211,27 @@ function authenticateToken(req, res, next) {
  */
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
+  
   if (!username || !password) {
       return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
   }
+
   try {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Verificar si el usuario ya existe
+      const existingUser = await User.findOne({ username }); // Busca un usuario con ese nombre de usuario
+      if (existingUser) {
+          return res.status(400).json({ message: 'El usuario ya está registrado' });
+      }
+
+      // Crear un nuevo usuario
+      const hashedPassword = await bcrypt.hash(password, 10); // Encriptar la contraseña
       const newUser = new User({ username, password: hashedPassword });
-      await newUser.save();
+
+      await newUser.save(); // Guardar el nuevo usuario
       res.status(201).json({ message: 'Usuario registrado exitosamente' });
   } catch (error) {
-      if (error.code === 11000) { 
-          return res.status(400).json({ message: 'El usuario ya existe' });
-      }
-      res.status(500).json({ error: error.message });
+      console.error(error);
+      res.status(500).json({ error: 'Error inesperado en el servidor' });
   }
 });
 
@@ -389,7 +391,7 @@ app.post('/login', async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    const isMatch = await bcrypt.compare(password, user.password); // Compara la contraseña
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
     const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
@@ -549,7 +551,7 @@ app.post('/pedidos', authenticateToken, async (req, res) => {
  */
 app.get('/pedidos', authenticateToken, async (req, res) => {
   try {
-    const pedidos = await Pedido.find({ estado: 'Completado' }); // Solo pedidos completados
+    const pedidos = await Pedido.find({ estado: 'Completado' });
     res.json(pedidos);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -683,25 +685,21 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
   try {
     const { tiendaId, productoId, cantidadSolicitada, estado, fechaFin } = req.body;
 
-    // Obtener el pedido previo
     const pedidoAnterior = await Pedido.findById(req.params.id);
     if (!pedidoAnterior) {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
-    // Verificar si el producto o la cantidad han cambiado
     const productoPrevioId = pedidoAnterior.productoId;
     const cantidadPrevia = pedidoAnterior.cantidadSolicitada;
 
     if (productoPrevioId !== productoId || cantidadPrevia !== cantidadSolicitada) {
-      // Revertir inventario del producto anterior
       const productoAnterior = await Inventario.findOne({ where: { productoId: productoPrevioId } });
       if (productoAnterior) {
-        productoAnterior.cantidad += cantidadPrevia; // Revertir cantidad previa
+        productoAnterior.cantidad += cantidadPrevia;
         await productoAnterior.save();
       }
 
-      // Actualizar inventario del producto nuevo
       const productoNuevo = await Inventario.findOne({ where: { productoId } });
       if (!productoNuevo) {
         return res.status(404).json({ message: 'Producto no encontrado' });
@@ -711,11 +709,10 @@ app.put('/pedidos/:id', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: 'Stock insuficiente' });
       }
 
-      productoNuevo.cantidad -= cantidadSolicitada; // Descontar nueva cantidad
+      productoNuevo.cantidad -= cantidadSolicitada;
       await productoNuevo.save();
     }
 
-    // Actualizar el pedido
     pedidoAnterior.tiendaId = tiendaId || pedidoAnterior.tiendaId;
     pedidoAnterior.productoId = productoId;
     pedidoAnterior.cantidadSolicitada = cantidadSolicitada;
@@ -805,7 +802,6 @@ app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
     const pedido = await Pedido.findById(req.params.id);
     if (!pedido) throw new Error('Pedido no encontrado');
 
-    // Registrar el pedido eliminado
     const pedidoEliminado = new PedidoEliminado({
       tiendaId: pedido.tiendaId,
       productoId: pedido.productoId,
@@ -815,7 +811,6 @@ app.delete('/pedidos/:id', authenticateToken, async (req, res) => {
     });
     await pedidoEliminado.save();
 
-    // Eliminar el pedido original
     await pedido.deleteOne();
     res.json({ message: 'Pedido eliminado y registrado correctamente' });
   } catch (error) {
@@ -1819,7 +1814,6 @@ app.delete('/pedidos-eliminados/:id', async (req, res) => {
   }
 });
 
-// Iniciar el servidor
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });

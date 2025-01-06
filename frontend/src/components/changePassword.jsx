@@ -7,7 +7,7 @@ const ChangePassword = () => {
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const navigate = useNavigate(); // Hook para navegar entre rutas
+  const navigate = useNavigate();
 
   const handlePasswordChange = (e) => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });

@@ -6,8 +6,8 @@ const UserOptions = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('token'); // Elimina el token al cerrar sesión
-        navigate('/'); // Redirige al inicio de sesión
+        localStorage.removeItem('token');
+        navigate('/');
     };
 
     return (

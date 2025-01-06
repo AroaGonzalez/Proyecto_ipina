@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Esquema para el modelo de Pedidos Pendientes
 const PedidoSchema = new mongoose.Schema({
   tiendaId: {
     type: String,

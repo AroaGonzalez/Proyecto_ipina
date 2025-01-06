@@ -47,7 +47,7 @@ body {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  max-width: 500px; /* Ancho máximo del formulario */
+  max-width: 500px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -192,7 +192,7 @@ button:hover {
 .login label {
   display: block;
   margin: 10px 0 5px;
-  color: #333; /* Texto oscuro */
+  color: #333;
   font-weight: bold;
 }
 
@@ -210,7 +210,7 @@ button:hover {
 .login input:focus {
   outline: none;
   border: 2px solid #2575fc;
-  box-shadow: 0 0 5px rgba(37, 117, 252, 0.5); /* Sombra al enfocarse */
+  box-shadow: 0 0 5px rgba(37, 117, 252, 0.5);
 }
 
 .login button {

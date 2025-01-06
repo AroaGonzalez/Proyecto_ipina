@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../register.css'; // Archivo CSS para estilos
+import '../register.css';
 
 function Register() {
   const navigate = useNavigate();
@@ -18,16 +18,15 @@ function Register() {
     try {
       const response = await axios.post('http://localhost:5000/register', form);
 
-      // Registro exitoso: redirige al login
       alert('Registro exitoso. Redirigiendo al inicio de sesión...');
       navigate('/');
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        // Usuario ya existe: redirige al login
+
         alert('Este usuario ya está registrado. Redirigiendo al inicio de sesión...');
         navigate('/');
       } else {
-        // Otros errores
+
         setErrorMessage('Hubo un error al procesar tu registro. Por favor, inténtalo de nuevo.');
       }
     }

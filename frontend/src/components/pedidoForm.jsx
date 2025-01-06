@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 
-// URLs separadas para los backends Python y Node.js
 const BASE_URL_PYTHON = process.env.REACT_APP_PYTHON_API_URL || "http://localhost:8000";
 const BASE_URL_NODE = process.env.REACT_APP_NODE_API_URL || "http://localhost:5000";
 
@@ -23,7 +22,6 @@ const PedidoForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Cargar productos del inventario desde el backend Python
   useEffect(() => {
     axios
       .get(`${BASE_URL_PYTHON}/inventario`)
@@ -37,7 +35,6 @@ const PedidoForm = () => {
       .catch((error) => console.error("Error al obtener el inventario:", error));
   }, []);
 
-  // Cargar tiendas desde el backend Python
   useEffect(() => {
     axios
       .get(`${BASE_URL_PYTHON}/tiendas`)
@@ -72,7 +69,6 @@ const PedidoForm = () => {
           : null,
     };
 
-    // Crear pedido usando el backend Node.js
     axios
       .post(`${BASE_URL_NODE}/pedidos`, adjustedPedido, config)
       .then(() => {

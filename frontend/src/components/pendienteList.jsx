@@ -13,13 +13,12 @@ const PendienteList = () => {
     fechaFin: "",
   });
 
-  // Cargar los pedidos pendientes desde el backend
   useEffect(() => {
     axios
-      .get(`${BASE_URL}/pedidos/pendientes`) // Ruta del backend para pedidos pendientes
+      .get(`${BASE_URL}/pedidos/pendientes`)
       .then((response) => {
         setPedidosPendientes(response.data);
-        setFilteredPedidos(response.data); // Inicializar pedidos filtrados
+        setFilteredPedidos(response.data);
       })
       .catch((error) =>
         console.error(
@@ -29,7 +28,6 @@ const PendienteList = () => {
       );
   }, []);
 
-  // Actualizar filtros
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({
@@ -38,7 +36,6 @@ const PendienteList = () => {
     });
   };
 
-  // Filtrar los pedidos cuando cambian los filtros
   useEffect(() => {
     let filtered = pedidosPendientes;
 
@@ -72,7 +69,6 @@ const PendienteList = () => {
     setFilteredPedidos(filtered);
   }, [filters, pedidosPendientes]);
 
-  // Manejar la eliminación de un pedido
   const handleDelete = (id) => {
     const token = localStorage.getItem("token");
     const config = {
@@ -107,7 +103,6 @@ const PendienteList = () => {
     <div className="pendientes-container">
       <h2>Lista de Pedidos Pendientes</h2>
 
-      {/* Filtros */}
       <div className="filters-container">
         <input
           type="text"
@@ -139,7 +134,6 @@ const PendienteList = () => {
         />
       </div>
 
-      {/* Tabla de pedidos */}
       {filteredPedidos.length > 0 ? (
         <table className="pendiente-table">
           <thead>

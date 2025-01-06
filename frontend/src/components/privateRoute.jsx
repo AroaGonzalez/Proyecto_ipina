@@ -13,7 +13,7 @@ const PrivateRoute = ({ children }) => {
     const decodedToken = jwtDecode(token);
     const isExpired = decodedToken.exp * 1000 < Date.now();
     if (isExpired) {
-      localStorage.removeItem('token'); // Elimina el token si expiró
+      localStorage.removeItem('token');
       return <Navigate to="/register" />;
     }
   } catch (error) {

@@ -71,20 +71,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
     restart: always
 
-  api-gateway:
-    build: ./gateway
-    container_name: api-gateway
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./gateway:/app:ro
-    depends_on:
-      - node-service
-      - python-service
-    networks:
-      - app-network
-    restart: always
-
 volumes:
   mongo-data:
   mysql-data:

@@ -84,7 +84,7 @@ function PedidoList() {
   };
 
   const handleEditClick = (pedido) => {
-    setEditingPedidoId(pedido._id); // Activa la edición para este pedido
+    setEditingPedidoId(pedido._id);
     setEditForm({
       tiendaId: pedido.tiendaId,
       productoId: pedido.productoId,
@@ -118,7 +118,7 @@ function PedidoList() {
           pedido._id === id ? { ...pedido, ...editForm } : pedido
         )
       );
-      setEditingPedidoId(null); // Salir del modo de edición
+      setEditingPedidoId(null);
     } catch (error) {
       console.error('Error al actualizar pedido:', error.response?.data || error);
       alert('No se pudo actualizar el pedido');

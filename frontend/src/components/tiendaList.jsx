@@ -79,7 +79,6 @@ const TiendaList = () => {
     <div className="inventario-list">
       <h2>Lista de Tiendas</h2>
 
-      {/* Filtros */}
       <div className="filters-container">
         <input
           type="text"
@@ -104,7 +103,6 @@ const TiendaList = () => {
         />
       </div>
 
-      {/* Tabla de Tiendas */}
       <table className="tabla-inventario">
         <thead>
           <tr>

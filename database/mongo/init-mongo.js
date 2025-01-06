@@ -6,6 +6,6 @@ db.createUser({
     ]
   });
   
-  db = db.getSiblingDB("tienda"); // Cambia a la base de datos "tienda"
+  db = db.getSiblingDB("tienda");
   db.createCollection("pedidos");
   

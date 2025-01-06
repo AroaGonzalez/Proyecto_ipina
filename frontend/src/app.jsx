@@ -13,7 +13,7 @@ import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
 import UserOptions from './components/userOptions';
 import Home from './components/home';
-import ChangePassword from './components/changePassword'; // Importar el componente
+import ChangePassword from './components/changePassword';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -29,7 +29,6 @@ function Layout({ children }) {
 }
 
 function App() {
-  // Define el estado compartido para los pedidos
   const [pedidos, setPedidos] = useState([]);
 
   return (
@@ -103,7 +102,7 @@ function App() {
             }
           />
           <Route
-            path="/change-password" // Nueva ruta para el cambio de contraseña
+            path="/change-password"
             element={
               <PrivateRoute>
                 <ChangePassword />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../profile.css'; // Asegúrate de tener el CSS
+import '../profile.css';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
