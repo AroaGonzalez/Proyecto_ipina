@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import PedidosForm from './components/pedidoForm';
+import PedidosForm from './components/pedidoForm'; // Nuevo Alias → Pedidos
 import PedidoList from './components/pedidoList';
 import Login from './components/login';
 import Menu from './components/menu';
 import PrivateRoute from './components/privateRoute';
 import Register from './components/register';
-import InventarioList from './components/inventarioList';
-import TiendaList from './components/tiendaList';
+import InventarioList from './components/inventarioList'; // Parametrización de Artículos → Inventario
+import TiendaList from './components/tiendaList'; // Consulta de Tienda → Consultar Tiendas
 import PendientesList from './components/pendienteList';
 import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
@@ -45,11 +45,13 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          {/* 🔹 Sección Pedidos */}
           <Route
-            path="/pedidos"
+            path="/pedidos-pendientes"
             element={
               <PrivateRoute>
-                <PedidosForm pedidos={pedidos} setPedidos={setPedidos} />
+                <PendientesList />
               </PrivateRoute>
             }
           />
@@ -62,30 +64,6 @@ function App() {
             }
           />
           <Route
-            path="/inventario"
-            element={
-              <PrivateRoute>
-                <InventarioList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/consultar-tiendas"
-            element={
-              <PrivateRoute>
-                <TiendaList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/pedidos-pendientes"
-            element={
-              <PrivateRoute>
-                <PendientesList />
-              </PrivateRoute>
-            }
-          />
-          <Route
             path="/pedidos-eliminados"
             element={
               <PrivateRoute>
@@ -93,6 +71,34 @@ function App() {
               </PrivateRoute>
             }
           />
+
+          {/* 🔹 Sección Parametrización */}
+          <Route
+            path="/parametrizacion-articulos"
+            element={
+              <PrivateRoute>
+                <InventarioList /> {/* Parametrización de Artículos → Inventario */}
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/consulta-tienda"
+            element={
+              <PrivateRoute>
+                <TiendaList /> {/* Consulta de Tienda → Consultar Tiendas */}
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/nuevo-alias"
+            element={
+              <PrivateRoute>
+                <PedidosForm pedidos={pedidos} setPedidos={setPedidos} /> {/* Nuevo Alias → Pedidos */}
+              </PrivateRoute>
+            }
+          />
+
+          {/* 🔹 Perfil y Seguridad */}
           <Route
             path="/profile"
             element={

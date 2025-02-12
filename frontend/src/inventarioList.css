@@ -1,3 +1,4 @@
+/* 🔹 Contenedor principal */
 .inventario-list {
     text-align: center;
     padding: 20px;
@@ -10,6 +11,7 @@
     overflow: hidden;
 }
 
+/* 🔹 Efecto de desenfoque en el fondo */
 .inventario-list::before {
     content: "";
     position: absolute;
@@ -17,99 +19,151 @@
     left: 0;
     width: 100%;
     height: 100%;
-    backdrop-filter: blur(8px);
-    opacity: 0.5;
+    backdrop-filter: blur(6px);
+    opacity: 0.6;
     z-index: -1;
 }
 
+/* 🔹 Título principal */
 .inventario-list h2 {
     z-index: 1;
     position: relative;
     font-family: 'Arial Black', sans-serif;
-    color: rgb(247, 243, 243);
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
 }
 
+/* 🔹 Contenedor de los botones superiores */
+.botones-superiores {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-right: 20px;
+}
+
+/* 🔹 Contenedor de filtros (oculto por defecto) */
+.filters-container {
+    display: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    background-color: rgba(240, 240, 240, 0.95);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    max-height: 0;
+    overflow: hidden;
+}
+
+/* 🔹 Mostrar filtros cuando se abren */
+.filters-container.open {
+    display: flex;
+    max-height: 500px;
+    opacity: 1;
+}
+
+/* 🔹 Estilos de inputs y selects dentro de los filtros */
+.filters-container input,
+.filters-container select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 150px;
+    background-color: white;
+}
+
+/* 🔹 Contenedor de la tabla */
 .tabla-inventario {
     z-index: 1;
     position: relative;
-    width: 80%;
+    width: 90%;
+    max-width: 1200px;
     margin: 20px auto;
     border-collapse: collapse;
     font-family: Arial, sans-serif;
     font-size: 16px;
-    background: rgba(167, 96, 96, 0.8);
+    background: rgba(0, 0, 0, 0.7);
     border-radius: 8px;
     overflow: hidden;
 }
 
+/* 🔹 Estilos de las celdas */
 .tabla-inventario th,
 .tabla-inventario td {
     border: 1px solid #ddd;
-    padding: 10px;
+    padding: 12px;
     text-align: center;
 }
 
+/* 🔹 Cabecera de la tabla */
 .tabla-inventario th {
-    background-color: #0c0c0c;
+    background-color: #222;
     color: white;
     text-transform: uppercase;
 }
 
+/* 🔹 Filas alternas */
 .tabla-inventario tr:nth-child(even) {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .tabla-inventario tr:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* 🔹 Colores de cantidades */
 .cantidad-verde {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: #28a745;
+    color: white;
     font-weight: bold;
+    border-radius: 4px;
+    padding: 5px;
 }
 
 .cantidad-amarillo {
-    background-color: #fff3cd;
-    color: #856404;
+    background-color: #ffc107;
+    color: black;
     font-weight: bold;
+    border-radius: 4px;
+    padding: 5px;
 }
 
 .cantidad-rojo-claro {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: #ff6f61;
+    color: white;
     font-weight: bold;
+    border-radius: 4px;
+    padding: 5px;
 }
 
 .cantidad-rojo-oscuro {
-    background-color: #f5c6cb;
-    color: #721c24;
+    background-color: #dc3545;
+    color: white;
     font-weight: bold;
+    border-radius: 4px;
+    padding: 5px;
 }
 
+/* 🔹 Contenedor de acciones */
 .acciones-container {
     display: flex;
     justify-content: center;
     gap: 10px;
 }
 
-.crear-pedido-btn,
-.recargar-btn {
-    display: inline-block;
-    width: 120px;
-    padding: 8px 12px;
-    font-size: 14px;
+/* 🔹 Botón de Crear Pedido */
+.crear-pedido-btn {
+    background-color: #e63946;
     color: white;
-    text-align: center;
+    font-size: 14px;
+    padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.crear-pedido-btn {
-    background-color: #a52c2c;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .crear-pedido-btn:hover {
@@ -117,20 +171,119 @@
     transform: scale(1.05);
 }
 
+.buttons-container {
+    display: flex;
+    gap: 10px;
+}
+
+/* 🔹 Botón de Recarga */
 .recargar-btn {
-    background-color: #711a57;
+    background-color: #457b9d;
+    color: white;
+    font-size: 14px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .recargar-btn:hover {
-    background-color: #218838;
+    background-color: #1d3557;
     transform: scale(1.05);
 }
 
-.tabla-inventario td {
-    vertical-align: middle;
-    text-align: center;
+.header-inventario {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
 }
 
-.tabla-inventario td button {
-    margin: auto;
+.titulo-inventario {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.botones-header {
+    display: flex;
+    gap: 10px;
+}
+
+.filtros-toggle,
+.nuevo-articulo-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #000;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filtros-toggle:hover {
+    background-color: #444;
+}
+
+.nuevo-articulo-btn:hover {
+    background-color: #222;
+}
+
+.filtros-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.filtro-minimalista {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+    width: 250px;  /* Compacto */
+    margin: 10px auto;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.85); /* Fondo blanco semi-transparente */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.filtro-minimalista input {
+    flex-grow: 1;
+    width: 150px; /* Reducido */
+    padding: 5px;
+    border: none;
+    font-size: 14px;
+    outline: none;
+    background: transparent;
+    color: black; 
+}
+
+.filtro-minimalista input::placeholder {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+}
+
+.buscar-btn, .borrar-btn {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.buscar-btn:hover {
+    background-color: #444;
 }
