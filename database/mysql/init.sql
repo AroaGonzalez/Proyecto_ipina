@@ -52,35 +52,24 @@ VALUES
     (40, 'Oysho Getafe', 'Calle Madrid 3, Getafe');
 
 CREATE TABLE IF NOT EXISTS inventario (
-    productoId INT PRIMARY KEY,
-    nombreProducto VARCHAR(255) NOT NULL,
-    cantidad INT NOT NULL,
-    umbralMinimo INT NOT NULL,
-    ultimaActualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    idArticulo INT PRIMARY KEY AUTO_INCREMENT,
+    articulo VARCHAR(255) NOT NULL,
+    estado ENUM('Activo', 'Pausado') NOT NULL DEFAULT 'Activo'
 );
 
-INSERT INTO inventario (productoId, nombreProducto, cantidad, umbralMinimo)
-VALUES
-    (1, 'Camisa', 100, 10),
-    (2, 'Pantalon', 100, 10),
-    (3, 'Vestido', 100, 15),
-    (4, 'Falda', 100, 10),
-    (5, 'Blusa', 100, 15),
-    (6, 'Zapatos', 100, 5),
-    (7, 'Zapatillas', 100, 10),
-    (8, 'Chaqueta', 100, 8),
-    (9, 'Abrigo', 100, 12),
-    (10, 'Sudadera', 100, 15),
-    (11, 'Chaleco', 100, 7),
-    (12, 'Camiseta', 100, 20),
-    (13, 'Short', 100, 8),
-    (14, 'Bañador', 100, 5),
-    (15, 'Bufanda', 100, 10),
-    (16, 'Sombrero', 100, 12),
-    (17, 'Guantes', 100, 15),
-    (18, 'Calcetines', 100, 5),
-    (19, 'Reloj', 100, 10),
-    (20, 'Bolso', 100, 15);
+-- Insertar algunos valores de ejemplo
+INSERT INTO inventario (articulo, estado) VALUES
+    ('Camisa', 'Activo'),
+    ('Pantalón', 'Activo'),
+    ('Vestido', 'Activo'),
+    ('Falda', 'Activo'),
+    ('Blusa', 'Activo'),
+    ('Zapatos', 'Activo'),
+    ('Zapatillas', 'Activo'),
+    ('Chaqueta', 'Activo'),
+    ('Abrigo', 'Activo'),
+    ('Sudadera', 'Activo'),
+    ('Chaleco', 'Activo');
 
-CREATE INDEX idx_productoId ON inventario (productoId);
-CREATE INDEX idx_nombreProducto ON inventario (nombreProducto);
+CREATE INDEX idx_idArticulo ON inventario (idArticulo);
+CREATE INDEX idx_articulo ON inventario (articulo);

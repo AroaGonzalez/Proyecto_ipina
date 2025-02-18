@@ -1,30 +1,56 @@
-/* 🔹 Contenedor principal */
 .inventario-list {
     text-align: center;
-    padding: 20px;
-    background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/edificio.jpg');
-    background-size: cover;
-    background-position: center;
+    padding: 10px;
+    position: relative;
     min-height: 100vh;
     color: white;
-    position: relative;
-    overflow: hidden;
 }
 
-/* 🔹 Efecto de desenfoque en el fondo */
+.content {
+    margin-left: 230px;
+    width: calc(100% - 230px);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 50px;
+    box-sizing: border-box;
+}
+
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; 
+    display: flex;
+}
+
+th input[type="checkbox"],
+td input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
 .inventario-list::before {
     content: "";
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: 230px;
+    width: calc(100% - 230px);
     height: 100%;
-    backdrop-filter: blur(6px);
-    opacity: 0.6;
-    z-index: -1;
+    background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/ropa.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    z-index: -1; 
 }
 
-/* 🔹 Título principal */
 .inventario-list h2 {
     z-index: 1;
     position: relative;
@@ -33,7 +59,6 @@
     text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
 }
 
-/* 🔹 Contenedor de los botones superiores */
 .botones-superiores {
     display: flex;
     justify-content: flex-end;
@@ -42,7 +67,6 @@
     padding-right: 20px;
 }
 
-/* 🔹 Contenedor de filtros (oculto por defecto) */
 .filters-container {
     display: none;
     flex-wrap: wrap;
@@ -56,14 +80,12 @@
     overflow: hidden;
 }
 
-/* 🔹 Mostrar filtros cuando se abren */
 .filters-container.open {
     display: flex;
     max-height: 500px;
     opacity: 1;
 }
 
-/* 🔹 Estilos de inputs y selects dentro de los filtros */
 .filters-container input,
 .filters-container select {
     padding: 8px;
@@ -75,11 +97,20 @@
     background-color: white;
 }
 
-/* 🔹 Contenedor de la tabla */
+.tabla-contenedor {
+    width: 100%; /* Aumentar el ancho */
+    max-width: 3000px; /* Puedes ajustar este valor según necesites */
+    height: 65vh; /* Mantener el scroll interno */
+    overflow-y: auto; /* Scroll vertical */
+    overflow-x: auto; /* Habilitar scroll horizontal si es necesario */
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 8px
+}
+
 .tabla-inventario {
     z-index: 1;
     position: relative;
-    width: 90%;
+    width: 95%;
     max-width: 1200px;
     margin: 20px auto;
     border-collapse: collapse;
@@ -90,7 +121,6 @@
     overflow: hidden;
 }
 
-/* 🔹 Estilos de las celdas */
 .tabla-inventario th,
 .tabla-inventario td {
     border: 1px solid #ddd;
@@ -98,14 +128,12 @@
     text-align: center;
 }
 
-/* 🔹 Cabecera de la tabla */
 .tabla-inventario th {
     background-color: #222;
     color: white;
     text-transform: uppercase;
 }
 
-/* 🔹 Filas alternas */
 .tabla-inventario tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.05);
 }
@@ -114,7 +142,6 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 🔹 Colores de cantidades */
 .cantidad-verde {
     background-color: #28a745;
     color: white;
@@ -147,14 +174,12 @@
     padding: 5px;
 }
 
-/* 🔹 Contenedor de acciones */
 .acciones-container {
     display: flex;
     justify-content: center;
     gap: 10px;
 }
 
-/* 🔹 Botón de Crear Pedido */
 .crear-pedido-btn {
     background-color: #e63946;
     color: white;
@@ -176,7 +201,6 @@
     gap: 10px;
 }
 
-/* 🔹 Botón de Recarga */
 .recargar-btn {
     background-color: #457b9d;
     color: white;
@@ -194,22 +218,26 @@
 }
 
 .header-inventario {
+    width: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
+    flex-direction: column;
+    align-items: center; /* Centrar título */
+    justify-content: center;
+    padding: 20px 0;
 }
 
 .titulo-inventario {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+    margin-bottom: 10px;
 }
 
 .botones-header {
     display: flex;
-    gap: 10px;
+    justify-content: center; /* Centrar los botones */
+    gap: 15px;
 }
 
 .filtros-toggle,
@@ -245,10 +273,10 @@
     align-items: center;
     justify-content: flex-start;
     gap: 5px;
-    width: 250px;  /* Compacto */
+    width: 250px;
     margin: 10px auto;
     padding: 8px;
-    background: rgba(255, 255, 255, 0.85); /* Fondo blanco semi-transparente */
+    background: rgba(255, 255, 255, 0.85);
     border-radius: 8px;
     border: 1px solid #ccc;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
@@ -286,4 +314,55 @@
 
 .buscar-btn:hover {
     background-color: #444;
+}
+
+.botones-accion {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.acciones-seleccion {
+    display: flex;
+    justify-content: flex-start;
+    gap: 5px;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+.accion-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    width: 4cm;
+    text-align: center;
+    justify-content: center;
+}
+
+.accion-btn.activar {
+    background-color: rgb(53, 62, 53);
+    color: white;
+}
+
+.accion-btn.pausar {
+    background-color: rgb(75, 64, 64);
+    color: white;
+}
+
+.botones-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.accion-btn:disabled {
+    background-color: grey;
+    cursor: not-allowed;
 }

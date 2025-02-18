@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../menu.css';
+import '../menu.css';  // Importar el CSS del menú
 
 function Menu() {
   const [parametrizacionOpen, setParametrizacionOpen] = useState(false);
@@ -8,13 +8,11 @@ function Menu() {
   return (
     <nav className="menu">
       <ul>
-        
-        {/* 🔹 Manteniendo la parte del menú sin cambios */}
         <li>
           <Link to="/home">🏠 Inicio</Link>
         </li>
 
-        {/* 🔹 Parametrización con Desplegable Mejorado */}
+        {/* 🔹 Menú desplegable */}
         <li>
           <button 
             className={`dropdown-btn ${parametrizacionOpen ? "open" : ""}`} 
@@ -45,23 +43,8 @@ function Menu() {
         <li>
           <Link to="/lista-pedidos">✅ Pedidos Completados</Link>
         </li>
-        <li>
-          <Link to="/pedidos-eliminados">🗑️ Pedidos Eliminados</Link>
-        </li>
-
-        {/* 🔹 Otras Secciones */}
-        <li>
-          <Link to="/tareas">📋 Tareas</Link>
-        </li>
-        <li>
-          <Link to="/eventos">📅 Eventos</Link>
-        </li>
-        <li>
-          <Link to="/propuestas">📑 Propuestas</Link>
-        </li>
       </ul>
 
-      {/* Opciones de Perfil y Cerrar Sesión */}
       <div className="footer-options">
         <Link to="/profile" className="footer-link">👤 Mi Perfil</Link>
         <button onClick={() => alert('Sesión cerrada')} className="footer-button">🚪 Cerrar Sesión</button>

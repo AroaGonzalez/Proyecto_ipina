@@ -1,16 +1,14 @@
 /* 🔹 Estilos generales del menú */
 .menu {
-  background-color: #2c2f33;
-  padding: 10px;
   width: 230px;
   height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
+  background-color: #2c2f33;
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
+  z-index: 1000;
 }
 
 .menu ul {
@@ -108,6 +106,10 @@
   margin-top: auto;
   padding: 8px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .footer-options a,
@@ -116,19 +118,29 @@
   color: #fff;
   border: none;
   padding: 10px;
-  margin: 5px 0;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
   text-align: center;
   text-decoration: none;
-  width: 100%;
+  width: 90%; /* Asegura que ambos botones tengan el mismo ancho */
   max-width: 180px;
-  display: inline-block;
   transition: all 0.3s ease-in-out;
 }
 
 .footer-options a:hover,
 .footer-options button:hover {
   background-color: #0056b3;
+}
+
+.footer-options button {
+  background-color: #dc3545; /* Rojo para cerrar sesión */
+}
+
+.footer-options a:hover {
+  background-color: #0056b3;
+}
+
+.footer-options button:hover {
+  background-color: #c82333;
 }
