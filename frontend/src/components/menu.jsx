@@ -1,53 +1,78 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import '../menu.css';  // Importar el CSS del menú
+import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaChartLine, FaTasks, FaCalendarAlt, FaLightbulb, FaListAlt, FaUser, FaSignOutAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import '../menu.css';
 
 function Menu() {
+  const location = useLocation();
   const [parametrizacionOpen, setParametrizacionOpen] = useState(false);
 
   return (
     <nav className="menu">
-      <ul>
-        <li>
-          <Link to="/home">🏠 Inicio</Link>
-        </li>
+      <div className="menu-content">
+        <Link to="/home" className={`menu-item ${location.pathname === '/home' ? 'active' : ''}`}>
+          <FaHome className="menu-icon" />
+          <span>INICIO</span>
+        </Link>
 
-        {/* 🔹 Menú desplegable */}
-        <li>
+        <div className={`menu-item dropdown ${parametrizacionOpen ? 'open' : ''}`}>
           <button 
-            className={`dropdown-btn ${parametrizacionOpen ? "open" : ""}`} 
+            className="dropdown-trigger"
             onClick={() => setParametrizacionOpen(!parametrizacionOpen)}
           >
-            ⚙️ Parametrización
-            <i className={`fas fa-chevron-${parametrizacionOpen ? "up" : "down"}`}></i>
+            <FaChartLine className="menu-icon" />
+            <span>PARAMETRIZACIÓN</span>
+            {parametrizacionOpen ? <FaChevronUp className="chevron" /> : <FaChevronDown className="chevron" />}
           </button>
-          <ul className={`dropdown-menu ${parametrizacionOpen ? "open" : ""}`}>
-            <li>
-              <Link to="/parametrizacion-articulos">📄 Parametrización de artículos</Link>
-            </li>
-            <li>
-              <Link to="/consulta-tienda">🏬 Consulta de tienda</Link>
-            </li>
-            <li>
-              <Link to="/nuevo-alias">🔄 Consulta y nuevo Alias</Link>
-            </li>
-            <li>
-              <Link to="/consulta-stocks">📦 Consulta stocks</Link>
-            </li>
-          </ul>
-        </li>
+          
+          {parametrizacionOpen && (
+            <div className="dropdown-content">
+              <Link to="/parametrizacion-articulos">
+                Parametrización de artículos
+              </Link>
+              <Link to="/consulta-tienda">
+                Consulta de tienda
+              </Link>
+              <Link to="/nuevo-alias">
+                Consulta y nuevo Alias
+              </Link>
+              <Link to="/consulta-stocks">
+                Consulta stocks
+              </Link>
+            </div>
+          )}
+        </div>
 
-        <li>
-          <Link to="/pedidos-pendientes">📌 Pedidos Pendientes</Link>
-        </li>
-        <li>
-          <Link to="/lista-pedidos">✅ Pedidos Completados</Link>
-        </li>
-      </ul>
+        <Link to="/tareas" className={`menu-item ${location.pathname === '/tareas' ? 'active' : ''}`}>
+          <FaTasks className="menu-icon" />
+          <span>TAREAS</span>
+        </Link>
 
-      <div className="footer-options">
-        <Link to="/profile" className="footer-link">👤 Mi Perfil</Link>
-        <button onClick={() => alert('Sesión cerrada')} className="footer-button">🚪 Cerrar Sesión</button>
+        <Link to="/eventos" className={`menu-item ${location.pathname === '/eventos' ? 'active' : ''}`}>
+          <FaCalendarAlt className="menu-icon" />
+          <span>EVENTOS</span>
+        </Link>
+
+        <Link to="/propuestas" className={`menu-item ${location.pathname === '/propuestas' ? 'active' : ''}`}>
+          <FaLightbulb className="menu-icon" />
+          <span>PROPUESTAS</span>
+        </Link>
+
+        <Link to="/recuentos" className={`menu-item ${location.pathname === '/recuentos' ? 'active' : ''}`}>
+          <FaListAlt className="menu-icon" />
+          <span>RECUENTOS</span>
+        </Link>
+      </div>
+
+      <div className="menu-footer">
+        <Link to="/profile" className={`menu-item ${location.pathname === '/profile' ? 'active' : ''}`}>
+          <FaUser className="menu-icon" />
+          <span>Mi Perfil</span>
+        </Link>
+        <button onClick={() => alert('Sesión cerrada')} className="menu-item logout-btn">
+          <FaSignOutAlt className="menu-icon" />
+          <span>Cerrar Sesión</span>
+        </button>
       </div>
     </nav>
   );
