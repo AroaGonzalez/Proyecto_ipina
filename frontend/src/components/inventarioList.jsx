@@ -58,6 +58,9 @@ function InventarioList() {
   };
 
   const handleSearch = () => {
+    setSelectedItems([]);
+    setSelectAll(false);
+    
     if (filter.trim() === '') {
       setFilteredInventarios(inventarios);
     } else {
@@ -75,6 +78,8 @@ function InventarioList() {
   const handleClearFilter = () => {
     setFilter('');
     setFilteredInventarios(inventarios);
+    setSelectedItems([]);
+    setSelectAll(false);
   };
 
   const handleToggleEstado = (nuevoEstado) => {
@@ -118,55 +123,58 @@ function InventarioList() {
           </div>
         </div>
 
-        {mostrarFiltros && (
-          <div className="filter-section">
-            <div className="filter-group">
-              <input
-                type="text"
-                placeholder="Id Artículo"
-                value={filter}
-                onChange={handleFilterChange}
-                className="filter-input"
-              />
-              <button 
-                className="clear-button" 
-                onClick={handleClearFilter}
-                style={{ visibility: filter ? 'visible' : 'hidden' }}
-              >
-                <span>×</span>
+        <div className={`filter-section ${mostrarFiltros ? 'show' : ''}`}>
+          <div className="filter-group">
+            <input
+              type="text"
+              placeholder="Id Artículo"
+              value={filter}
+              onChange={handleFilterChange}
+              className="filter-input"
+            />
+            <div className="filter-actions">
+              {filter && (
+                <button 
+                  className="clear-button" 
+                  onClick={handleClearFilter}
+                >
+                  <span>×</span>
+                </button>
+              )}
+              <button className="search-button-small" onClick={handleSearch}>
+                BUSCAR
               </button>
             </div>
-            <button className="search-button" onClick={handleSearch}>
-              BUSCAR
-            </button>
-          </div>
-        )}
-
-        <div className="info-section">
-          <div className="results-info">
-            <span className="results-count">
-              Cargados {filteredInventarios.length} resultados de {inventarios.length} encontrados
-            </span>
-            {' · '}
-            <span className="update-time">
-              Última actualización: {currentTime}
-            </span>
           </div>
         </div>
 
-        {selectedItems.length > 0 && (
-          <div className="header-select-display">
-            <span>Seleccionados {selectedItems.length} resultados de {inventarios.length}</span>
-            <div className="action-buttons">
-              <button className="action-button activate" onClick={() => handleToggleEstado('Activo')}>
-                <FaPlay /> Activar
-              </button>
-              <button className="action-button pause" onClick={() => handleToggleEstado('Pausado')}>
-                <FaPause /> Pausar
-              </button>
+        <div className="info-section">
+          {selectedItems.length === 0 ? (
+            <div className="results-info">
+              <span className="results-count">
+                Cargados {filteredInventarios.length} resultados de {inventarios.length} encontrados
+              </span>
+              {' · '}
+              <span className="update-time">
+                Última actualización: {currentTime}
+              </span>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="selection-info">
+              <span>Seleccionados {selectedItems.length} resultados de {inventarios.length}</span>
+              <div className="action-buttons">
+                <button className="action-button-fixed activate" onClick={() => handleToggleEstado('Activo')}>
+                  <FaPlay />
+                  <span>ACTIVAR</span>
+                </button>
+                <button className="action-button-fixed pause" onClick={() => handleToggleEstado('Pausado')}>
+                  <FaPause />
+                  <span>PAUSAR</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="table-container">
           <table className="data-table">
@@ -198,19 +206,23 @@ function InventarioList() {
                     </select>
                   </td>
                   <td>
-                    <div className="quantity-input">
-                      <input type="number" defaultValue="1" min="1" />
-                      <button className="quantity-clear">×</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="quantity-input">
+                        <input type="number" defaultValue="1" min="1" />
+                      </div>
+                      <span>×</span>
                     </div>
                   </td>
                   <td>
-                    <div className="quantity-input">
-                      <input type="number" defaultValue="1" min="1" />
-                      <button className="quantity-clear">×</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div className="quantity-input">
+                        <input type="number" defaultValue="1" min="1" />
+                      </div>
+                      <span>×</span>
                     </div>
                   </td>
                   <td>
-                    <span className="status-tag active">ACTIVO</span>
+                    <span className="status-tag activo">ACTIVO</span>
                   </td>
                 </tr>
               ))}

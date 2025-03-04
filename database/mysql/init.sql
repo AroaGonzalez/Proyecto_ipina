@@ -57,7 +57,6 @@ CREATE TABLE IF NOT EXISTS inventario (
     estado ENUM('Activo', 'Pausado') NOT NULL DEFAULT 'Activo'
 );
 
--- Insertar algunos valores de ejemplo
 INSERT INTO inventario (articulo, estado) VALUES
     ('Camisa', 'Activo'),
     ('Pantalón', 'Activo'),
