@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import '../userOptions.css';
+import '../styles/userOptions.css';
 
 const UserOptions = () => {
     const navigate = useNavigate();

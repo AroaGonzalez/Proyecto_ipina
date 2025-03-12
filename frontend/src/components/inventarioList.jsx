@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaFilter, FaPlay, FaPause } from 'react-icons/fa';
 import axios from 'axios';
 import Menu from '../components/menu';
-import '../inventarioList.css';
+import '../styles/inventarioList.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 

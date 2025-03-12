@@ -6,20 +6,23 @@ const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
 
   if (!token) {
-    return <Navigate to="/register" />;
+    return <Navigate to="/login" />;
   }
 
   try {
     const decodedToken = jwtDecode(token);
     const isExpired = decodedToken.exp * 1000 < Date.now();
+    
     if (isExpired) {
       localStorage.removeItem('token');
-      return <Navigate to="/register" />;
+      localStorage.removeItem('user');
+      return <Navigate to="/login" />;
     }
   } catch (error) {
-    console.error('Invalid token:', error);
+    console.error('Token inválido:', error);
     localStorage.removeItem('token');
-    return <Navigate to="/register" />;
+    localStorage.removeItem('user');
+    return <Navigate to="/login" />;
   }
 
   return children;

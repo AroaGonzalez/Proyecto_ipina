@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import '../inventarioList.css';
+import '../styles/inventarioList.css';
 
 const BASE_URL = process.env.REACT_APP_PYTHON_API_URL || 'http://localhost:8000';
 

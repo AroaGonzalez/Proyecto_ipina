@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../profile.css';
+import '../styles/profile.css';
 
 const ChangePassword = () => {
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });

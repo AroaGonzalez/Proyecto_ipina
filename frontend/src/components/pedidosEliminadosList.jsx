@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../pedidosEliminadosList.css';
+import '../styles/pedidosEliminadosList.css';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 

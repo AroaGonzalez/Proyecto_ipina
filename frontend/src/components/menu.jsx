@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FaHome, FaChartLine, FaTasks, FaCalendarAlt, FaLightbulb, FaListAlt, FaUser, FaSignOutAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import '../menu.css';
+import '../styles/menu.css';
 
 function Menu() {
   const location = useLocation();
