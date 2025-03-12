@@ -10,16 +10,13 @@ services:
       - ./backend/node:/app:ro
     depends_on:
       - mysqldb
-      - mongo
     networks:
       - app-network
     restart: always
     environment:
       MYSQL_HOST: mysqldb
-      MYSQL_DATABASE: tienda
       MYSQL_USER: root
       MYSQL_PASSWORD: root
-      MONGO_URI: mongodb://root:rootpassword@mongodb:27017/tienda
 
   mysqldb:
     image: mysql:8.0
@@ -28,51 +25,21 @@ services:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: tienda
     volumes:
       - ./database/mysql:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+    # Este comando modifica la secuencia de arranque para ejecutar tu script de inicialización
+    command: >
+      bash -c "
+      echo 'Contenedor iniciando...' &&
+      chmod +x /docker-entrypoint-initdb.d/init.sh &&
+      /usr/local/bin/docker-entrypoint.sh mysqld
+      "
     networks:
       - app-network
-    restart: always
-
-  python-service:
-    build:
-      context: ./backend/python
-    container_name: python-service
-    ports:
-      - "8000:8000"
-    depends_on:
-      - mysqldb
-    volumes:
-      - ./backend/python:/app
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-    networks:
-      - app-network
-    restart: always
-    environment:
-      MYSQL_HOST: mysqldb
-      MYSQL_DATABASE: tienda
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-
-  mongo:
-    image: mongo:latest
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-      - ./database/mongo:/docker-entrypoint-initdb.d
-    networks:
-      - app-network
-    environment:
-      MONGO_INITDB_DATABASE: tienda
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
     restart: always
 
 volumes:
-  mongo-data:
   mysql-data:
 
 networks:
