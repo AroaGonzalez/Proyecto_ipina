@@ -9,7 +9,6 @@ import Register from './components/register';
 import InventarioList from './components/inventarioList'; // Parametrización de Artículos → Inventario
 import TiendaList from './components/tiendaList'; // Consulta de Tienda → Consultar Tiendas
 import PendientesList from './components/pendienteList';
-import PedidosEliminadosList from './components/pedidosEliminadosList';
 import Profile from './components/profile';
 import UserOptions from './components/userOptions';
 import Home from './components/home';
@@ -60,14 +59,6 @@ function App() {
             element={
               <PrivateRoute>
                 <PedidoList pedidos={pedidos} setPedidos={setPedidos} />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/pedidos-eliminados"
-            element={
-              <PrivateRoute>
-                <PedidosEliminadosList />
               </PrivateRoute>
             }
           />

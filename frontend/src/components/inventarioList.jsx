@@ -5,6 +5,8 @@ import Menu from '../components/menu';
 import '../styles/inventarioList.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
+// Define la ruta específica para el endpoint de inventario
+const INVENTARIO_ENDPOINT = `${BASE_URL}/inventario`;
 
 function InventarioList() {
   const [inventarios, setInventarios] = useState([]);
@@ -22,15 +24,37 @@ function InventarioList() {
 
   const fetchInventario = () => {
     setLoading(true);
+    console.log('Obteniendo datos del inventario desde:', `${BASE_URL}/inventario`);
+    
     axios
-      .get(`${BASE_URL}/inventario`)
+      .get(INVENTARIO_ENDPOINT)
       .then((response) => {
-        setInventarios(response.data);
-        setFilteredInventarios(response.data);
+        console.log('Respuesta API inventario:', response.data);
+        
+        // Extraer los datos según la estructura de la respuesta del controlador
+        // response.data debería contener un objeto con la propiedad 'content'
+        const inventarioData = response.data && response.data.content 
+          ? response.data.content 
+          : Array.isArray(response.data) 
+            ? response.data 
+            : [];
+        
+        console.log('Datos procesados:', inventarioData);
+        
+        if (inventarioData.length === 0) {
+          console.warn('No se encontraron datos de inventario en la respuesta');
+        }
+        
+        setInventarios(inventarioData);
+        setFilteredInventarios(inventarioData);
         setLoading(false);
       })
       .catch((error) => {
         console.error('Error al obtener inventario:', error);
+        if (error.response) {
+          console.error('Detalle de error:', error.response.data);
+          console.error('Status:', error.response.status);
+        }
         setError('No se pudo cargar el inventario. Inténtalo más tarde.');
         setLoading(false);
       });
@@ -85,15 +109,29 @@ function InventarioList() {
   const handleToggleEstado = (nuevoEstado) => {
     if (selectedItems.length === 0) return;
 
+    console.log(`Cambiando estado a ${nuevoEstado} para IDs:`, selectedItems);
+
+    // Llamada a la API con la estructura correcta según el controlador
     axios
-      .put(`${BASE_URL}/inventario/estado`, { ids: selectedItems, estado: nuevoEstado })
-      .then(() => {
+      .put(`${BASE_URL}/inventario/estado`, { 
+        ids: selectedItems, 
+        estado: nuevoEstado 
+      })
+      .then((response) => {
+        console.log('Respuesta cambio de estado:', response.data);
+        alert(`Estado cambiado a ${nuevoEstado} correctamente para ${selectedItems.length} artículos`);
         setSelectedItems([]);
         setSelectAll(false);
-        fetchInventario();
+        fetchInventario(); // Recargar los datos para reflejar el cambio
       })
       .catch((error) => {
         console.error('Error al cambiar el estado:', error);
+        if (error.response) {
+          console.error('Detalle:', error.response.data);
+          alert(`Error al cambiar el estado: ${error.response.data.message || 'Error desconocido'}`);
+        } else {
+          alert('Error al cambiar el estado. Revisa la consola para más detalles.');
+        }
       });
   };
 
@@ -111,7 +149,6 @@ function InventarioList() {
 
   return (
     <div className="app-container">
-      <Menu />
       <div className="content">
         <div className="header-section">
           <h1 className="main-title">CONSULTA DE ARTÍCULOS</h1>
@@ -191,41 +228,61 @@ function InventarioList() {
               </tr>
             </thead>
             <tbody>
-              {filteredInventarios.map((item) => (
-                <tr key={item.idArticulo}>
-                  <td><input type="checkbox" checked={selectedItems.includes(item.idArticulo)} onChange={() => handleSelectItem(item.idArticulo)} /></td>
-                  <td>{item.idArticulo}</td>
-                  <td>{item.articulo}</td>
-                  <td>
-                    <span className={getStatusTagClass(item.estado)}>{item.estado.toUpperCase()}</span>
-                  </td>
-                  <td>
-                    <select className="row-select" defaultValue="BULTO-PACKAGE">
-                      <option value="BULTO-PACKAGE">BULTO-PACKAGE</option>
-                      <option value="UNIDAD">UNIDAD</option>
-                    </select>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="quantity-input">
-                        <input type="number" defaultValue="1" min="1" />
+              {filteredInventarios && filteredInventarios.length > 0 ? (
+                filteredInventarios.map((item) => (
+                  <tr key={item.idArticulo}>
+                    <td><input type="checkbox" checked={selectedItems.includes(item.idArticulo)} onChange={() => handleSelectItem(item.idArticulo)} /></td>
+                    <td>{item.idArticulo}</td>
+                    <td>{item.articulo}</td>
+                    <td>
+                      <span className={getStatusTagClass(item.estado || "ACTIVO")}>
+                        {(item.estado || "ACTIVO").toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <select className="row-select" defaultValue={item.unidadesBox || "BULTO-PACKAGE"}>
+                        <option value="BULTO-PACKAGE">BULTO-PACKAGE</option>
+                        <option value="UNIDAD">UNIDAD</option>
+                      </select>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="quantity-input">
+                          <input 
+                            type="number" 
+                            defaultValue={item.unidadEmpaquetado || 1} 
+                            min="1" 
+                          />
+                        </div>
+                        <span>×</span>
                       </div>
-                      <span>×</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className="quantity-input">
-                        <input type="number" defaultValue="1" min="1" />
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="quantity-input">
+                          <input 
+                            type="number" 
+                            defaultValue={item.multiploMinimo || 1} 
+                            min="1" 
+                          />
+                        </div>
+                        <span>×</span>
                       </div>
-                      <span>×</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="status-tag activo">ACTIVO</span>
+                    </td>
+                    <td>
+                      <span className={getStatusTagClass(item.estadoSFI || "ACTIVO")}>
+                        {(item.estadoSFI || "ACTIVO").toUpperCase()}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
+                    No se encontraron datos de inventario en la base de datos
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

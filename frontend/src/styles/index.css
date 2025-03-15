@@ -23,7 +23,6 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/ropa.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -88,7 +87,6 @@ body {
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/inditex.jpg');
   background-size: cover; 
   background-position: center;
   background-repeat: no-repeat;
@@ -494,7 +492,6 @@ button:hover {
 .pendientes-container {
   text-align: center;
   padding: 20px;
-  background-image: url('C:/Users/aroag/Desktop/Proyecto_Ipina/imagenes/ropa.jpg');
   background-size: cover;
   background-position: center;
   min-height: 100vh;

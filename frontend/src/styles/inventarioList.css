@@ -408,24 +408,24 @@ background-color: transparent !important;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 8px 12px; /* Reducir el padding horizontal */
+    padding: 8px 12px; 
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
     border: none;
     cursor: pointer;
-    min-width: 100px; /* Reducir ancho mínimo */
+    min-width: 100px;
     height: 32px;
 }
 
 .action-button-fixed.activate {
-    background-color: #28a745; /* Verde */
+    background-color: #28a745;
     color: white;
 }
 
 .action-button-fixed.pause {
-background-color: #6c757d; /* Gris */
+background-color: #6c757d;
 color: white;
 }
 
