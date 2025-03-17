@@ -1,6 +1,6 @@
 const { sequelizeAjenos } = require('../utils/database');
 
-exports.findAllWithPagination = async (pageable = { page: 0, size: 10 }, idIdioma = 1, idsAjeno = null) => {
+exports.findAllWithPagination = async (pageable = { page: 0, size: 10000 }, idIdioma = 1, idsAjeno = null) => {
   const query = `
     SELECT 
         ar.ID_AJENO as idAjeno,
@@ -19,8 +19,8 @@ exports.findAllWithPagination = async (pageable = { page: 0, size: 10 }, idIdiom
         INNER JOIN AJENO_IDIOMA ai ON a.ID_AJENO = ai.ID_AJENO
         INNER JOIN TIPO_ESTADO_AJENO_RAM_IDIOMA teari ON ar.ID_TIPO_ESTADO_AJENO_RAM = teari.ID_TIPO_ESTADO_AJENO_RAM
         INNER JOIN MAQUINA_ESTADO_AJENOS mea ON mea.ID_MAQUINA_ESTADO_AJENOS = a.ID_MAQUINA_ESTADO_AJENOS
-        INNER JOIN TIPO_ESTADO_IDIOMA tei ON mea.ID_TIPO_ESTADO_ACTUAL = tei.ID_TIPO_ESTADO
-        INNER JOIN UNIDADES_MEDIDA_IDIOMA umi ON ar.ID_UNIDADES_MEDIDA = umi.ID_UNIDADES_MEDIDA
+        INNER JOIN MAESTROS.TIPO_ESTADO_IDIOMA tei ON mea.ID_TIPO_ESTADO_ACTUAL = tei.ID_TIPO_ESTADO
+        INNER JOIN MAESTROS.UNIDADES_MEDIDA_IDIOMA umi ON ar.ID_UNIDADES_MEDIDA = umi.ID_UNIDADES_MEDIDA
         WHERE teari.ID_IDIOMA = :idIdioma 
         AND tei.ID_IDIOMA = :idIdioma 
         AND umi.ID_IDIOMA = :idIdioma 

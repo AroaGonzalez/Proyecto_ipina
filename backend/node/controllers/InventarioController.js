@@ -4,7 +4,7 @@ const ajenoRamRepository = require('../repositories/ajenoRamRepository.js');
 exports.getInventario = async (req, res) => {
  try {
    const page = parseInt(req.query.page) || 0;
-   const size = parseInt(req.query.size) || 10;
+   const size = parseInt(req.query.size) || 10000;
    const idIdioma = parseInt(req.query.idIdioma) || 1;
    const idsAjeno = req.query.idsAjeno ? req.query.idsAjeno.split(',').map(id => parseInt(id)) : null;
    
