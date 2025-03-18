@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import '../styles/home.css';
 
 const Home = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     pedidosPendientes: 0,
     productosInventario: 0,
     tiendasRegistradas: 0,
   });
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await axios.get('http://localhost:5000/stats');
-        console.log('Estadísticas recibidas:', response.data);
         setStats(response.data);
         setLoading(false);
       } catch (error) {
@@ -28,40 +28,40 @@ const Home = () => {
   }, []);  
 
   if (loading) {
-    return <p>Cargando estadísticas...</p>;
+    return <p>{t('loading_stats')}</p>;
   }
 
   return (
     <div className="home-container">
       <div className="home-header">
-        <h1>Bienvenido a la Gestión de Inventarios</h1>
-        <p>Optimiza tus recursos, administra tus pedidos y mantén tus operaciones al día.</p>
+        <h1>{t('welcome_title')}</h1>
+        <p>{t('welcome_subtitle')}</p>
       </div>
 
       <div className="stats-container">
         <div className="stat-card">
-          <h3>Pedidos Pendientes</h3>
+          <h3>{t('pending_orders')}</h3>
           <p>{stats.pedidosPendientes}</p>
         </div>
         <div className="stat-card">
-          <h3>Productos en Inventario</h3>
+          <h3>{t('inventory_products')}</h3>
           <p>{stats.productosInventario}</p>
         </div>
         <div className="stat-card">
-          <h3>Tiendas Registradas</h3>
+          <h3>{t('registered_stores')}</h3>
           <p>{stats.tiendasRegistradas}</p>
         </div>
       </div>
 
       <div className="actions-container">
         <button className="action-button" onClick={() => window.location.href = '/pedidos'}>
-          Gestionar Pedidos
+          {t('manage_orders')}
         </button>
         <button className="action-button" onClick={() => window.location.href = '/inventario'}>
-          Ver Inventario
+          {t('view_inventory')}
         </button>
         <button className="action-button" onClick={() => window.location.href = '/consultar-tiendas'}>
-          Consultar Tiendas
+          {t('query_stores')}
         </button>
       </div>
     </div>

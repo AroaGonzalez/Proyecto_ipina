@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/register.css';
+import { useTranslation } from 'react-i18next';
+import '../styles/login.css'; // Usar el mismo CSS que login
+import { LanguageContext } from '../context/LanguageContext';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function Register() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { language, setLanguage } = useContext(LanguageContext);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,49 +22,103 @@ function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
     try {
       const response = await axios.post('http://localhost:5000/register', form);
-
-      alert('Registro exitoso. Redirigiendo al inicio de sesión...');
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('appLanguage', language);
+      alert(t('register.success_message'));
       navigate('/');
     } catch (error) {
       if (error.response && error.response.status === 400) {
-
-        alert('Este usuario ya está registrado. Redirigiendo al inicio de sesión...');
-        navigate('/');
+        setError(t('register.user_exists'));
       } else {
-
-        setErrorMessage('Hubo un error al procesar tu registro. Por favor, inténtalo de nuevo.');
+        setError(t('register.error_message'));
       }
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  const handleLoginRedirect = () => {
+    navigate('/');
+  };
+
+  const toggleLanguage = () => {
+    const newLang = language === 'es' ? 'en' : 'es';
+    setLanguage(newLang);
   };
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <h2>CREAR CUENTA</h2>
-        <form onSubmit={handleRegister}>
-          <label htmlFor="username">Usuario:</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="password">Contraseña:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <button type="submit" className="register-button">Registrarse</button>
+    <div className="login-page">
+      <div className="logo-container">
+        <h1 className="logo">RAM</h1>
+      </div>
+      
+      <div className="language-selector">
+        <button onClick={toggleLanguage} className="language-toggle-btn">
+          {language === 'es' ? 'EN' : 'ES'}
+        </button>
+      </div>
+      
+      <div className="login-form-container">
+        <div className="form-header">
+          <h2>{t('register.title')}</h2>
+          <p>{t('CREATE AN ACCOUNT TO ACCESS THE SYSTEM')}</p>
+        </div>
+        
+        <form onSubmit={handleRegister} className="login-form">
+          <div className="input-label">{t('register.username')}</div>
+          <div className="form-field">
+            <input
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              required
+              className="form-input"
+            />
+          </div>
+          
+          <div className="input-label">{t('register.password')}</div>
+          <div className="form-field password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="form-input"
+            />
+            <button 
+              type="button" 
+              className="toggle-password"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+          
+          {error && <div className="error-message">{error}</div>}
+          
+          <button 
+            type="submit" 
+            className="register-button"
+            disabled={loading}
+          >
+            {loading ? t('REGISTRANDO...') : t('register.submit_button')}
+          </button>
+          
+          <button 
+            type="button" 
+            className="login-button"
+            onClick={handleLoginRedirect}
+          >
+            {t('BACK TO LOGIN')}
+          </button>
         </form>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
       </div>
     </div>
   );

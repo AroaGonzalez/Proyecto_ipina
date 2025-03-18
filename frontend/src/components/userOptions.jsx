@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Añadir este import
 import '../styles/userOptions.css';
 
 const UserOptions = () => {
     const navigate = useNavigate();
-
+    const { t } = useTranslation(); // Añadir este hook
+    
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/');
@@ -12,8 +14,8 @@ const UserOptions = () => {
 
     return (
         <div className="footer-options">
-            <Link to="/profile" className="footer-link">Mi Perfil</Link>
-            <button onClick={handleLogout} className="footer-button">Cerrar Sesión</button>
+            <Link to="/profile" className="footer-link">{t('Mi Perfil')}</Link>
+            <button onClick={handleLogout} className="footer-button">{t('Cerrar Sesión')}</button>
         </div>
     );
 };

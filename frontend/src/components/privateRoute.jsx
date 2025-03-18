@@ -1,11 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useTranslation } from 'react-i18next';
 
 const PrivateRoute = ({ children }) => {
+  const { t } = useTranslation();
   const token = localStorage.getItem('token');
 
   if (!token) {
+    // Si quieres mostrar algún mensaje antes de redirigir
+    console.log(t('session_required'));
     return <Navigate to="/login" />;
   }
 
@@ -16,10 +20,11 @@ const PrivateRoute = ({ children }) => {
     if (isExpired) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      console.log(t('session_expired'));
       return <Navigate to="/login" />;
     }
   } catch (error) {
-    console.error('Token inválido:', error);
+    console.error(t('invalid_token'), error);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     return <Navigate to="/login" />;

@@ -183,6 +183,98 @@ const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 
 app.use('/inventario', ajenoRamRoutes);
 
+// Middleware para validar el token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Token no proporcionado' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('Error al verificar token:', error);
+    return res.status(401).json({ message: 'Token inválido o expirado' });
+  }
+};
+
+// Ruta para obtener perfil de usuario
+app.get('/profile', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'name', 'email', 'address']
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error al obtener perfil:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
+// Actualizar perfil
+app.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, address } = req.body;
+    
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Actualizar datos
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.address = address || user.address;
+    await user.save();
+    
+    res.json({ message: 'Perfil actualizado correctamente' });
+  } catch (error) {
+    console.error('Error al actualizar perfil:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
+// Cambiar contraseña
+app.put('/profile/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Se requieren ambas contraseñas' });
+    }
+    
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Verificar contraseña actual
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Contraseña actual incorrecta' });
+    }
+    
+    // Actualizar contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al cambiar contraseña:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+});
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
