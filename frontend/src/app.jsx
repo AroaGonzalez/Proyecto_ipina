@@ -11,6 +11,7 @@ import ChangePassword from './components/changePassword';
 import { LanguageProvider } from './context/LanguageContext';
 import Profile from './components/profile';
 import EditProfile from './components/editProfile';
+import NuevoArticulo from './components/nuevoArticulo';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -26,7 +27,6 @@ function Layout({ children }) {
 }
 
 function App() {
-
   return (
     <LanguageProvider>
       <Router>
@@ -49,7 +49,15 @@ function App() {
                   <InventarioList />
                 </PrivateRoute>
               }
-            />           
+            />
+            <Route
+              path="/nuevo-articulo"
+              element={
+                <PrivateRoute>
+                  <NuevoArticulo />
+                </PrivateRoute>
+              }
+            />          
             <Route
               path="/change-password"
               element={
@@ -66,11 +74,6 @@ function App() {
             <Route path="/edit-profile" element={
               <PrivateRoute>
                 <EditProfile />
-              </PrivateRoute>
-            } />
-            <Route path="/change-password" element={
-              <PrivateRoute>
-                <ChangePassword />
               </PrivateRoute>
             } />
           </Routes>

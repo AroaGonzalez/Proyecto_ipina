@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { FaFilter, FaPlay, FaPause } from 'react-icons/fa';
 import axios from 'axios';
-import Menu from '../components/menu';
+import { useNavigate } from 'react-router-dom';
 import '../styles/inventarioList.css';
 import { LanguageContext } from '../context/LanguageContext';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ const INVENTARIO_ENDPOINT = `${BASE_URL}/inventario`;
 
 function InventarioList() {
  const { t } = useTranslation();
+ const navigate = useNavigate();
  const [inventarios, setInventarios] = useState([]);
  const [filteredInventarios, setFilteredInventarios] = useState([]);
  const [filter, setFilter] = useState('');
@@ -135,6 +136,10 @@ function InventarioList() {
      });
  };
 
+ const handleNewArticle = () => {
+   navigate('/nuevo-articulo');
+ };
+
  const getStatusTagClass = (estado) => {
    return `status-tag ${estado.toLowerCase()}`;
  };
@@ -156,7 +161,7 @@ function InventarioList() {
            <button className="filter-button" onClick={() => setMostrarFiltros(!mostrarFiltros)}>
              <FaFilter /> {mostrarFiltros ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}
            </button>
-           <button className="new-button">{t('NUEVO ARTÍCULO')}</button>
+           <button className="new-button" onClick={handleNewArticle}>{t('NUEVO ARTÍCULO')}</button>
          </div>
        </div>
 

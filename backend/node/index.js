@@ -181,6 +181,7 @@ app.post('/register', async (req, res) => {
 
 const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 
+app.use('/ajenos', ajenoRamRoutes);
 app.use('/inventario', ajenoRamRoutes);
 
 // Middleware para validar el token

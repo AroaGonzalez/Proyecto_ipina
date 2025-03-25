@@ -1,80 +1,177 @@
 .home-container {
-  text-align: center;
-  padding: 20px;
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  color: white;
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.home-container::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  filter: blur(2px);
-  z-index: -1; 
+.welcome-message {
+  margin-bottom: 40px;
 }
 
-.home-header {
-  background-color: #c16e6be6;
-  color: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.stats-container {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: rgba(176, 174, 174, 0.9);
-  border: 1px solid #aa1f1f;
-  border-radius: 8px;
-  padding: 20px;
-  flex: 1;
-  margin: 0 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card h3 {
-  margin-bottom: 10px;
-  font-size: 1.2rem;
+.welcome-message h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
   color: #333;
 }
 
-.stat-card p {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #961b12;
+.welcome-message p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
 }
 
-.actions-container {
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.dashboard-card {
+  display: flex;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 150px;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  color: white;
+  padding: 15px;
+}
+
+.material-icon {
+  background-color: #3498db;
+}
+
+.store-icon {
+  background-color: #2ecc71;
+}
+
+.task-icon {
+  background-color: #f39c12;
+}
+
+.report-icon {
+  background-color: #9b59b6;
+}
+
+.card-icon i {
+  font-size: 30px;
+}
+
+.card-content {
+  flex: 1;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
-.action-button {
-  background-color: rgba(186, 65, 65, 0.9);
-  color: rgb(254, 253, 254);
-  border: none;
-  padding: 15px 20px;
-  margin: 10px 0;
-  width: 50%;
+.card-content h3 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.card-content p {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 15px 0;
+  flex-grow: 1;
+}
+
+.card-link {
+  align-self: flex-start;
+  text-decoration: none;
+  color: #0071ce;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.card-link:hover {
+  color: #005b9f;
+  text-decoration: underline;
+}
+
+.quick-access {
+  background-color: white;
   border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 25px;
 }
 
-.action-button:hover {
-  background-color: #379a32;
+.quick-access h2 {
+  font-size: 20px;
+  margin: 0 0 20px 0;
+  color: #333;
 }
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.quick-link-item {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.2s, transform 0.2s;
+  width: calc(33.333% - 14px);
+  min-width: 200px;
+}
+
+.quick-link-item:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.quick-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #0071ce;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-link-item {
+    width: 100%;
+  }
+}
+
+/* Add Font Awesome compatibility classes if you're not including the library */
+.fas {
+  font-family: 'Font Awesome 5 Free', sans-serif;
+}
+
+.fa-box:before { content: "📦"; }
+.fa-store:before { content: "🏪"; }
+.fa-tasks:before { content: "📋"; }
+.fa-chart-bar:before { content: "📊"; }
+.fa-cog:before { content: "⚙️"; }
+.fa-tag:before { content: "🏷️"; }
+.fa-warehouse:before { content: "🏭"; }

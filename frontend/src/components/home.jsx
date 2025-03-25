@@ -1,68 +1,98 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import '../styles/home.css';
+import { LanguageContext } from '../context/LanguageContext';
+import { jwtDecode } from 'jwt-decode';
 
 const Home = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState({
-    pedidosPendientes: 0,
-    productosInventario: 0,
-    tiendasRegistradas: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/stats');
-        setStats(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error al obtener las estadísticas:', error);
-        setLoading(false);
-      }
-    };
+  const { language } = useContext(LanguageContext);
+  const [userName, setUserName] = useState('');
+  const navigate = useNavigate();
   
-    fetchStats();
-  }, []);  
-
-  if (loading) {
-    return <p>{t('loading_stats')}</p>;
-  }
+  useEffect(() => {
+    // Get the user's name from token or localStorage
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const decoded = jwtDecode(token);
+        setUserName(decoded.username || '');
+      }
+    } catch (error) {
+      console.error('Error getting username:', error);
+    }
+  }, []);
 
   return (
     <div className="home-container">
-      <div className="home-header">
-        <h1>{t('welcome_title')}</h1>
-        <p>{t('welcome_subtitle')}</p>
+      <div className="welcome-message">
+        <h1>{t('HOLA')}, {userName.toUpperCase()}</h1>
+        <p>{t('Te damos la bienvenida a la herramienta de reposición automática de materiales')}</p>
       </div>
-
-      <div className="stats-container">
-        <div className="stat-card">
-          <h3>{t('pending_orders')}</h3>
-          <p>{stats.pedidosPendientes}</p>
+      
+      <div className="dashboard-grid">
+                  <div className="dashboard-card">
+          <div className="card-icon material-icon">
+            <i className="fas fa-box"></i>
+          </div>
+          <div className="card-content">
+            <h3>{t('Gestión de materiales')}</h3>
+            <p>{t('Consulta y modifica los materiales disponibles en el sistema')}</p>
+            <Link to="/parametrizacion-articulos" className="card-link">{t('Acceder')}</Link>
+          </div>
         </div>
-        <div className="stat-card">
-          <h3>{t('inventory_products')}</h3>
-          <p>{stats.productosInventario}</p>
+        
+        <div className="dashboard-card">
+          <div className="card-icon store-icon">
+            <i className="fas fa-store"></i>
+          </div>
+          <div className="card-content">
+            <h3>{t('Consulta de tiendas')}</h3>
+            <p>{t('Visualiza información detallada de las tiendas registradas')}</p>
+            <Link to="/consulta-tienda" className="card-link">{t('Acceder')}</Link>
+          </div>
         </div>
-        <div className="stat-card">
-          <h3>{t('registered_stores')}</h3>
-          <p>{stats.tiendasRegistradas}</p>
+        
+        <div className="dashboard-card">
+          <div className="card-icon task-icon">
+            <i className="fas fa-tasks"></i>
+          </div>
+          <div className="card-content">
+            <h3>{t('Tareas pendientes')}</h3>
+            <p>{t('Gestiona las tareas asignadas y pendientes')}</p>
+            <Link to="/tareas" className="card-link">{t('Acceder')}</Link>
+          </div>
+        </div>
+        
+        <div className="dashboard-card">
+          <div className="card-icon report-icon">
+            <i className="fas fa-chart-bar"></i>
+          </div>
+          <div className="card-content">
+            <h3>{t('Informes y estadísticas')}</h3>
+            <p>{t('Visualiza informes sobre reposición y consumo')}</p>
+            <Link to="/informes" className="card-link">{t('Acceder')}</Link>
+          </div>
         </div>
       </div>
-
-      <div className="actions-container">
-        <button className="action-button" onClick={() => window.location.href = '/pedidos'}>
-          {t('manage_orders')}
-        </button>
-        <button className="action-button" onClick={() => window.location.href = '/inventario'}>
-          {t('view_inventory')}
-        </button>
-        <button className="action-button" onClick={() => window.location.href = '/consultar-tiendas'}>
-          {t('query_stores')}
-        </button>
+      
+      <div className="quick-access">
+        <h2>{t('Acceso rápido')}</h2>
+        <div className="quick-links">
+          <Link to="/parametrizacion-articulos" className="quick-link-item">
+            <span className="quick-link-icon"><i className="fas fa-cog"></i></span>
+            <span>{t('Parametrización de artículos')}</span>
+          </Link>
+          <Link to="/nuevo-alias" className="quick-link-item">
+            <span className="quick-link-icon"><i className="fas fa-tag"></i></span>
+            <span>{t('Consulta y nuevo Alias')}</span>
+          </Link>
+          <Link to="/consulta-stocks" className="quick-link-item">
+            <span className="quick-link-icon"><i className="fas fa-warehouse"></i></span>
+            <span>{t('Consulta stocks')}</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
