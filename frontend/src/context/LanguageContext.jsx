@@ -1,6 +1,5 @@
-// src/context/LanguageContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
-import i18n from '../i18n'; // Asegúrate que la ruta es correcta
+import i18n from '../i18n';
 
 export const LanguageContext = createContext();
 
@@ -14,12 +13,10 @@ export const LanguageProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Forzar un cambio de idioma inmediato
     i18n.changeLanguage(language);
     localStorage.setItem('appLanguage', language);
     console.log('Idioma cambiado a:', language, 'ID:', getLanguageId());
     
-    // Forzar re-renderizado (hack)
     document.title = language === 'es' ? 'RAM - Español' : 'RAM - English';
   }, [language]);
 

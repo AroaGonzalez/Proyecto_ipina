@@ -12,7 +12,6 @@ const Home = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Get the user's name from token or localStorage
     try {
       const token = localStorage.getItem('token');
       if (token) {

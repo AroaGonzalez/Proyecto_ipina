@@ -168,14 +168,11 @@ exports.findAjenosRam = async (idIdioma, idAjeno, nombre) => {
   });
 };
 
-// Nueva función para añadir ajenos a RAM
 exports.addAjenosToRam = async (ajenos) => {
   try {
     const results = [];
     
-    // Para cada ajeno en el array
     for (const ajeno of ajenos) {
-      // Verificar si ya existe en AJENO_RAM
       const checkQuery = `
         SELECT COUNT(*) as count FROM AJENO_RAM 
         WHERE ID_AJENO = :idAjeno
@@ -186,34 +183,52 @@ exports.addAjenosToRam = async (ajenos) => {
         type: sequelizeAjenos.QueryTypes.SELECT
       });
       
-      // Si ya existe, actualizamos
+      let idUnidadesMedida = 1; // Valor predeterminado
+      const unidadesMap = {
+        "UNIDAD": 1,
+        "BULTO-PACKAGE": 2
+      };
+      
+      if (unidadesMap[ajeno.unidadesBox]) {
+        idUnidadesMedida = unidadesMap[ajeno.unidadesBox];
+      }
+      
       if (checkResult[0].count > 0) {
         const updateQuery = `
           UPDATE AJENO_RAM 
           SET ID_TIPO_ESTADO_AJENO_RAM = 1, 
-              UNIDADES_EMPAQUETADO = 1, 
-              MULTIPLO_MINIMO = 1, 
-              ID_UNIDADES_MEDIDA = 1
+              UNIDADES_EMPAQUETADO = :unidadEmpaquetado, 
+              MULTIPLO_MINIMO = :multiploMinimo, 
+              ID_UNIDADES_MEDIDA = :idUnidadesMedida
           WHERE ID_AJENO = :idAjeno
         `;
         
         await sequelizeAjenos.query(updateQuery, {
-          replacements: { idAjeno: ajeno.idAjeno },
+          replacements: { 
+            idAjeno: ajeno.idAjeno,
+            unidadEmpaquetado: ajeno.unidadEmpaquetado,
+            multiploMinimo: ajeno.multiploMinimo,
+            idUnidadesMedida: idUnidadesMedida
+          },
           type: sequelizeAjenos.QueryTypes.UPDATE
         });
         
         results.push({ idAjeno: ajeno.idAjeno, status: 'updated' });
       } 
-      // Si no existe, lo insertamos
       else {
         const insertQuery = `
           INSERT INTO AJENO_RAM 
           (ID_AJENO, ID_TIPO_ESTADO_AJENO_RAM, UNIDADES_EMPAQUETADO, MULTIPLO_MINIMO, ID_UNIDADES_MEDIDA) 
-          VALUES (:idAjeno, 1, 1, 1, 1)
+          VALUES (:idAjeno, 1, :unidadEmpaquetado, :multiploMinimo, :idUnidadesMedida)
         `;
         
         await sequelizeAjenos.query(insertQuery, {
-          replacements: { idAjeno: ajeno.idAjeno },
+          replacements: { 
+            idAjeno: ajeno.idAjeno,
+            unidadEmpaquetado: ajeno.unidadEmpaquetado,
+            multiploMinimo: ajeno.multiploMinimo,
+            idUnidadesMedida: idUnidadesMedida
+          },
           type: sequelizeAjenos.QueryTypes.INSERT
         });
         
@@ -224,6 +239,88 @@ exports.addAjenosToRam = async (ajenos) => {
     return results;
   } catch (error) {
     console.error('Error en addAjenosToRam:', error);
+    throw error;
+  }
+};
+
+exports.updateAjenosRam = async (ajenos) => {
+  try {
+    const results = [];
+    
+    for (const ajeno of ajenos) {
+      const checkQuery = `
+        SELECT COUNT(*) as count FROM AJENO_RAM
+        WHERE ID_AJENO = :idAjeno
+      `;
+      
+      const checkResult = await sequelizeAjenos.query(checkQuery, {
+        replacements: { idAjeno: ajeno.idAjeno },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      if (checkResult[0].count > 0) {
+        const updateQuery = `
+          UPDATE AJENO_RAM
+          SET 
+            UNIDADES_EMPAQUETADO = :unidadEmpaquetado,
+            MULTIPLO_MINIMO = :multiploMinimo,
+            ID_UNIDADES_MEDIDA = (
+              SELECT ID_UNIDADES_MEDIDA 
+              FROM MAESTROS.UNIDADES_MEDIDA_IDIOMA 
+              WHERE DESCRIPCION = :unidadesBox
+              LIMIT 1
+            )
+          WHERE ID_AJENO = :idAjeno
+        `;
+        
+        await sequelizeAjenos.query(updateQuery, {
+          replacements: {
+            idAjeno: ajeno.idAjeno,
+            unidadEmpaquetado: ajeno.unidadEmpaquetado || 1,
+            multiploMinimo: ajeno.multiploMinimo || 1,
+            unidadesBox: ajeno.unidadesBox || 'BULTO-PACKAGE'
+          },
+          type: sequelizeAjenos.QueryTypes.UPDATE
+        });
+        
+        results.push({ idAjeno: ajeno.idAjeno, status: 'updated' });
+      }
+      
+      else {
+        const insertQuery = `
+          INSERT INTO AJENO_RAM
+          (ID_AJENO, ID_TIPO_ESTADO_AJENO_RAM, UNIDADES_EMPAQUETADO, MULTIPLO_MINIMO, ID_UNIDADES_MEDIDA)
+          VALUES (
+            :idAjeno, 
+            1, 
+            :unidadEmpaquetado, 
+            :multiploMinimo, 
+            (
+              SELECT ID_UNIDADES_MEDIDA 
+              FROM MAESTROS.UNIDADES_MEDIDA_IDIOMA 
+              WHERE DESCRIPCION = :unidadesBox
+              LIMIT 1
+            )
+          )
+        `;
+        
+        await sequelizeAjenos.query(insertQuery, {
+          replacements: {
+            idAjeno: ajeno.idAjeno,
+            unidadEmpaquetado: ajeno.unidadEmpaquetado || 1,
+            multiploMinimo: ajeno.multiploMinimo || 1,
+            unidadesBox: ajeno.unidadesBox || 'BULTO-PACKAGE'
+          },
+          type: sequelizeAjenos.QueryTypes.INSERT
+        });
+        
+        results.push({ idAjeno: ajeno.idAjeno, status: 'inserted' });
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Error en updateAjenosRam:', error);
     throw error;
   }
 };

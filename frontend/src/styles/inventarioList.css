@@ -40,25 +40,40 @@
     gap: 8px;
 }
 
+/* Estilos para la barra de selección activa - CORREGIDO */
 .info-section.selection-active {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8;
+    padding: 8px 20px;
     background: #f5f5f5;
     border-bottom: 1px solid #e0e0e0;
     font-size: 13px;
     color: #333;
+    margin-bottom: 0; /* Importante: elimina el espacio entre la barra y la tabla */
+    height: 38px; /* Altura fija para que se vea consistente */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .info-section.selection-active span {
-font-weight: normal;
+    font-weight: normal;
+    margin-right: auto; /* Esto deja espacio para los botones */
+    display: inline-block;
 }
 
-.info-section .action-buttons {
-display: flex;
+/* Botones dentro de la barra de selección - CORREGIDO */
+.action-button-fixed {
+    position: absolute;
+    right: 20px; /* Posicionar en el extremo derecho */
+    top: 4px; /* Alinear verticalmente */
 }
 
+.action-button-fixed.pause {
+    right: 120px; /* Aumentado el espacio entre botones */
+}
+
+/* Estilos para el encabezado principal */
 .header-section {
     display: flex;
     justify-content: space-between;
@@ -83,6 +98,7 @@ display: flex;
     padding: 0 20px;
 }
 
+/* Estilos para la sección de filtros */
 .filter-section {
     max-height: 0;
     overflow: hidden;
@@ -129,12 +145,6 @@ display: flex;
     gap: 10px;
 }
 
-.selection-info .action-buttons {
-    display: flex;
-    gap: 2;
-    margin-left: auto;
-}
-
 .clear-button {
     position: static;
     right: 0;
@@ -179,6 +189,7 @@ display: flex;
     min-width: 100px;
 }
 
+/* Estilos para la sección de información */
 .info-section {
     padding: 15px 20px;
     display: flex;
@@ -189,6 +200,7 @@ display: flex;
     color: #666;
     flex-shrink: 0;
     background-color: #fff;
+    margin-bottom: 0; /* Importante: elimina el espacio entre la barra y la tabla */
 }
 
 .results-count {
@@ -208,26 +220,84 @@ display: flex;
     color: #666;
 }
 
-.selection-info {
-    background: #f5f5f5;
-    color: #333;
-    font-size: 13px;
-    font-weight: normal;
-}
-
-.info-section .selection-info {
+/* Estilos para botones y filtros */
+.filter-button {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    width: 100%;
-    background-color: #f5f5f5;
-    padding: 8;
+    gap: 8px;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
 }
 
+.filter-button svg,
+.filter-button:hover svg,
+.filter-button:active svg,
+.filter-button:focus svg,
+.filter-button:visited svg {
+  color: #666 !important;
+  fill: #666 !important;
+}
+
+button.filter-button,
+.header-actions .filter-button {
+    background-color: transparent !important;
+}
+
+.filter-button svg {
+    font-size: 14px;
+}
+
+.new-button {
+    padding: 4px 12px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* Estilos corregidos para los botones de acción */
+.action-button-fixed {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    height: 30px;
+}
+
+.action-button-fixed.activate {
+    background-color: #28a745; /* Verde */
+    color: white;
+}
+
+.action-button-fixed.pause {
+    background-color: #6c757d; /* Gris */
+    color: white;
+}
+
+.action-button-fixed svg {
+    font-size: 14px;
+}
+
+/* Estilos para la tabla y contenedor */
 .table-container {
     flex: 1;
     overflow: auto;
     position: relative;
+    margin-top: 0; /* Elimina cualquier espacio entre la barra de info y la tabla */
 }
 
 .data-table {
@@ -267,58 +337,14 @@ display: flex;
     text-transform: uppercase;
 }
 
-.filter-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    border: none;
-    background: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 12px;
-    text-transform: uppercase;
+.status-tag.activo {
+    background-color: #1b963e;
+    color: #f9fbfa;
 }
 
-.filter-button svg,
-.filter-button:hover svg,
-.filter-button:active svg,
-.filter-button:focus svg,
-.filter-button:visited svg {
-  color: #666 !important;
-  fill: #666 !important;
-}
-
-.new-button {
-    padding: 4px 12px;
-    background: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    text-transform: uppercase;
-}
-
-button.filter-button {
-    background-color: transparent !important;
-}
-
-.header-actions .filter-button {
-background-color: transparent !important;
-}
-
-.filter-button svg {
-    font-size: 14px;
-}
-
-.new-button {
-    padding: 4px 12px;
-    background: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    text-transform: uppercase;
+.status-tag.pausado {
+    background-color: #706f6f;
+    color: #fdfdfd;
 }
 
 .fake-arrow {
@@ -379,11 +405,68 @@ background-color: transparent !important;
     border-radius: 0;
 }
 
+/* Estilos específicos para el botón de guardar cambios */
+.save-button {
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo casi transparente */
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    color: #000; /* Color de texto negro */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-left: auto; /* Para posicionarlo a la derecha */
+    padding: 8px 16px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    font-weight: normal;
+    height: 36px;
+}
 
-@media (max-width: 1200px) {
-    .filter-group {
-        width: 250px;
-    }
+.save-button.active {
+background-color: rgba(230, 230, 230, 0.2);
+color: #000;
+}
+
+.save-button.disabled {
+color: #aaa;
+border-color: #e5e5e5;
+background-color: rgba(245, 245, 245, 0.3);
+cursor: not-allowed;
+opacity: 0.7;
+}
+
+.save-button svg {
+font-size: 16px;
+margin-right: 3px;
+}
+
+.save-button:hover:not(.disabled) {
+background-color: rgba(230, 230, 230, 0.3);
+}
+
+.save-button:active:not(.disabled) {
+transform: translateY(1px);
+}
+
+/* Animación durante el guardado */
+@keyframes saving-pulse {
+0% { opacity: 1; }
+50% { opacity: 0.7; }
+100% { opacity: 1; }
+}
+
+.save-button:disabled {
+animation: saving-pulse 1.5s infinite;
+}
+
+/* Para entradas modificadas */
+.row-select.modified,
+input.modified {
+border-color: #009688 !important;
+background-color: rgba(0, 150, 136, 0.05) !important;
 }
 
 @media (max-width: 768px) {
@@ -404,54 +487,3 @@ background-color: transparent !important;
         width: 100%;
     }
 }
-
-.action-button-fixed {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 8px 12px; 
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    border: none;
-    cursor: pointer;
-    min-width: 100px;
-    height: 32px;
-}
-
-.action-button-fixed.activate {
-    background-color: #28a745;
-    color: white;
-}
-
-.action-button-fixed.pause {
-background-color: #6c757d;
-color: white;
-}
-
-.status-tag.activo {
-    background-color: #1b963e;
-    color: #f9fbfa; /* Texto verde oscuro */
-}
-
-.status-tag.pausado {
-background-color: #706f6f; /* Fondo gris claro */
-color: #fdfdfd; /* Texto gris oscuro */
-}
-
-.action-button-fixed.activate {
-background-color: transparent;
-color: rgb(78, 76, 76);
-}
-
-.action-button-fixed.pause {
-background-color: transparent;
-color: rgb(78, 76, 76);
-}
-
-.action-button-fixed svg {
-font-size: 14px;
-}
-

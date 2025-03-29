@@ -13,19 +13,14 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  // Estado local para el idioma
   const [currentLanguage, setCurrentLanguage] = useState(localStorage.getItem('appLanguage') || 'es');
   
-  // Actualizar idioma al iniciar y cuando cambie currentLanguage
   useEffect(() => {
-    // Cargar idioma del localStorage
     const storedLanguage = localStorage.getItem('appLanguage') || 'es';
     setCurrentLanguage(storedLanguage);
     
-    // Aplicar el idioma a i18n
     i18n.changeLanguage(storedLanguage);
     
-    // Actualizar título de la página para forzar re-renderizado
     document.title = storedLanguage === 'es' ? 'RAM - Español' : 'RAM - English';
     
     console.log('Idioma actualizado en Login:', storedLanguage);
@@ -59,22 +54,15 @@ function Login() {
   const handleForgotPassword = () => {
     alert(t('Función de recuperar contraseña en desarrollo'));
   };
-  
-  // Función radical para cambiar idioma
   const toggleLanguage = () => {
     const newLang = currentLanguage === 'es' ? 'en' : 'es';
     console.log('Cambiando idioma de', currentLanguage, 'a', newLang);
     
-    // Actualizar almacenamiento local
     localStorage.setItem('appLanguage', newLang);
     
-    // Actualizar estado local
     setCurrentLanguage(newLang);
-    
-    // Actualizar i18n
     i18n.changeLanguage(newLang);
     
-    // Forzar recarga completa de la página
     window.location.href = window.location.pathname;
   };
 

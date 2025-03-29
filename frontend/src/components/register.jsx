@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import '../styles/login.css'; // Usar el mismo CSS que login
+import '../styles/login.css';
 import { LanguageContext } from '../context/LanguageContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 

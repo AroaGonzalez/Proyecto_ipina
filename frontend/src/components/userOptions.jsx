@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // Añadir este import
+import { useTranslation } from 'react-i18next';
 import '../styles/userOptions.css';
 
 const UserOptions = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation(); // Añadir este hook
+    const { t } = useTranslation();
     
     const handleLogout = () => {
         localStorage.removeItem('token');

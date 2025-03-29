@@ -24,7 +24,6 @@ const NuevoArticulo = () => {
   const { languageId } = useContext(LanguageContext);
   const [formValid, setFormValid] = useState(false);
 
-  // Cargar todos los ajenos al iniciar
   useEffect(() => {
     const fetchAllAjenos = async () => {
       try {
@@ -32,7 +31,6 @@ const NuevoArticulo = () => {
         const response = await axios.get(`${BASE_URL}/ajenos/all?idIdioma=${languageId}`);
         if (response.data && Array.isArray(response.data)) {
           setAllAjenos(response.data);
-          // Mostrar todos los ajenos inicialmente
           setSearchResults(response.data);
           setShowResults(true);
         }
@@ -46,7 +44,6 @@ const NuevoArticulo = () => {
     fetchAllAjenos();
   }, [languageId]);
 
-  // Validar si todos los campos requeridos están completos
   useEffect(() => {
     const allValid = selectedArticles.every(
       article => 
@@ -58,19 +55,16 @@ const NuevoArticulo = () => {
     setFormValid(allValid && selectedArticles.length > 0);
   }, [selectedArticles]);
 
-  // Filtrar resultados al escribir
   const handleFilterChange = (e) => {
     const searchValue = e.target.value;
     setSearchQuery(searchValue);
     
     if (!searchValue.trim()) {
-      // Si el campo está vacío, mostrar todos los ajenos
       setSearchResults(allAjenos);
       setShowResults(allAjenos.length > 0);
       return;
     }
     
-    // Filtrar localmente según si es número o texto
     const isSearchById = !isNaN(searchValue.trim());
     let filtered;
     
@@ -79,7 +73,6 @@ const NuevoArticulo = () => {
         ajeno.idAjeno.toString().includes(searchValue.trim())
       );
     } else {
-      // Solo filtrar por nombre si hay al menos 5 caracteres
       if (searchValue.trim().length < 5) {
         setShowHelp(true);
         return;
@@ -94,14 +87,11 @@ const NuevoArticulo = () => {
     setShowResults(filtered.length > 0);
   };
 
-  // Maneja la selección/deselección en la lista de búsqueda
   const handleSelectItem = (article) => {
     setPreselectedArticles(prev => {
-      // Si ya está preseleccionado, lo quitamos
       if (prev.some(a => a.idAjeno === article.idAjeno)) {
         return prev.filter(a => a.idAjeno !== article.idAjeno);
       }
-      // Si no está, lo añadimos con los campos adicionales
       return [...prev, {
         ...article,
         unidadesBox: '',
@@ -112,7 +102,6 @@ const NuevoArticulo = () => {
   };
 
   const handleAddSelected = () => {
-    // Añadir los preseleccionados que no estén ya en selectedArticles
     const newSelectedArticles = [...selectedArticles];
     preselectedArticles.forEach(article => {
       if (!selectedArticles.some(a => a.idAjeno === article.idAjeno)) {
@@ -126,7 +115,6 @@ const NuevoArticulo = () => {
     });
     setSelectedArticles(newSelectedArticles);
     
-    // Limpiar preseleccionados y cerrar resultados
     setPreselectedArticles([]);
     setShowResults(false);
   };
@@ -137,7 +125,6 @@ const NuevoArticulo = () => {
 
   const handleSelectAllResults = () => {
     if (!selectAll) {
-      // Add all search results to preselected
       setPreselectedArticles(searchResults.map(item => ({
         ...item, 
         unidadesBox: '',
@@ -145,7 +132,6 @@ const NuevoArticulo = () => {
         multiploMinimo: ''
       })));
     } else {
-      // Clear all preselected
       setPreselectedArticles([]);
     }
     setSelectAll(!selectAll);
@@ -195,7 +181,6 @@ const NuevoArticulo = () => {
     setShowResults(true);
   };
 
-  // Manejar cambios en los campos de cada artículo
   const handleArticleFieldChange = (id, field, value) => {
     setSelectedArticles(prev => 
       prev.map(article => 
@@ -206,7 +191,16 @@ const NuevoArticulo = () => {
     );
   };
 
-  // Close dropdown when clicking outside
+  const handleClearField = (id, field) => {
+    setSelectedArticles(prev => 
+      prev.map(article => 
+        article.idAjeno === id 
+          ? { ...article, [field]: '' }
+          : article
+      )
+    );
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchInputRef.current && !searchInputRef.current.contains(event.target)) {
@@ -355,7 +349,10 @@ const NuevoArticulo = () => {
                             required
                           />
                         </div>
-                        <span>×</span>
+                        <span 
+                          className="clear-button"
+                          onClick={() => handleClearField(article.idAjeno, 'unidadEmpaquetado')}
+                        >×</span>
                       </div>
                     </td>
                     <td>
@@ -369,7 +366,10 @@ const NuevoArticulo = () => {
                             required
                           />
                         </div>
-                        <span>×</span>
+                        <span 
+                          className="clear-button"
+                          onClick={() => handleClearField(article.idAjeno, 'multiploMinimo')}
+                        >×</span>
                       </div>
                     </td>
                     <td>

@@ -8,5 +8,6 @@ router.put('/estado', inventarioController.updateEstado);
 router.get('/search', ajenoController.searchAjenos);
 router.post('/create', ajenoController.createAjenos);
 router.get('/all', ajenoController.getAllAjenos);
+router.put('/update', ajenoController.updateAjenos);
 
 module.exports = router;

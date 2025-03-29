@@ -8,7 +8,6 @@ const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
 
   if (!token) {
-    // Si quieres mostrar algún mensaje antes de redirigir
     console.log(t('session_required'));
     return <Navigate to="/login" />;
   }

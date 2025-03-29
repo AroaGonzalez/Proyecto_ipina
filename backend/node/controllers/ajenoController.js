@@ -23,11 +23,13 @@ exports.createAjenos = async (req, res) => {
     if (!ajenos || !Array.isArray(ajenos)) {
       return res.status(400).json({ message: 'Se requiere un array de ajenos' });
     }
-    
-    console.log('Creando ajenos:', ajenos);
+   
+    const ajenosConEstado = ajenos.map(ajeno => ({
+      ...ajeno,
+      estadoRam: 1
+    }));
      
-    // Llamamos a la función implementada para añadir ajenos a RAM
-    const results = await ajenoRamRepository.addAjenosToRam(ajenos);
+    const results = await ajenoRamRepository.addAjenosToRam(ajenosConEstado);
      
     res.json({
       message: 'Ajenos añadidos correctamente',
@@ -48,5 +50,28 @@ exports.getAllAjenos = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener todos los ajenos:', error);
     res.status(500).json({ message: 'Error al obtener ajenos', error: error.message });
+  }
+};
+
+exports.updateAjenos = async (req, res) => {
+  try {
+    const { ajenos } = req.body;
+    
+    if (!ajenos || !Array.isArray(ajenos)) {
+      return res.status(400).json({ message: 'Se requiere un array de ajenos' });
+    }
+    
+    console.log('Actualizando ajenos:', ajenos);
+    
+    const results = await ajenoRamRepository.updateAjenosRam(ajenos);
+    
+    res.json({
+      message: 'Ajenos actualizados correctamente',
+      count: ajenos.length,
+      results
+    });
+  } catch (error) {
+    console.error('Error al actualizar ajenos:', error);
+    res.status(500).json({ message: 'Error al actualizar ajenos', error: error.message });
   }
 };

@@ -1,8 +1,7 @@
-/* nuevoArticulo.css */
 .nuevo-articulo-container {
     padding: 20px;
-    margin-left: 140px; /* Espacio para el menú lateral */
-    width: calc(100% - 160px); /* Ajuste para el ancho total menos el menú */
+    margin-left: 140px;
+    width: calc(100% - 160px);
     box-sizing: border-box;
 }
 
@@ -69,6 +68,24 @@
     pointer-events: none;
 }
 
+.clear-button {
+    position: static;
+    right: 0;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    transform: none;
+}
+
 .clear-search-button {
     position: absolute;
     right: 35px;
@@ -106,6 +123,7 @@
 
 .content-area {
     min-height: 60vh;
+    max-height: calc(100vh - 320px);
 }
 
 .empty-state {
@@ -207,7 +225,28 @@
 .selected-articles {
     width: 100%;
     margin-top: 20px;
-    overflow-x: auto; /* Permitir desplazamiento horizontal si la tabla es muy ancha */
+    max-height: calc(100vh - 350px);
+    overflow-y: auto;
+    overflow-x: auto; 
+}
+
+.selected-articles::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.selected-articles::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.selected-articles::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.selected-articles::-webkit-scrollbar-thumb:hover {
+    background: #999;
 }
 
 .selected-articles table {
@@ -222,6 +261,9 @@
     font-weight: 600;
     color: #333;
     border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .selected-articles td {
@@ -268,7 +310,6 @@
     cursor: not-allowed;
 }
 
-/* Campos editables dentro de la tabla */
 .quantity-input {
     display: flex;
     align-items: center;
@@ -318,7 +359,6 @@
     opacity: 1;
 }
 
-/* Responsivo para pantallas más pequeñas */
 @media (max-width: 1200px) {
     .nuevo-articulo-container {
         padding: 15px;
