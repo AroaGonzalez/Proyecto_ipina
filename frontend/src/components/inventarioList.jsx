@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';  
 import { FaFilter, FaPlay, FaPause, FaSave } from 'react-icons/fa';  
-import axios from 'axios';  
+import axios from 'axios';
+import { FaSyncAlt, FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';  
 import '../styles/inventarioList.css';  
 import { LanguageContext } from '../context/LanguageContext';  
@@ -21,18 +22,14 @@ function InventarioList() {
  const [selectedItems, setSelectedItems] = useState([]);  
  const [selectAll, setSelectAll] = useState(false);  
  const { languageId } = useContext(LanguageContext);
- // Estado para rastrear elementos modificados
  const [modifiedItems, setModifiedItems] = useState({});
- // Estado para habilitar/deshabilitar el botón guardar
  const [saveEnabled, setSaveEnabled] = useState(false);
- // Estado para rastrear si está en proceso de guardar
  const [saving, setSaving] = useState(false);
 
  useEffect(() => {  
    fetchInventario();  
- }, [languageId]); // Refrescar cuando cambie el idioma
+ }, [languageId]);
 
- // Verificar si hay cambios para habilitar/deshabilitar el botón guardar
  useEffect(() => {
    setSaveEnabled(Object.keys(modifiedItems).length > 0);
  }, [modifiedItems]);
@@ -61,7 +58,6 @@ function InventarioList() {
        setInventarios(inventarioData);  
        setFilteredInventarios(inventarioData);  
        setLoading(false);
-       // Resetear los elementos modificados al recargar
        setModifiedItems({});
      })  
      .catch((error) => {  
@@ -121,6 +117,21 @@ function InventarioList() {
    setSelectAll(false);  
  };
 
+  const checkAllSelectedItemsStatus = (status) => {
+    if (selectedItems.length === 0) return false;
+    
+    const selectedItemStates = selectedItems.map(id => {
+      const item = filteredInventarios.find(item => item.idArticulo === id);
+      return (item.estado || "ACTIVO").toLowerCase();
+    });
+
+    if (new Set(selectedItemStates).size > 1) {
+      return true;
+    }
+
+    return selectedItemStates[0] === status.toLowerCase();
+  };
+
  const handleToggleEstado = (nuevoEstado) => {  
    if (selectedItems.length === 0) return;
 
@@ -153,13 +164,10 @@ function InventarioList() {
    navigate('/nuevo-articulo');  
  };
 
- // Manejar cambios en unidades box
  const handleUnidadesBoxChange = (idArticulo, value) => {
-   // Buscar el valor original
    const originalItem = filteredInventarios.find(item => item.idArticulo === idArticulo);
    const originalValue = originalItem?.unidadesBox || "BULTO-PACKAGE";
    
-   // Solo registramos como cambio si es diferente del valor original
    if (value !== originalValue) {
      setModifiedItems(prev => ({
        ...prev,
@@ -169,19 +177,16 @@ function InventarioList() {
        }
      }));
      
-     // Agregar clase para destacar visualmente el campo modificado
      const selectElement = document.querySelector(`#unidadesBox-${idArticulo}`);
      if (selectElement) {
        selectElement.classList.add('modified');
      }
    } else {
-     // Si se vuelve al valor original, eliminamos este campo de los cambios
      setModifiedItems(prev => {
        const newModifiedItems = { ...prev };
        if (newModifiedItems[idArticulo]) {
          delete newModifiedItems[idArticulo].unidadesBox;
          
-         // Si no hay más cambios para este artículo, eliminamos todo el objeto
          if (Object.keys(newModifiedItems[idArticulo]).length === 0) {
            delete newModifiedItems[idArticulo];
          }
@@ -189,7 +194,6 @@ function InventarioList() {
        return newModifiedItems;
      });
      
-     // Quitar clase visual
      const selectElement = document.querySelector(`#unidadesBox-${idArticulo}`);
      if (selectElement) {
        selectElement.classList.remove('modified');
@@ -197,13 +201,10 @@ function InventarioList() {
    }
  };
 
- // Manejar cambios en unidad de empaquetado
  const handleUnidadEmpaquetadoChange = (idArticulo, value) => {
-   // Buscar el valor original
    const originalItem = filteredInventarios.find(item => item.idArticulo === idArticulo);
    const originalValue = originalItem?.unidadEmpaquetado?.toString() || "1";
    
-   // Solo registramos como cambio si es diferente del valor original
    if (value !== originalValue) {
      setModifiedItems(prev => ({
        ...prev,
@@ -213,19 +214,16 @@ function InventarioList() {
        }
      }));
      
-     // Agregar clase para destacar visualmente el campo modificado
      const inputElement = document.querySelector(`#unidadEmpaquetado-${idArticulo}`);
      if (inputElement) {
        inputElement.classList.add('modified');
      }
    } else {
-     // Si se vuelve al valor original, eliminamos este campo de los cambios
      setModifiedItems(prev => {
        const newModifiedItems = { ...prev };
        if (newModifiedItems[idArticulo]) {
          delete newModifiedItems[idArticulo].unidadEmpaquetado;
          
-         // Si no hay más cambios para este artículo, eliminamos todo el objeto
          if (Object.keys(newModifiedItems[idArticulo]).length === 0) {
            delete newModifiedItems[idArticulo];
          }
@@ -233,7 +231,6 @@ function InventarioList() {
        return newModifiedItems;
      });
      
-     // Quitar clase visual
      const inputElement = document.querySelector(`#unidadEmpaquetado-${idArticulo}`);
      if (inputElement) {
        inputElement.classList.remove('modified');
@@ -241,13 +238,10 @@ function InventarioList() {
    }
  };
 
- // Manejar cambios en múltiplo mínimo
  const handleMultiploMinimoChange = (idArticulo, value) => {
-   // Buscar el valor original
    const originalItem = filteredInventarios.find(item => item.idArticulo === idArticulo);
    const originalValue = originalItem?.multiploMinimo?.toString() || "1";
    
-   // Solo registramos como cambio si es diferente del valor original
    if (value !== originalValue) {
      setModifiedItems(prev => ({
        ...prev,
@@ -257,19 +251,16 @@ function InventarioList() {
        }
      }));
      
-     // Agregar clase para destacar visualmente el campo modificado
      const inputElement = document.querySelector(`#multiploMinimo-${idArticulo}`);
      if (inputElement) {
        inputElement.classList.add('modified');
      }
    } else {
-     // Si se vuelve al valor original, eliminamos este campo de los cambios
      setModifiedItems(prev => {
        const newModifiedItems = { ...prev };
        if (newModifiedItems[idArticulo]) {
          delete newModifiedItems[idArticulo].multiploMinimo;
          
-         // Si no hay más cambios para este artículo, eliminamos todo el objeto
          if (Object.keys(newModifiedItems[idArticulo]).length === 0) {
            delete newModifiedItems[idArticulo];
          }
@@ -285,15 +276,12 @@ function InventarioList() {
    }
  };
 
- // Guardar cambios
  const handleSaveChanges = () => {
    if (!saveEnabled || Object.keys(modifiedItems).length === 0) return;
    
    setSaving(true);
    
-   // Preparar los datos para la API
    const ajenosToUpdate = Object.entries(modifiedItems).map(([idAjeno, changes]) => {
-     // Buscar el artículo original para obtener los valores por defecto si no hay cambios
      const originalItem = filteredInventarios.find(item => item.idArticulo.toString() === idAjeno);
      
      return {
@@ -304,14 +292,13 @@ function InventarioList() {
      };
    });
    
-   // Usar el endpoint existente createAjenos que también funciona para actualizar
    axios
      .post(`${BASE_URL}/ajenos/create`, { ajenos: ajenosToUpdate })
      .then(response => {
        console.log('Cambios guardados:', response.data);
        alert(t('Cambios guardados correctamente'));
        setModifiedItems({});
-       fetchInventario(); // Recargar datos
+       fetchInventario();
      })
      .catch(error => {
        console.error('Error al guardar cambios:', error);
@@ -372,53 +359,66 @@ function InventarioList() {
          </div>  
        </div>
 
-       <div className="info-section">  
-         {selectedItems.length === 0 ? (  
-           <div className="results-info">  
-             <span className="results-count">  
-               {t('Cargados {{count}} resultados de {{total}} encontrados', {  
-                 count: filteredInventarios.length,  
-                 total: inventarios.length  
-               })}  
-             </span>  
-             {' · '}  
-             <span className="update-time">  
-               {t('Última actualización')}: {currentTime}  
-             </span>  
+       {selectedItems.length === 0 ? (
+         <div className="info-section">
+           <div className="results-info">
+              <span className="results-count">
+               {t('Cargados {{count}} resultados de {{total}} encontrados', {
+                 count: filteredInventarios.length,
+                 total: inventarios.length
+                })}
+             
+                {' '}
+                <FaSyncAlt className="sync-icon" />
+                <span className="update-time">
+                  {t('Última actualización')}: {currentTime}
+                </span>
+              </span>
              <button 
-                className={`save-button ${saveEnabled ? 'active' : 'disabled'}`}
-                onClick={handleSaveChanges}
-                disabled={!saveEnabled || saving}
-              >
-                <span role="img" aria-label="document">📄</span>
-                {saving ? t('GUARDANDO...') : t('GUARDAR CAMBIOS')}
-              </button>
-           </div>  
-         ) : (  
-           <div className="selection-info">  
-             <span>{t('Seleccionados {{count}} resultados de {{total}}', {  
-               count: selectedItems.length,  
-               total: inventarios.length  
-             })}</span>  
-             <div className="action-buttons">  
-               <button className="action-button-fixed activate" onClick={() => handleToggleEstado('Activo')}>  
-                 <FaPlay />  
-                 <span>{t('ACTIVAR')}</span>  
-               </button>  
-               <button className="action-button-fixed pause" onClick={() => handleToggleEstado('Pausado')}>  
-                 <FaPause />  
-                 <span>{t('PAUSAR')}</span>  
-               </button>  
-             </div>  
-           </div>  
-         )}  
-       </div>
+               className={`save-button ${saveEnabled ? 'active' : 'disabled'}`}
+               onClick={handleSaveChanges}
+               disabled={!saveEnabled || saving}
+             >
+               <span role="img" aria-label="document">📄</span>
+               {saving ? t('GUARDANDO...') : t('GUARDAR CAMBIOS')}
+             </button>
+           </div>
+         </div>
+       ) : (
+         <div className="selection-info">
+           <span className="selected-count">
+             {t('Seleccionados {{count}} resultados de {{total}} encontrados', {
+               count: selectedItems.length,
+               total: inventarios.length
+             })}
+           </span>
+           <div className="btn-actions-container">
+             <button 
+               className="text-button"
+               onClick={() => handleToggleEstado('Activo')}
+               disabled={checkAllSelectedItemsStatus('activo')}
+             >
+               <FaPlay />
+               {t('ACTIVAR')}
+             </button>
+             <div className="button-separator"></div>
+             <button 
+               className="text-button"
+               onClick={() => handleToggleEstado('Pausado')}
+               disabled={checkAllSelectedItemsStatus('pausado')}
+             >
+               <FaPause />
+               {t('PAUSAR')}
+             </button>
+           </div>
+         </div>
+       )}
 
        <div className="table-container">  
          <table className="data-table">  
            <thead>  
              <tr>  
-               <th><input type="checkbox" checked={selectAll} onChange={handleSelectAll} /></th>  
+               <th className="checkbox-header"><input type="checkbox" checked={selectAll} onChange={handleSelectAll} /></th>  
                <th>{t('ID ARTÍCULO')}</th>  
                <th>{t('ARTÍCULO')}</th>  
                <th>{t('ESTADO RAM')}</th>  
@@ -431,11 +431,20 @@ function InventarioList() {
            <tbody>  
              {filteredInventarios && filteredInventarios.length > 0 ? (  
                filteredInventarios.map((item) => (  
-                 <tr key={item.idArticulo}>  
-                   <td><input type="checkbox" checked={selectedItems.includes(item.idArticulo)} onChange={() => handleSelectItem(item.idArticulo)} /></td>  
+                 <tr 
+                   key={item.idArticulo}
+                   className={selectedItems.includes(item.idArticulo) ? 'selected' : ''}
+                 >  
+                   <td className="checkbox-cell">
+                     <input 
+                       type="checkbox" 
+                       checked={selectedItems.includes(item.idArticulo)} 
+                       onChange={() => handleSelectItem(item.idArticulo)} 
+                     />
+                   </td>  
                    <td>{item.idArticulo}</td>  
                    <td>{item.articulo}</td>  
-                   <td>  
+                   <td className="status-cell">  
                      <span className={getStatusTagClass(item.estado || "ACTIVO")}>  
                        {(item.estado || "ACTIVO").toUpperCase()}  
                      </span>  
@@ -479,7 +488,7 @@ function InventarioList() {
                        <span>×</span>  
                      </div>  
                    </td>  
-                   <td>  
+                   <td className="status-cell">  
                      <span className={getStatusTagClass(item.estadoSFI || "ACTIVO")}>  
                        {(item.estadoSFI || "ACTIVO").toUpperCase()}  
                      </span>  

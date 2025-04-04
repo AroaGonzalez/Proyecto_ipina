@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaSyncAlt, FaSearch, FaDownload } from 'react-icons/fa';
+import { FaSyncAlt, FaSearch } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/consultaTienda.css';
