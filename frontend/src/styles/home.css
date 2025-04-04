@@ -163,7 +163,6 @@
   }
 }
 
-/* Add Font Awesome compatibility classes if you're not including the library */
 .fas {
   font-family: 'Font Awesome 5 Free', sans-serif;
 }

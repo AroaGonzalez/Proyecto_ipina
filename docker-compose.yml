@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   node-service:
     build: ./backend/node
@@ -17,6 +16,11 @@ services:
       MYSQL_HOST: mysqldb
       MYSQL_USER: root
       MYSQL_PASSWORD: root
+    command: >
+      sh -c "echo 'Esperando a que MySQL esté listo...' &&
+             sleep 20 &&
+             echo 'Iniciando servicio Node...' &&
+             npm start"
 
   mysqldb:
     image: mysql:8.0
@@ -28,7 +32,6 @@ services:
     volumes:
       - ./database/mysql:/docker-entrypoint-initdb.d
       - mysql-data:/var/lib/mysql
-    # Este comando modifica la secuencia de arranque para ejecutar tu script de inicialización
     command: >
       bash -c "
       echo 'Contenedor iniciando...' &&

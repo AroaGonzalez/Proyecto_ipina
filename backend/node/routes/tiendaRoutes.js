@@ -7,5 +7,6 @@ router.get('/', tiendaController.getTiendas);
 router.get('/mercados', tiendaController.getMercados);
 router.get('/grupos-cadena', tiendaController.getGruposCadena);
 router.get('/cadenas', tiendaController.getCadenas);
+router.get('/grupos-localizacion', tiendaController.getGruposLocalizacion);
 
 module.exports = router;

@@ -10,7 +10,6 @@ const app = express();
 const JWT_SECRET = 'your_jwt_secret'; 
 const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 
-
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -255,8 +254,6 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' });
   }
 });
-
-
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

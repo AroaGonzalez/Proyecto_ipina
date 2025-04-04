@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaSyncAlt, FaSearch, FaDownload } from 'react-icons/fa';
 import axios from 'axios';
@@ -7,47 +7,194 @@ import '../styles/consultaTienda.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
+const CustomDropdown = ({ label, options, selectedItems, onChange, disabled = false }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleSelect = (id) => {
+    if (id === 'all') {
+      if (selectedItems.includes('all')) {
+        onChange([]);
+      } else {
+        onChange(['all', ...options
+          .filter(item => item.id !== 'all')
+          .map(item => item.id)]);
+      }
+    } else {
+      const isSelected = selectedItems.includes(id);
+      
+      if (isSelected) {
+        onChange(selectedItems.filter(item => item !== id && item !== 'all'));
+      } else {
+        const newSelected = [...selectedItems, id];
+        
+        const allItemsSelected = options
+          .filter(item => item.id !== 'all')
+          .every(item => newSelected.includes(item.id));
+        
+        onChange(allItemsSelected ? [...newSelected, 'all'] : newSelected);
+      }
+    }
+  };
+
+  const filteredOptions = options.filter(item => {
+    if (!searchTerm) return true;
+    
+    const search = searchTerm.toLowerCase();
+    const id = item.id.toString().toLowerCase();
+    const desc = item.descripcion.toLowerCase();
+    
+    return id.includes(search) || desc.includes(search);
+  });
+
+  return (
+    <div className="dropdown-container">
+      <label className="dropdown-label">{label}</label>
+      <div className="custom-dropdown" ref={dropdownRef}>
+        <div 
+          className={`dropdown-header ${disabled ? 'disabled' : ''}`}
+          onClick={() => !disabled && setShowDropdown(!showDropdown)}
+        >
+          {selectedItems.length > 0 
+            ? `${selectedItems.length} seleccionados` 
+            : "Seleccionar"}
+          <span className="dropdown-arrow">▼</span>
+        </div>
+        
+        {showDropdown && !disabled && (
+          <div className="dropdown-options">
+            <div className="dropdown-search">
+              <input 
+                type="text" 
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            {filteredOptions.map(item => (
+              <div 
+                key={item.id} 
+                className={`dropdown-option ${selectedItems.includes(item.id) ? 'selected' : ''}`}
+                onClick={() => handleSelect(item.id)}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={selectedItems.includes(item.id)}
+                  readOnly
+                />
+                <span>{item.descripcion}</span>
+              </div>
+            ))}
+            {filteredOptions.length === 0 && (
+              <div className="no-results">No se encontraron resultados</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ConsultaTienda = () => {
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
   const [tiendas, setTiendas] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingFilters, setLoadingFilters] = useState(false);
-  const [dataRequested, setDataRequested] = useState(false);
   const [error, setError] = useState(null);
   const [selectAll, setSelectAll] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [showFilters, setShowFilters] = useState(true); // Mostrar filtros por defecto
+  const [showFilters, setShowFilters] = useState(true);
   const [totalElements, setTotalElements] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Estados para opciones de filtro
   const [mercados, setMercados] = useState([]);
   const [gruposCadena, setGruposCadena] = useState([]);
   const [cadenas, setCadenas] = useState([]);
+  const [gruposLocalizacion, setGruposLocalizacion] = useState([]);
 
-  // Estados para los filtros
-  const [filtroMercado, setFiltroMercado] = useState('');
-  const [filtroLocalizacion, setFiltroLocalizacion] = useState('');
-  const [filtroGrupoCadena, setFiltroGrupoCadena] = useState('');
-  const [filtroCadena, setFiltroCadena] = useState('');
+  const [selectedMercados, setSelectedMercados] = useState([]);
+  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+  const [selectedCadenas, setSelectedCadenas] = useState([]);
+  const [selectedGruposLocalizacion, setSelectedGruposLocalizacion] = useState([]);
   
-  // Cargar opciones de filtro al iniciar el componente
+  const [filtroLocalizacion, setFiltroLocalizacion] = useState('');
+  const tableEndRef = useRef(null);
+  const tableContainerRef = useRef(null);
+  
   useEffect(() => {
     fetchFilterOptions();
+    fetchTiendas();
   }, [languageId]);
 
-  // Función para cargar datos de filtros
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tableContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = tableContainerRef.current;
+        if (!loadingMore && hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
+          loadMoreData();
+        }
+      }
+    };
+
+    const tableContainer = tableContainerRef.current;
+    if (tableContainer) {
+      tableContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (tableContainer) {
+        tableContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [loadingMore, hasMore]);
+
+  const loadMoreData = async () => {
+    if (!hasMore || loadingMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      await fetchTiendas(undefined, nextPage, true);
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error('Error cargando más datos:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const fetchFilterOptions = async () => {
     setLoadingFilters(true);
     try {
-      // Solo cargar mercados y grupos cadena, las cadenas se cargarán bajo demanda
-      const [mercadosRes, gruposCadenaRes] = await Promise.all([
-        axios.get(`${BASE_URL}/tiendas/mercados?idIdioma=${languageId}`),
-        axios.get(`${BASE_URL}/tiendas/grupos-cadena?idIdioma=${languageId}`)
+      const [mercadosRes, gruposCadenaRes, cadenasRes, gruposLocalizacionRes] = await Promise.all([
+        axios.get(`${BASE_URL}/tiendas/mercados?idIdioma=${languageId}&formatoSelector=true`),
+        axios.get(`${BASE_URL}/tiendas/grupos-cadena?idIdioma=${languageId}&formatoSelector=true`),
+        axios.get(`${BASE_URL}/tiendas/cadenas?idIdioma=${languageId}&formatoSelector=true`),
+        axios.get(`${BASE_URL}/tiendas/grupos-localizacion?idIdioma=${languageId}&formatoSelector=true`)
       ]);
       
       setMercados(mercadosRes.data || []);
       setGruposCadena(gruposCadenaRes.data || []);
+      setCadenas(cadenasRes.data || []);
+      setGruposLocalizacion(gruposLocalizacionRes.data || []);
     } catch (error) {
       console.error('Error al cargar opciones de filtro:', error);
     } finally {
@@ -55,70 +202,92 @@ const ConsultaTienda = () => {
     }
   };
 
-  // Cargar cadenas cuando se selecciona un grupo cadena
   useEffect(() => {
-    if (filtroGrupoCadena) {
-      const fetchCadenas = async () => {
-        try {
+    const fetchCadenas = async () => {
+      try {
+        const gruposCadenaToFilter = selectedGruposCadena.filter(id => id !== 'all');
+        
+        if (gruposCadenaToFilter.length > 0) {
+          const idGrupoCadena = gruposCadenaToFilter[0];
           const response = await axios.get(
-            `${BASE_URL}/tiendas/cadenas?idGrupoCadena=${filtroGrupoCadena}&idIdioma=${languageId}`
+            `${BASE_URL}/tiendas/cadenas?idGrupoCadena=${idGrupoCadena}&idIdioma=${languageId}&formatoSelector=true`
           );
           setCadenas(response.data || []);
-        } catch (error) {
-          console.error('Error al cargar cadenas:', error);
+        } else {
+          const response = await axios.get(
+            `${BASE_URL}/tiendas/cadenas?idIdioma=${languageId}&formatoSelector=true`
+          );
+          setCadenas(response.data || []);
         }
-      };
-      fetchCadenas();
-    } else {
-      setCadenas([]);
-      setFiltroCadena('');
-    }
-  }, [filtroGrupoCadena, languageId]);
+      } catch (error) {
+        console.error('Error al cargar cadenas:', error);
+      }
+    };
+    
+    fetchCadenas();
+  }, [selectedGruposCadena, languageId]);
 
-  // Función para cargar tiendas con paginación
-  const fetchTiendas = async (filters = {}) => {
-    setLoading(true);
+  const fetchTiendas = async (filters = {}, page = 0, append = false) => {
+    if (page === 0) {
+      setLoading(true);
+      setHasMore(true);
+    }
     setError(null);
-    setDataRequested(true);
     
     try {
-      // Construir parámetros de consulta
       const params = new URLSearchParams();
       params.append('idIdioma', languageId);
-      params.append('page', 0); // Primera página
-      params.append('size', 50); // Limitar a 50 registros por página
+      params.append('page', page);
+      params.append('size', 50);
       
-      if (filters.idsMercado) params.append('idsMercado', filters.idsMercado);
-      if (filters.idsGrupoCadena) params.append('idsGrupoCadena', filters.idsGrupoCadena);
-      if (filters.idsCadena) params.append('idsCadena', filters.idsCadena);
-      if (filters.idLocalizacion) params.append('idLocalizacion', filters.idLocalizacion);
+      const mercadosToFilter = selectedMercados.filter(id => id !== 'all');
+      const gruposCadenaToFilter = selectedGruposCadena.filter(id => id !== 'all');
+      const cadenasToFilter = selectedCadenas.filter(id => id !== 'all');
+      const gruposLocalizacionToFilter = selectedGruposLocalizacion.filter(id => id !== 'all');
+      
+      mercadosToFilter.forEach(id => params.append('idsMercado', id));
+      gruposCadenaToFilter.forEach(id => params.append('idsGrupoCadena', id));
+      cadenasToFilter.forEach(id => params.append('idsCadena', id));
+      gruposLocalizacionToFilter.forEach(id => params.append('idsGrupoLocalizacion', id));
+      
+      if (filtroLocalizacion) {
+        params.append('idLocalizacion', filtroLocalizacion);
+      }
       
       const response = await axios.get(`${BASE_URL}/tiendas?${params.toString()}`);
       
       if (response.data && response.data.content) {
-        // Procesamos los datos para garantizar que estadoTiendaMtu nunca sea null
         const processedData = response.data.content.map(item => ({
           ...item,
           estadoTiendaMtu: item.estadoTiendaMtu || 'Sin estado'
         }));
         
-        setTiendas(processedData);
+        if (append) {
+          setTiendas(prev => [...prev, ...processedData]);
+        } else {
+          setTiendas(processedData);
+          setCurrentPage(0);
+        }
+        
         setTotalElements(response.data.totalElements || 0);
         
-        // Debug
-        console.log('Respuesta API:', response.data);
-        if (processedData.length > 0) {
-          console.log('Primer elemento procesado:', processedData[0]);
+        if (processedData.length === 0 || (response.data.totalPages && page >= response.data.totalPages - 1)) {
+          setHasMore(false);
         }
       } else {
-        setTiendas([]);
+        if (!append) {
+          setTiendas([]);
+        }
         setTotalElements(0);
+        setHasMore(false);
       }
     } catch (error) {
       console.error('Error al cargar tiendas:', error);
       setError(t('No se pudieron cargar las tiendas'));
     } finally {
-      setLoading(false);
+      if (page === 0) {
+        setLoading(false);
+      }
     }
   };
 
@@ -150,52 +319,24 @@ const ConsultaTienda = () => {
     return 'estado-otro';
   };
 
-  const handleSearch = () => {
-    // Construir objeto de filtros
-    const filters = {};
+  const formatCountryName = (name) => {
+    if (!name) return name;
     
-    if (filtroMercado) filters.idsMercado = filtroMercado;
-    if (filtroGrupoCadena) filters.idsGrupoCadena = filtroGrupoCadena;
-    if (filtroCadena) filters.idsCadena = filtroCadena;
-    if (filtroLocalizacion) filters.idLocalizacion = filtroLocalizacion;
+    if (name.includes('ESPA')) {
+      return 'ESPAÑA';
+    }
     
-    // Buscar tiendas con los filtros
-    fetchTiendas(filters);
+    return name;
   };
 
-  const handleDownload = () => {
-    alert(t('Función de descarga en desarrollo'));
+  const handleSearch = () => {
+    fetchTiendas();
   };
 
   const currentTime = new Date().toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit'
   });
-
-  // CSS dinámico para los filtros
-  const filterContainerStyle = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '15px',
-    marginBottom: '20px'
-  };
-
-  const filterGroupStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: '1 1 200px'
-  };
-
-  const filterLabelStyle = {
-    fontSize: '14px',
-    marginBottom: '5px'
-  };
-
-  const filterSelectStyle = {
-    padding: '8px',
-    border: '1px solid #ccc',
-    borderRadius: '4px'
-  };
 
   return (
     <div className="consulta-tienda-container">
@@ -210,28 +351,19 @@ const ConsultaTienda = () => {
       </div>
 
       {showFilters && (
-        <div style={filterContainerStyle}>
-          <div style={filterGroupStyle}>
-            <label style={filterLabelStyle}>Id o Mercado</label>
-            <select 
-              style={filterSelectStyle}
-              value={filtroMercado}
-              onChange={(e) => setFiltroMercado(e.target.value)}
-              disabled={loadingFilters}
-            >
-              <option value="">Seleccionar</option>
-              {mercados.map(mercado => (
-                <option key={mercado.id} value={mercado.id}>
-                  {mercado.descripcion}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="filters-container">
+          <CustomDropdown 
+            label="Id o Mercado"
+            options={mercados}
+            selectedItems={selectedMercados}
+            onChange={setSelectedMercados}
+            disabled={loadingFilters}
+          />
 
-          <div style={filterGroupStyle}>
-            <label style={filterLabelStyle}>Id Localización</label>
+          <div className="localizacion-filter">
+            <label className="filter-label">Id Localización</label>
             <input 
-              style={filterSelectStyle}
+              className="filter-input"
               type="text" 
               value={filtroLocalizacion}
               onChange={(e) => setFiltroLocalizacion(e.target.value)}
@@ -239,62 +371,46 @@ const ConsultaTienda = () => {
             />
           </div>
 
-          <div style={filterGroupStyle}>
-            <label style={filterLabelStyle}>Id o Grupo Cadena (T6)</label>
-            <select 
-              style={filterSelectStyle}
-              value={filtroGrupoCadena}
-              onChange={(e) => setFiltroGrupoCadena(e.target.value)}
-              disabled={loadingFilters}
-            >
-              <option value="">Seleccionar</option>
-              {gruposCadena.map(grupo => (
-                <option key={grupo.id} value={grupo.id}>
-                  {grupo.descripcion}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomDropdown 
+            label="Id o Grupo de Localizaciones"
+            options={gruposLocalizacion}
+            selectedItems={selectedGruposLocalizacion}
+            onChange={setSelectedGruposLocalizacion}
+            disabled={loadingFilters}
+          />
 
-          <div style={filterGroupStyle}>
-            <label style={filterLabelStyle}>Id o Cadena</label>
-            <select 
-              style={filterSelectStyle}
-              value={filtroCadena}
-              onChange={(e) => setFiltroCadena(e.target.value)}
-              disabled={!filtroGrupoCadena || loadingFilters}
-            >
-              <option value="">Seleccionar</option>
-              {cadenas.map(cadena => (
-                <option key={cadena.id} value={cadena.id}>
-                  {cadena.descripcion}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomDropdown 
+            label="Id o Grupo Cadena (T6)"
+            options={gruposCadena}
+            selectedItems={selectedGruposCadena}
+            onChange={setSelectedGruposCadena}
+            disabled={loadingFilters}
+          />
+
+          <CustomDropdown 
+            label="Id o Cadena"
+            options={cadenas}
+            selectedItems={selectedCadenas}
+            onChange={setSelectedCadenas}
+            disabled={loadingFilters}
+          />
         </div>
       )}
 
       <div className="results-info">
         <span className="results-count">
-          {loading ? t('Cargando...') : dataRequested 
-            ? t('Cargados {{count}} resultados de {{total}} encontrados', {
-                count: tiendas.length,
-                total: totalElements
-              })
-            : t('Utilice los filtros para buscar tiendas')
+          {loading ? t('Cargando...') : 
+            t('Cargados {{count}} resultados de {{total}} encontrados', {
+              count: tiendas.length,
+              total: totalElements
+            })
           }
-        </span>
-        <div className="update-info">
+          {' '}
           <FaSyncAlt className="sync-icon" />
           <span className="update-time">
             {t('Última actualización')}: {currentTime}
           </span>
-        </div>
-        <button className="download-button" onClick={handleDownload}>
-          <FaDownload />
-          <span>{t('DESCARGAR')}</span>
-        </button>
+        </span>
       </div>
 
       {error && (
@@ -303,27 +419,18 @@ const ConsultaTienda = () => {
         </div>
       )}
 
-      <div style={{marginTop: '10px', marginBottom: '20px', textAlign: 'right'}}>
+      <div className="search-button-container">
         <button 
-          className="buscar-button" 
-          style={{
-            padding: '8px 20px',
-            backgroundColor: '#333',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
+          className="buscar-button"
           onClick={handleSearch}
           disabled={loading}
         >
-          <FaSearch style={{marginRight: '8px'}} />
+          <FaSearch className="search-icon" />
           <span>{t('BUSCAR')}</span>
         </button>
       </div>
 
-      <div className="table-container">
+      <div className="table-container" ref={tableContainerRef}>
         <table className="tiendas-table">
           <thead>
             <tr>
@@ -351,48 +458,47 @@ const ConsultaTienda = () => {
                   {t('Cargando datos...')}
                 </td>
               </tr>
-            ) : !dataRequested ? (
-              <tr>
-                <td colSpan="8" className="instruction-cell">
-                  {t('Utilice los filtros para buscar tiendas')}
-                </td>
-              </tr>
             ) : tiendas.length > 0 ? (
-              tiendas.map((tienda) => (
-                <tr key={tienda.idLocalizacionRam || tienda.codigoTienda}>
-                  <td>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedItems.includes(tienda.idLocalizacionRam)} 
-                      onChange={() => handleSelectItem(tienda.idLocalizacionRam)} 
-                    />
-                  </td>
-                  <td>{tienda.codigoTienda}</td>
-                  <td>{tienda.nombreTienda}</td>
-                  <td>
-                    <div className="mercado-cell">
-                      <span className="flag">
-                        {tienda.codigoIsoMercado === 'ES' ? `🇪🇸` : (
-                          tienda.codigoIsoMercado === 'AR' ? `🇦🇷` : ''
-                        )}
+              <>
+                {tiendas.map((tienda) => (
+                  <tr key={tienda.idLocalizacionRam || tienda.codigoTienda}>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedItems.includes(tienda.idLocalizacionRam)} 
+                        onChange={() => handleSelectItem(tienda.idLocalizacionRam)} 
+                      />
+                    </td>
+                    <td>{tienda.codigoTienda}</td>
+                    <td>{tienda.nombreTienda}</td>
+                    <td>
+                      <div className="mercado-cell">
+                        <span>{formatCountryName(tienda.nombreMercado)}</span>
+                      </div>
+                    </td>
+                    <td>{tienda.nombreGrupoCadena}</td>
+                    <td>{tienda.nombreCadena}</td>
+                    <td>
+                      <span className={`estado-tag ${getEstadoClass(tienda.estadoTiendaMtu)}`}>
+                        {tienda.estadoTiendaMtu}
                       </span>
-                      <span>{tienda.nombreMercado}</span>
-                    </div>
-                  </td>
-                  <td>{tienda.nombreGrupoCadena}</td>
-                  <td>{tienda.nombreCadena}</td>
-                  <td>
-                    <span className={`estado-tag ${getEstadoClass(tienda.estadoTiendaMtu)}`}>
-                      {tienda.estadoTiendaMtu}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`estado-tag ${getEstadoClass(tienda.descripcionTipoEstadoLocalizacionRam)}`}>
-                      {tienda.descripcionTipoEstadoLocalizacionRam || ''}
-                    </span>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td>
+                      <span className={`estado-tag ${getEstadoClass(tienda.descripcionTipoEstadoLocalizacionRam)}`}>
+                        {tienda.descripcionTipoEstadoLocalizacionRam || ''}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {loadingMore && (
+                  <tr>
+                    <td colSpan="8" className="loading-cell">
+                      {t('Cargando más datos...')}
+                    </td>
+                  </tr>
+                )}
+                <tr ref={tableEndRef}></tr>
+              </>
             ) : (
               <tr>
                 <td colSpan="8" className="empty-table-message">

@@ -4,17 +4,24 @@
     min-height: 100vh;
     background-color: #fff;
     width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .content {
-    margin-left: 140px;
-    width: calc(100% - 160px); /* Reduced from 250px to 160px */
+    margin-left: 250px; 
+    width: calc(100vw - 250px); 
     height: 100vh;
     background-color: #fff;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding-right: 20px; /* Added padding to prevent content from touching the edge */
+    padding: 0; /* Eliminar todos los paddings */
+    box-sizing: border-box; /* Esto garantiza que el padding no afecte el ancho total */
+    position: fixed; /* Fijar el contenido en su posición */
+    top: 0;
+    right: 0;
 }
 
 .header-select-display {
@@ -40,7 +47,6 @@
     gap: 8px;
 }
 
-/* Estilos para la barra de selección activa - CORREGIDO */
 .info-section.selection-active {
     position: relative;
     display: flex;
@@ -70,10 +76,9 @@
 }
 
 .action-button-fixed.pause {
-    right: 120px; /* Aumentado el espacio entre botones */
+    right: 120px;
 }
 
-/* Estilos para el encabezado principal */
 .header-section {
     display: flex;
     justify-content: space-between;
@@ -189,7 +194,6 @@
     min-width: 100px;
 }
 
-/* Estilos para la sección de información */
 .info-section {
     padding: 15px 20px;
     display: flex;
@@ -200,7 +204,7 @@
     color: #666;
     flex-shrink: 0;
     background-color: #fff;
-    margin-bottom: 0; /* Importante: elimina el espacio entre la barra y la tabla */
+    margin-bottom: 0;
 }
 
 .results-count {
@@ -292,12 +296,14 @@ button.filter-button,
     font-size: 14px;
 }
 
-/* Estilos para la tabla y contenedor */
 .table-container {
     flex: 1;
     overflow: auto;
     position: relative;
-    margin-top: 0; /* Elimina cualquier espacio entre la barra de info y la tabla */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .data-table {
