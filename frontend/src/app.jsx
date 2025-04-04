@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Login from './components/login';
 import Menu from './components/menu';
@@ -12,6 +12,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import Profile from './components/profile';
 import EditProfile from './components/editProfile';
 import NuevoArticulo from './components/nuevoArticulo';
+import ConsultaTienda from './components/consultaTienda';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -41,12 +42,20 @@ function App() {
                   <Home />
                 </PrivateRoute>
               }
-            />            
+            />              
             <Route
               path="/parametrizacion-articulos"
               element={
                 <PrivateRoute>
                   <InventarioList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/consulta-tienda"
+              element={
+                <PrivateRoute>
+                  <ConsultaTienda />
                 </PrivateRoute>
               }
             />
@@ -57,7 +66,7 @@ function App() {
                   <NuevoArticulo />
                 </PrivateRoute>
               }
-            />          
+            />            
             <Route
               path="/change-password"
               element={

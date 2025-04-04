@@ -5,9 +5,11 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Sequelize, DataTypes } = require('sequelize');
-
+const tiendaRoutes = require('./routes/tiendaRoutes');
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; 
+const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
+
 
 const swaggerOptions = {
   definition: {
@@ -30,7 +32,6 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Conexión a AJENOS
 const sequelizeAjenos = new Sequelize(
   'AJENOS',
   process.env.MYSQL_USER || 'root',
@@ -42,7 +43,6 @@ const sequelizeAjenos = new Sequelize(
   }
 );
 
-// Conexión a MAESTROS
 const sequelizeMaestros = new Sequelize(
   'MAESTROS',
   process.env.MYSQL_USER || 'root',
@@ -54,7 +54,6 @@ const sequelizeMaestros = new Sequelize(
   }
 );
 
-// Función para conectar a ambas bases de datos
 async function connectWithRetry() {
   let retries = 10;
   while (retries > 0) {
@@ -88,7 +87,6 @@ app.use(express.json());
 
 const User = require('./models/user')(sequelizeAjenos);
 
-// Para la ruta de login, reemplazar el código existente
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -96,7 +94,6 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    // Buscar usuario en la base de datos
     const user = await User.findOne({ 
       where: { username } 
     });
@@ -105,20 +102,16 @@ app.post('/login', async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    // Comparar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Contraseña incorrecta' });
     }
 
-    // Generar token JWT
     const token = jwt.sign(
       { id: user.id, username: user.username }, 
       JWT_SECRET, 
       { expiresIn: '8h' }
     );
-    
-    // Devolver token y datos básicos del usuario
     res.json({ 
       token,
       user: {
@@ -133,7 +126,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// backend/node/index.js (Registro)
 app.post('/register', async (req, res) => {
   const { username, password, name, email } = req.body;
    
@@ -142,7 +134,6 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ 
       where: { username } 
     });
@@ -151,10 +142,8 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'El usuario ya existe' });
     }
 
-    // Encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Crear nuevo usuario
     const newUser = await User.create({
       username,
       password: hashedPassword,
@@ -162,7 +151,6 @@ app.post('/register', async (req, res) => {
       email: email || ''
     });
 
-    // Generar token para login automático
     const token = jwt.sign(
       { id: newUser.id, username: newUser.username }, 
       JWT_SECRET, 
@@ -179,12 +167,10 @@ app.post('/register', async (req, res) => {
   }
 });
 
-const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
-
 app.use('/ajenos', ajenoRamRoutes);
 app.use('/inventario', ajenoRamRoutes);
+app.use('/tiendas', tiendaRoutes);
 
-// Middleware para validar el token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -203,7 +189,6 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-// Ruta para obtener perfil de usuario
 app.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -221,7 +206,6 @@ app.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Actualizar perfil
 app.put('/profile', authenticateToken, async (req, res) => {
   try {
     const { name, email, address } = req.body;
@@ -231,7 +215,6 @@ app.put('/profile', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    // Actualizar datos
     user.name = name || user.name;
     user.email = email || user.email;
     user.address = address || user.address;
@@ -244,7 +227,6 @@ app.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Cambiar contraseña
 app.put('/profile/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -258,13 +240,11 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
-    // Verificar contraseña actual
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Contraseña actual incorrecta' });
     }
     
-    // Actualizar contraseña
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
@@ -275,6 +255,8 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' });
   }
 });
+
+
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
