@@ -411,15 +411,6 @@ const ConsultaTienda = () => {
             {t('Última actualización')}: {currentTime}
           </span>
         </span>
-      </div>
-
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
-
-      <div className="search-button-container">
         <button 
           className="buscar-button"
           onClick={handleSearch}
@@ -430,6 +421,13 @@ const ConsultaTienda = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
+      
       <div className="table-container" ref={tableContainerRef}>
         <table className="tiendas-table">
           <thead>

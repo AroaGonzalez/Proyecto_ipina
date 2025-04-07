@@ -60,7 +60,7 @@ function Menu() {
               <Link to="/consulta-tienda">
                 {t('Consulta de tienda')}
               </Link>
-              <Link to="/nuevo-alias">
+              <Link to="/consulta-nuevo-alias">
                 {t('Consulta y nuevo Alias')}
               </Link>
               <Link to="/consulta-stocks">

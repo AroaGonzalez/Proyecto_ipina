@@ -44,24 +44,22 @@
   font-weight: normal;
 }
 
-/* Estilos para el contenedor de filtros */
 .filters-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 16px;
 }
 
-/* Estilos para el dropdown personalizado */
 .dropdown-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 200px;
+  position: relative;
+  width: 100%;
 }
 
-.dropdown-label, .filter-label {
-  font-size: 14px;
-  margin-bottom: 5px;
+.dropdown-label {
+  display: none; 
 }
 
 .custom-dropdown {
@@ -70,18 +68,27 @@
 }
 
 .dropdown-header {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: color 0.2s ease;
+}
+
+.dropdown-header:hover {
+  color: #666;
 }
 
 .dropdown-header.disabled {
-  background-color: #f5f5f5;
+  color: #999;
   cursor: not-allowed;
 }
 
@@ -89,38 +96,54 @@
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
+  width: 100%;
   max-height: 300px;
   overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-top: none;
   background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   z-index: 10;
 }
 
 .dropdown-search {
   padding: 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .dropdown-search input {
   width: 100%;
-  padding: 6px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 6px 0;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+}
+
+.dropdown-search input:focus {
+  outline: none;
+  border-bottom-color: #333;
 }
 
 .dropdown-option {
-  padding: 8px;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background-color: white;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-option input[type="checkbox"] {
+  margin-right: 10px;
+  accent-color: #333;
+}
+
+.dropdown-option span {
+  font-size: 14px;
+  color: #333;
 }
 
 .dropdown-option.selected {
-  background-color: #f0f0f0;
+  background-color: #f5f5f5;
 }
 
 .dropdown-option:hover {
@@ -128,26 +151,39 @@
 }
 
 .dropdown-arrow {
-  margin-left: 5px;
+  font-size: 0.75rem;
+  color: #666;
 }
 
 .no-results {
-  padding: 8px;
+  padding: 10px;
   text-align: center;
-  color: #999;
+  color: #666;
+  font-size: 14px;
 }
 
-/* Estilos para el filtro de localización */
+/* Localization Filter */
 .localizacion-filter {
   display: flex;
   flex-direction: column;
-  flex: 1 1 200px;
 }
 
-.filter-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.localizacion-filter .filter-label {
+  display: none;
+}
+
+.localizacion-filter .filter-input {
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  color: #333;
+}
+
+.localizacion-filter .filter-input:focus {
+  outline: none;
+  border-bottom-color: #333;
 }
 
 /* Estilos para la información de resultados */
@@ -309,7 +345,7 @@
 /* Estilos responsivos */
 @media (max-width: 1200px) {
   .filters-container {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
   
   .dropdown-container,

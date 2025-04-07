@@ -1,0 +1,453 @@
+/* parametrizacionAlias.css */
+.parametrizacion-alias-container {
+  padding: 0;
+  font-family: Arial, sans-serif;
+  color: #333;
+  background-color: #fff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  margin-bottom: 0;
+}
+
+.main-title {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin: 0;
+  color: #444;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.new-alias-button {
+  background-color: #111;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.new-alias-button:hover {
+  background-color: #333;
+}
+
+/* Estilos para la sección de filtros */
+.filters-section {
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+.filters-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 15px;
+  width: 100%;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.filter-item {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.filter-dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-label {
+  display: block;
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.filter-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 35px;
+  border-bottom: 1px solid #ccc;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-placeholder {
+  color: #777;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  color: #777;
+  margin-left: 5px;
+}
+
+.filter-dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 5px;
+}
+
+.dropdown-search {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.dropdown-search input {
+  width: 100%;
+  padding: 8px 30px 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  font-size: 14px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.dropdown-search::after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>');
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.5;
+}
+
+.dropdown-items {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+.dropdown-item:nth-child(odd):hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-item.select-all {
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  margin-top: 5px;
+}
+
+.dropdown-item input {
+  margin-right: 8px;
+}
+
+.search-button-container {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 2px;
+  margin-left: 10px;
+}
+
+.search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 15px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  height: 35px;
+  font-weight: 500;
+}
+
+.search-button:hover {
+  background-color: #f5f5f5;
+}
+
+.search-icon {
+  font-size: 12px;
+}
+
+/* Estilos para las pestañas */
+.tab-container {
+  margin: 0;
+  padding: 0 20px;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #777;
+  position: relative;
+  transition: color 0.2s;
+  text-transform: uppercase;
+  margin-right: 5px;
+}
+
+.tab-button.active {
+  color: #000;
+  border-bottom: 2px solid #000;
+  margin-bottom: -1px;
+}
+
+.tab-button:hover:not(.active) {
+  color: #444;
+}
+
+/* Estilos para la información de resultados */
+.results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 15px 0;
+  padding: 0 20px;
+  font-size: 13px;
+}
+
+.results-count {
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.sync-icon {
+  margin: 0 5px;
+  font-size: 13px;
+  color: #666;
+}
+
+.update-time {
+  color: #666;
+  margin-left: 5px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.download-button, .massive-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-button:hover, .massive-button:hover {
+  color: #333;
+}
+
+.download-icon, .upload-icon {
+  margin-right: 5px;
+  font-size: 13px;
+}
+
+.table-container {
+  border: 1px solid #eee;
+  border-radius: 0;
+  overflow-y: auto;  /* Explicitly set vertical scrolling */
+  overflow-x: auto;  /* Enable horizontal scrolling */
+  max-height: 600px; /* Limit height to force scrollbar */
+  margin: 0 20px;
+  width: calc(100% - 40px); /* Ensure full width */
+}
+
+.alias-table {
+  width: 100%; 
+  border-collapse: collapse;
+  min-width: 1200px; /* Ensure table is wider than container to trigger horizontal scroll */
+}
+
+.alias-table th {
+  position: sticky;
+  top: 0;
+  background-color: #f6f6f6;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  color: #666;
+  border-bottom: 1px solid #ddd;
+  text-transform: uppercase;
+}
+
+.alias-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+}
+
+.loading-cell, .empty-table-message {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+}
+
+.tipo-tag, .estado-tag, .estacionalidad-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.tipo-tag {
+  background-color: #4682B4;
+  color: white;
+}
+
+.estado-tag {
+  background-color: #4682B4;
+  color: white;
+}
+
+.estacionalidad-tag {
+  background-color: #90EE90;
+  color: #444;
+}
+
+.error-message {
+  background-color: #fff0f0;
+  color: #d32f2f;
+  padding: 10px;
+  margin: 0 20px 15px;
+  border-radius: 4px;
+  border-left: 4px solid #d32f2f;
+  font-size: 13px;
+}
+
+/* Estilos específicos para las etiquetas en la tabla */
+.produccion {
+  background-color: #4682B4;
+}
+
+.siempre {
+  background-color: #90EE90;
+}
+
+/* Estilos para el responsive */
+@media (max-width: 1200px) {
+  .filters-row {
+    flex-wrap: wrap;
+  }
+  
+  .filter-item {
+    flex: 0 0 48%;
+    margin-bottom: 15px;
+  }
+  
+  .search-button-container {
+    margin-top: 15px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-item {
+    flex: 0 0 100%;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .results-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

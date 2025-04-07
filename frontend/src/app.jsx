@@ -13,11 +13,11 @@ import Profile from './components/profile';
 import EditProfile from './components/editProfile';
 import NuevoArticulo from './components/nuevoArticulo';
 import ConsultaTienda from './components/consultaTienda';
+import ParametrizacionAlias from './components/parametrizacionAlias';
 
 function Layout({ children }) {
   const location = useLocation();
   const hideMenu = location.pathname === '/' || location.pathname === '/register';
-
   return (
     <div className="app">
       {!hideMenu && <Menu />}
@@ -26,7 +26,6 @@ function Layout({ children }) {
     </div>
   );
 }
-
 function App() {
   return (
     <LanguageProvider>
@@ -60,6 +59,14 @@ function App() {
               }
             />
             <Route
+              path="/consulta-nuevo-alias"
+              element={
+                <PrivateRoute>
+                  <ParametrizacionAlias />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/nuevo-articulo"
               element={
                 <PrivateRoute>
@@ -84,12 +91,11 @@ function App() {
               <PrivateRoute>
                 <EditProfile />
               </PrivateRoute>
-            } />
+            } />         
           </Routes>
         </Layout>
       </Router>
     </LanguageProvider>
   );
 }
-
 export default App;

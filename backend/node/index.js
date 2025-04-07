@@ -1,3 +1,4 @@
+// File: index.js
 const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -6,9 +7,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Sequelize, DataTypes } = require('sequelize');
 const tiendaRoutes = require('./routes/tiendaRoutes');
+const aliasRoutes = require('./routes/aliasRoutes');
+const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; 
-const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 
 const swaggerOptions = {
   definition: {
@@ -166,9 +168,11 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Rutas de API tradicionales
 app.use('/ajenos', ajenoRamRoutes);
 app.use('/inventario', ajenoRamRoutes);
 app.use('/tiendas', tiendaRoutes);
+app.use('/', aliasRoutes);
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -258,3 +262,8 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
+
+module.exports = {
+  sequelizeAjenos,
+  sequelizeMaestros
+};

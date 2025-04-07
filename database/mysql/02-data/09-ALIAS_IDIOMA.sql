@@ -80,7 +80,7 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (236,3,'S SOBRES REGALO MEDIANOS','S SOBRES REGALO MEDIANOS'),
 	 (236,1,'S ENVELOPES GIFT MEDIUM','S ENVELOPES GIFT MEDIUM'),
-	 (381,1,'Pruebas T4','Pruebas T4'),
+	 (301,1,'PRUEBA 1','PRUEBA 1'),
 	 (237,3,'S SOBRES REGALO GRANDES','S SOBRES REGALO GRANDES'),
 	 (120,3,'Z BOLSAS GRANDES','Z BOLSAS GRANDES'),
 	 (120,1,'Z BAGS LARGE','Z BAGS LARGE'),
@@ -177,7 +177,7 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (162,1,'M SINT ENVELOPES A-1','M SINT ENVELOPES A-1'),
 	 (162,3,'M SINT SOBRES A-1','M SINT SOBRES A-1');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (381,3,'Pruebas T4','Pruebas T4'),
+	 (301,3,'PRUEBA 1','PRUEBA 1'),
 	 (163,3,'M SINT SOBRES B-1','M SINT SOBRES B-1'),
 	 (163,1,'M SINT ENVELOPES B-1','M SINT ENVELOPES B-1'),
 	 (164,1,'M SINT ENVELOPES B-3','M SINT ENVELOPES B-3'),
@@ -221,7 +221,6 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (181,1,'H SINT BOXES LARGE','H SINT BOXES LARGE'),
 	 (182,3,'H SINT CAJAS GRANDES','H SINT CAJAS GRANDES');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (382,1,'Pruebas Eventos','Pruebas Eventos'),
 	 (182,1,'H SINT BOXES LARGE','H SINT BOXES LARGE'),
 	 (183,3,'H SINT CAJAS MEDIANAS','H SINT CAJAS MEDIANAS'),
 	 (183,1,'H SINT BOXES MEDIUM','H SINT BOXES MEDIUM'),
@@ -230,9 +229,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (185,3,'H SINT CAJAS PEQUEÑAS','H SINT CAJAS PEQUEÑAS'),
 	 (185,1,'H SINT BOXES SMALL','H SINT BOXES SMALL'),
 	 (186,1,'H SINT BOXES SMALL PLUS','H SINT BOXES SMALL PLUS'),
-	 (186,3,'H SINT CAJAS PEQUEÑAS PLUS','H SINT CAJAS PEQUEÑAS PLUS');
+	 (186,3,'H SINT CAJAS PEQUEÑAS PLUS','H SINT CAJAS PEQUEÑAS PLUS'),
+	 (187,1,'H SINT BOXES UNIT','H SINT BOXES UNIT');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (187,1,'H SINT BOXES UNIT','H SINT BOXES UNIT'),
 	 (187,3,'H SINT CAJAS UNITARIAS','H SINT CAJAS UNITARIAS'),
 	 (188,3,'H SINT CAJAS XS','H SINT CAJAS XS'),
 	 (188,1,'H SINT BOXES XS','H SINT BOXES XS'),
@@ -241,9 +240,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (191,1,'H SINT PACKAGING FOR CARPET','H SINT PACKAGING FOR CARPET'),
 	 (191,3,'H SINT EMBALAJE PARA ALFOMBRA','H SINT EMBALAJE PARA ALFOMBRA'),
 	 (192,3,'H ETIQUETAS ZEBRA','H ETIQUETAS ZEBRA'),
-	 (192,1,'H STICKERS ZEBRA','H STICKERS ZEBRA');
+	 (192,1,'H STICKERS ZEBRA','H STICKERS ZEBRA'),
+	 (237,1,'S ENVELOPES GIFT LARGE','S ENVELOPES GIFT LARGE');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (237,1,'S ENVELOPES GIFT LARGE','S ENVELOPES GIFT LARGE'),
 	 (238,3,'S SOBRES REGALO XL','S SOBRES REGALO XL'),
 	 (238,1,'S ENVELOPES GIFT XL','S ENVELOPES GIFT XL'),
 	 (239,3,'S ETIQUETAS REGALO','S ETIQUETAS REGALO'),
@@ -252,9 +251,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (240,1,'S SINT BOXES L','S SINT BOXES L'),
 	 (241,3,'S SINT PRECINTO','S SINT PRECINTO'),
 	 (241,1,'S SINT SEAL','S SINT SEAL'),
-	 (242,3,'S SINT ETIQUETAS 100X210','S SINT ETIQUETAS 100X210');
+	 (242,3,'S SINT ETIQUETAS 100X210','S SINT ETIQUETAS 100X210'),
+	 (242,1,'S SINT STICKERS 100X210','S SINT STICKERS 100X210');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (242,1,'S SINT STICKERS 100X210','S SINT STICKERS 100X210'),
 	 (243,3,'P BOLSAS MEDIANAS','P BOLSAS MEDIANAS'),
 	 (243,1,'P BAGS MEDIUM','P BAGS MEDIUM'),
 	 (244,3,'P BOLSAS PEQUEÑAS','P BOLSAS PEQUEÑAS'),
@@ -263,9 +262,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (245,1,'P ENVELOPES GIFT XXL','P ENVELOPES GIFT XXL'),
 	 (246,3,'P SOBRE REGALO L','P SOBRE REGALO L'),
 	 (246,1,'P ENVELOPE GIFT L','P ENVELOPE GIFT L'),
-	 (247,3,'P SOBRE REGALO M','P SOBRE REGALO M');
+	 (247,3,'P SOBRE REGALO M','P SOBRE REGALO M'),
+	 (247,1,'P ENVELOPE GIFT M','P ENVELOPE GIFT M');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (247,1,'P ENVELOPE GIFT M','P ENVELOPE GIFT M'),
 	 (248,3,'P SOBRE REGALO S','P SOBRE REGALO S'),
 	 (248,1,'P ENVELOPE GIFT S','P ENVELOPE GIFT S'),
 	 (249,3,'P BOLSAS GRANDES','P BOLSAS GRANDES'),
@@ -274,9 +273,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (250,1,'P SINT ENVELOPES  M','P SINT ENVELOPES  M'),
 	 (251,3,'P SINT SOBRES S','P SINT SOBRES S'),
 	 (251,1,'P SINT ENVELOPES  S','P SINT ENVELOPES  S'),
-	 (252,3,'P SINT SOBRES L','P SINT SOBRES L');
+	 (252,3,'P SINT SOBRES L','P SINT SOBRES L'),
+	 (252,1,'P SINT ENVELOPES  L','P SINT ENVELOPES  L');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (252,1,'P SINT ENVELOPES  L','P SINT ENVELOPES  L'),
 	 (253,3,'P SINT ETIQUETAS TRANSPORTE','P SINT ETIQUETAS TRANSPORTE'),
 	 (253,1,'P SINT TAGS TRANSPORT','P SINT TAGS TRANSPORT'),
 	 (254,3,'K BOLSAS MEDIANAS','K BOLSAS MEDIANAS'),
@@ -285,9 +284,9 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (255,1,'K BAGS LARGE','K BAGS LARGE'),
 	 (256,3,'K BOLSAS COMPLEMENTOS','K BOLSAS COMPLEMENTOS'),
 	 (256,1,'K BAGS ACCESSORIES','K BAGS ACCESSORIES'),
-	 (257,3,'K SOBRES REGALO PEQUEÑOS','K SOBRES REGALO PEQUEÑOS');
+	 (257,3,'K SOBRES REGALO PEQUEÑOS','K SOBRES REGALO PEQUEÑOS'),
+	 (257,1,'K ENVELOPES GIFT SMALL','K ENVELOPES GIFT SMALL');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (257,1,'K ENVELOPES GIFT SMALL','K ENVELOPES GIFT SMALL'),
 	 (258,3,'K SOBRES REGALO MEDIANOS','K SOBRES REGALO MEDIANOS'),
 	 (258,1,'K ENVELOPES GIFT MEDIUM','K ENVELOPES GIFT MEDIUM'),
 	 (259,3,'K SOBRES REGALO GRANDES','K SOBRES REGALO GRANDES'),
@@ -296,178 +295,78 @@ INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
 	 (260,1,'K ENVELOPES GIFT XXL','K ENVELOPES GIFT XXL'),
 	 (261,3,'K BOLSAS MINI','K BOLSAS MINI'),
 	 (261,1,'K BAGS MINI','K BAGS MINI'),
-	 (281,1,'Bolsa Zara- QA Erick','Bolsa Zara- QA Erick');
+	 (281,1,'Prueba PILOTO 07','Prueba PILOTO 07'),
+	 (281,3,'Prueba PILOTO 07','Prueba PILOTO 07');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (281,3,'Bolsa Zara- QA Erick','Bolsa Zara- QA Erick'),
-	 (382,3,'Pruebas Eventos','Pruebas Eventos'),
-	 (383,1,'Pruebas Antonio','Pruebas Antonio'),
-	 (283,1,'Bolsa Rebajas Zara Medianas - QA (Erick))','Bolsa Rebajas Zara Medianas - QA (Erick))'),
-	 (283,3,'Bolsa Rebajas Zara Medianas - QA (Erick))','Bolsa Rebajas Zara Medianas - QA (Erick))'),
-	 (284,1,'STR CAJA SOBRES REGALO - QA (Erick)','STR CAJA SOBRES REGALO - QA (Erick)'),
-	 (284,3,'STR CAJA SOBRES REGALO - QA (Erick)','STR CAJA SOBRES REGALO - QA (Erick)'),
-	 (383,3,'Pruebas Antonio','Pruebas Antonio'),
-	 (384,1,'Pruebas Solicitar','Pruebas Solicitar'),
-	 (384,3,'Pruebas Solicitar','Pruebas Solicitar');
+	 (282,1,'Prueba PILOTO 07','Prueba PILOTO 07'),
+	 (282,3,'Prueba PILOTO 07','Prueba PILOTO 07'),
+	 (283,1,'PAPER BIN','PAPER BIN'),
+	 (283,3,'PAPELERA','PAPELERA'),
+	 (302,1,'PruebaprincipalAroa','PruebaprincipalAroa'),
+	 (302,3,'PruebaprincipalAroa','PruebaprincipalAroa'),
+	 (303,1,'pruebaAcopleAroa','pruebaAcopleAroa'),
+	 (303,3,'pruebaAcopleAroa','pruebaAcopleAroa'),
+	 (304,1,'test','test'),
+	 (304,3,'test','test');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (385,1,'Pruebas Regre','Pruebas Regre'),
-	 (385,3,'Pruebas Regre','Pruebas Regre'),
-	 (386,1,'Pruebas Regresion','Pruebas Regresion'),
-	 (288,1,'PAPER BIN','PAPER BIN'),
-	 (288,3,'PAPELERA','PAPELERA'),
-	 (386,3,'Pruebas Regresion','Pruebas Regresion'),
-	 (387,1,'Flujo T4','Flujo T4'),
-	 (387,3,'Flujo T4','Flujo T4'),
-	 (388,1,'Pruebas Antonio T4','Pruebas Antonio T4'),
-	 (291,1,'Bolsas Zara - QA Pruebas 07','Bolsas Zara - QA Pruebas 07');
+	 (305,1,'est','test'),
+	 (305,3,'test','test'),
+	 (306,1,'PRUEBA V','PRUEBA V'),
+	 (306,3,'PRUEBA V','PRUEBA V'),
+	 (307,1,'QA Alias Principal ','QA Alias Principal '),
+	 (307,3,'QA Alias Principal ','QA Alias Principal '),
+	 (308,1,'QA Alias Acoplado 1','QA Alias Acoplado 1'),
+	 (308,3,'QA Alias Acoplado 1','QA Alias Acoplado 1'),
+	 (309,1,'QA Alias Acoplado 2','QA Alias Acoplado 2'),
+	 (309,3,'QA Alias Acoplado 2','QA Alias Acoplado 2');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (291,3,'Bolsas Zara - QA Pruebas 07','Bolsas Zara - QA Pruebas 07'),
-	 (388,3,'Pruebas Antonio T4','Pruebas Antonio T4'),
-	 (389,1,'Pruebas T4 Varios estados','Pruebas T4 Varios estados'),
-	 (293,1,'Alias Loc. 12 - QA Pruebas T1 (1)','Alias Loc. 12 - QA Pruebas T1 (1)'),
-	 (293,3,'Alias Loc. 12 - QA Pruebas T1 (1)','Alias Loc. 12 - QA Pruebas T1 (1)'),
-	 (294,1,'Alias Loc. 12 - QA Pruebas T1 (2)','Alias Loc. 12 - QA Pruebas T1 (2)'),
-	 (294,3,'Alias Loc. 12 - QA Pruebas T1 (2)','Alias Loc. 12 - QA Pruebas T1 (2)'),
-	 (295,1,'Alias Loc. 12 - QA Pruebas T1 (3)','Alias Loc. 12 - QA Pruebas T1 (3)'),
-	 (295,3,'Alias Loc. 12 - QA Pruebas T1 (3)','Alias Loc. 12 - QA Pruebas T1 (3)'),
-	 (296,1,'Alias Loc. 11 - QA Pruebas T1 (1)','Alias Loc. 11 - QA Pruebas T1 (1)');
+	 (310,1,'PRUEBA 2 UNIDAD','PRUEBA 2 UNIDAD'),
+	 (310,3,'PRUEBA 2 UNIDAD','PRUEBA 2 UNIDAD'),
+	 (312,1,'QA Pruebas T4','QA Pruebas T4'),
+	 (312,3,'QA Pruebas T4','QA Pruebas T4'),
+	 (313,1,'QA Test','QA Test'),
+	 (313,3,'QA Test','QA Test'),
+	 (314,1,'QA Pruebas Recuentos','QA Pruebas Recuentos'),
+	 (314,3,'QA Pruebas Recuentos','QA Pruebas Recuentos'),
+	 (315,1,'Alias Luis tipo 2 zara es','Alias Luis tipo 2 zara es'),
+	 (315,3,'Alias Luis tipo 2 zara es','Alias Luis tipo 2 zara es');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (296,3,'Alias Loc. 11 - QA Pruebas T1 (1)','Alias Loc. 11 - QA Pruebas T1 (1)'),
-	 (297,1,'Alias Loc. 11 - QA Pruebas T1 (2)','Alias Loc. 11 - QA Pruebas T1 (2)'),
-	 (297,3,'Alias Loc. 11 - QA Pruebas T1 (2)','Alias Loc. 11 - QA Pruebas T1 (2)'),
-	 (389,3,'Pruebas T4 Varios estados','Pruebas T4 Varios estados'),
-	 (299,1,'Alias Loc. 11 - QA Pruebas T1 (3)','Alias Loc. 11 - QA Pruebas T1 (3)'),
-	 (299,3,'Alias Loc. 11 - QA Pruebas T1 (3)','Alias Loc. 11 - QA Pruebas T1 (3)'),
-	 (300,1,'Zara Bolsas - QA Prueba Ajenos (Erick)','Zara Bolsas - QA Prueba Ajenos (Erick)'),
-	 (300,3,'Zara Bolsas - QA Prueba Ajenos (Erick)','Zara Bolsas - QA Prueba Ajenos (Erick)'),
-	 (301,1,'Zara Bolsas - QA Prueba Ajenos (Erick) 2','Zara Bolsas - QA Prueba Ajenos (Erick) 2'),
-	 (301,3,'Zara Bolsas - QA Prueba Ajenos (Erick) 2','Zara Bolsas - QA Prueba Ajenos (Erick) 2');
+	 (316,1,'Alias Zara Luis','Alias Zara Luis'),
+	 (316,3,'Alias Zara Luis','Alias Zara Luis'),
+	 (317,1,'QA Principal','QA Principal'),
+	 (317,3,'QA Principal','QA Principal'),
+	 (318,1,'QA Acople 1','QA Acople 1'),
+	 (318,3,'QA Acople 1','QA Acople 1'),
+	 (319,1,'QA Acople 2','QA Acople 2'),
+	 (319,3,'QA Acople 2','QA Acople 2'),
+	 (320,1,'QA Pruebas T4','QA Pruebas T4'),
+	 (320,3,'QA Pruebas T4','QA Pruebas T4');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (302,1,'Zara Bolsas - QA Prueba Ajenos (Erick) 4','Zara Bolsas - QA Prueba Ajenos (Erick) 4'),
-	 (302,3,'Zara Bolsas - QA Prueba Ajenos (Erick) 4','Zara Bolsas - QA Prueba Ajenos (Erick) 4'),
-	 (303,1,'TRAYS','TRAYS'),
-	 (303,3,'CUBETAS','CUBETAS'),
-	 (305,1,'Trays test 2','Trays test 2'),
-	 (305,3,'Cubeta test 2','Cubeta test 2'),
-	 (308,1,'Alias Eliminar - QA (Erick) 2','Alias Eliminar - QA (Erick) 2'),
-	 (308,3,'Alias Eliminar - QA (Erick) 2','Alias Eliminar - QA (Erick) 2'),
-	 (309,1,'Pausar Alias - QA (Erick) 1','Pausar Alias - QA (Erick) 1'),
-	 (309,3,'Pausar Alias - QA (Erick) 1','Pausar Alias - QA (Erick) 1');
+	 (321,1,'QA Pruebas recuentos Antonio','QA Pruebas recuentos Antonio'),
+	 (321,3,'QA Pruebas recuentos Antonio','QA Pruebas recuentos Antonio'),
+	 (322,1,'fdsa','fasd'),
+	 (322,3,'fsda','fad'),
+	 (323,1,'QA prueba.... alias','QA prueba.... alias'),
+	 (323,3,'QA prueba.... alias','QA prueba.... alias'),
+	 (324,1,'Test 1','Test 1'),
+	 (324,3,'Prueba 1','Prueba 1'),
+	 (325,1,'QA Pruebas Localizaciones','QA Pruebas Localizaciones'),
+	 (325,3,'QA Pruebas Localizaciones','QA Pruebas Localizaciones');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (310,1,'Pausar Alias - QA (Erick) 2','Pausar Alias - QA (Erick) 2'),
-	 (310,3,'Pausar Alias - QA (Erick) 2','Pausar Alias - QA (Erick) 2'),
-	 (311,1,'Eliminar Alias - QA (Erick) 1','Eliminar Alias - QA (Erick) 1'),
-	 (311,3,'Eliminar Alias - QA (Erick) 1','Eliminar Alias - QA (Erick) 1'),
-	 (312,1,'Eliminar Alias - QA (Erick) 2','Eliminar Alias - QA (Erick) 2'),
-	 (312,3,'Eliminar Alias - QA (Erick) 2','Eliminar Alias - QA (Erick) 2'),
-	 (313,1,'Pausar Alias Acople - QA (Erick)','Pausar Alias Acople - QA (Erick)'),
-	 (313,3,'Pausar Alias Acople - QA (Erick)','Pausar Alias Acople - QA (Erick)'),
-	 (315,1,'Alias Acolple PPL - QA','Alias Acolple PPL - QA'),
-	 (315,3,'Alias Acolple PPL - QA','Alias Acolple PPL - QA');
+	 (326,1,'QA Pruebas Masivas','QA Pruebas Masivas'),
+	 (326,3,'QA Pruebas Masivas','QA Pruebas Masivas'),
+	 (327,1,'QA Pruebas T4 Masivas','QA Pruebas T4 Masivas'),
+	 (327,3,'QA Pruebas T4 Masivas','QA Pruebas T4 Masivas'),
+	 (328,1,'QA Pruebas 1500','QA Pruebas 1500'),
+	 (328,3,'QA Pruebas 1500','QA Pruebas 1500'),
+	 (329,1,'QA Pruebas 1500 T4','QA Pruebas 1500 T4'),
+	 (329,3,'QA Pruebas 1500 T4','QA Pruebas 1500 T4'),
+	 (330,1,'Test 1','Test 1'),
+	 (330,3,'Prueba 1','Prueba 1');
 INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (316,1,'Eliminar alias acople -QA','Eliminar alias acople -QA'),
-	 (316,3,'Eliminar alias acople -QA','Eliminar alias acople -QA'),
-	 (317,1,'Acople - QA Prueba','Acople - QA Prueba'),
-	 (317,3,'Acople - QA Prueba','Acople - QA Prueba'),
-	 (318,1,'Prueba Acople principal - QA','Prueba Acople principal - QA'),
-	 (318,3,'Prueba Acople principal - QA','Prueba Acople principal - QA'),
-	 (390,1,'Pruebas T4 prop.','Pruebas T4 prop.'),
-	 (320,1,'Acople Principal - QA PPL','Acople Principal - QA PPL'),
-	 (320,3,'Acople Principal - QA PPL','Acople Principal - QA PPL'),
-	 (321,1,'Alias Acoplado - QA ID 320','Alias Acoplado - QA ID 320');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (321,3,'Alias Acoplado - QA ID 320','Alias Acoplado - QA ID 320'),
-	 (324,1,'Tienda 691 - QA 07','Tienda 691 - QA 07'),
-	 (324,3,'Tienda 691 - QA 07','Tienda 691 - QA 07'),
-	 (325,1,'Tienda 296 - QA 07','Tienda 296 - QA 07'),
-	 (325,3,'Tienda 296 - QA 07','Tienda 296 - QA 07'),
-	 (326,1,'Tienda 6460 - QA 07','Tienda 6460 - QA 07'),
-	 (326,3,'Tienda 6460 - QA 07','Tienda 6460 - QA 07'),
-	 (327,1,'Prueba QA','Prueba QA'),
-	 (327,3,'Prueba QA','Prueba QA'),
-	 (329,3,'QA - NO migrada Alias I','QA - NO migrada Alias I');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (329,1,'QA - NO migrada Alias I','QA - NO migrada Alias I'),
-	 (330,1,'QA - NO migrada Alias II principal','QA - NO migrada Alias II principal'),
-	 (330,3,'QA - NO migrada Alias II principal','QA - NO migrada Alias II principal'),
-	 (331,1,'test 29.1','test 29.1'),
-	 (331,3,'test 29.1','test 29.1'),
-	 (339,1,'prueba tienda','prueba tienda'),
-	 (339,3,'prueba tienda','prueba tienda'),
-	 (340,1,'9 STEPS LADDER','9 STEPS LADDER'),
-	 (340,3,'ESCALERA 9 PELDAÑOS','ESCALERA 9 PELDAÑOS'),
-	 (341,1,'BAG M SPECIAL','BAG M SPECIAL');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (341,3,'BOLSA M ESPECIAL','BOLSA M ESPECIAL'),
-	 (342,1,'Prueba - QA 1','Prueba - QA 1'),
-	 (342,3,'Prueba - QA 1','Prueba - QA 1'),
-	 (343,1,'Prueba - QA 2','Prueba - QA 2'),
-	 (343,3,'Prueba - QA 2','Prueba - QA 2'),
-	 (344,1,'Prueba - QA 3','Prueba - QA 3'),
-	 (344,3,'Prueba - QA 3','Prueba - QA 3'),
-	 (345,1,'QA - Pruebas Antonio','QA - Pruebas Antonio'),
-	 (345,3,'QA - Pruebas Antonio','QA - Pruebas Antonio'),
-	 (346,1,'QA - Prueba Evento','QA - Prueba Evento');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (346,3,'QA - Prueba Evento','QA - Prueba Evento'),
-	 (347,1,'test','test'),
-	 (347,3,'test','test'),
-	 (348,1,'test','test'),
-	 (348,3,'test','test'),
-	 (390,3,'Pruebas T4 prop.','Pruebas T4 prop.'),
-	 (352,1,'QA - Alias Andorra','QA - Alias Andorra'),
-	 (352,3,'QA - Alias Andorra','QA - Alias Andorra'),
-	 (353,1,'QA - Pruebas IV','QA - Pruebas IV'),
-	 (353,3,'QA - Pruebas IV','QA - Pruebas IV');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (354,1,'QA - Alias Stock','QA - Alias Stock'),
-	 (354,3,'QA - Alias Stock','QA - Alias Stock'),
-	 (355,1,'test','test'),
-	 (355,3,'test','test'),
-	 (356,1,'QA - Pruebas Stock I','QA - Pruebas Stock I'),
-	 (356,3,'QA - Pruebas Stock I','QA - Pruebas Stock I'),
-	 (357,1,'QA - IV','QA - IV'),
-	 (357,3,'QA - IV','QA - IV'),
-	 (358,1,'test wnj','test wnj'),
-	 (358,3,'test wnj','test wnj');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (359,1,'test wnj prepru','test wnj prepru'),
-	 (359,3,'test wnj prepru','test wnj prepru'),
-	 (360,1,'test wnj T1 prepru','test wnj T1 prepru'),
-	 (360,3,'test wnj T1 prepru','test wnj T1 prepru'),
-	 (361,1,'QA - Prueba Antonio Edit','QA - Prueba Antonio Edit'),
-	 (361,3,'QA - Prueba Antonio Edit','QA - Prueba Antonio Edit'),
-	 (362,1,'Prueba Propuestas 1','Prueba Propuestas 1'),
-	 (362,3,'Prueba Propuestas 1','Prueba Propuestas 1'),
-	 (363,1,'Prueba anna alias T1','Prueba anna alias T1'),
-	 (363,3,'Prueba anna alias T1','Prueba anna alias T1');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (364,1,'Prueba anna alias T2 PPAL','Prueba anna alias T2 PPAL'),
-	 (364,3,'Prueba anna alias T2 PPAL','Prueba anna alias T2 PPAL'),
-	 (365,1,'Prueba anna alias T2 ACOPLE','Prueba anna alias T2 ACOPLE'),
-	 (365,3,'Prueba anna alias T2 ACOPLE','Prueba anna alias T2 ACOPLE'),
-	 (366,1,'Prueba anna alias T4','Prueba anna alias T4'),
-	 (366,3,'Prueba anna alias T4','Prueba anna alias T4'),
-	 (367,1,'pruebas propuestas','pruebas propuestas'),
-	 (367,3,'pruebas propuestas','pruebas propuestas'),
-	 (368,1,'Alias Pruebas Matteo','Alias Pruebas Matteo'),
-	 (368,3,'Alias Pruebas Matteo','Alias Pruebas Matteo');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (391,1,'QA Acople II','QA Acople II'),
-	 (391,3,'QA Acople II','QA Acople II'),
-	 (392,1,'QA Acople II Principal','QA Acople II Principal'),
-	 (392,3,'QA Acople II Principal','QA Acople II Principal'),
-	 (393,1,'QA Alias Acoplado añadido antes','QA Alias Acoplado añadido antes'),
-	 (393,3,'QA Alias Acoplado añadido antes','QA Alias Acoplado añadido antes'),
-	 (394,1,'QA Alias Acople añadido despues','QA Alias Acople añadido despues'),
-	 (394,3,'QA Alias Acople añadido despues','QA Alias Acople añadido despues'),
-	 (395,1,'Prueba T4 rec','Prueba T4 rec'),
-	 (395,3,'Prueba T4 rec','Prueba T4 rec');
-INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS,ID_IDIOMA,DESCRIPCION,NOMBRE) VALUES
-	 (396,1,'PRUEBA GEN REC DESDE STOCKS','PRUEBA GEN REC DESDE STOCKS'),
-	 (396,3,'PRUEBA GEN REC DESDE STOCKS','PRUEBA GEN REC DESDE STOCKS'),
-	 (397,1,'QA Alias principal Prueba Eliminar','QA Alias principal Prueba Eliminar'),
-	 (397,3,'QA Alias principal Prueba Eliminar','QA Alias principal Prueba Eliminar'),
-	 (398,1,'QA Alias acople 1 Prueba Eliminar','QA Alias acople 1 Prueba Eliminar'),
-	 (398,3,'QA Alias acople 1 Prueba Eliminar','QA Alias acople 1 Prueba Eliminar'),
-	 (399,1,'QA Alias acople 2 Prueba Eliminar','QA Alias acople 2 Prueba Eliminar'),
-	 (399,3,'QA Alias acople 2 Prueba Eliminar','QA Alias acople 2 Prueba Eliminar');
+	 (331,1,'fdas','fdas'),
+	 (331,3,'fdsa','fda'),
+	 (332,1,'QA Pruebas','QA Pruebas'),
+	 (332,3,'QA Pruebas','QA Pruebas'),
+	 (333,1,'QA Pruebas Alias','QA Pruebas Alias'),
+	 (333,3,'QA Pruebas Alias','QA Pruebas Alias');
