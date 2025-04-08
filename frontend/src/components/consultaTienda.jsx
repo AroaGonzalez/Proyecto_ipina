@@ -111,7 +111,7 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
                  
                  // Si no es array, inicializar como array
                  const currentSelections = Array.isArray(value) ? [...value] : 
-                                         (value ? [value] : []);
+                                          (value ? [value] : []);
                  
                  const optionId = option.id.toString();
                  const index = currentSelections.indexOf(optionId);
@@ -210,11 +210,56 @@ const ConsultaTienda = () => {
  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState([]);
  const [selectedCadena, setSelectedCadena] = useState([]);
  const [selectedGrupoLocalizacion, setSelectedGrupoLocalizacion] = useState([]);
- 
+
  const [filtroLocalizacion, setFiltroLocalizacion] = useState('');
  const tableEndRef = useRef(null);
  const tableContainerRef = useRef(null);
- 
+
+ // Funciones para determinar si los botones deben estar deshabilitados
+ const shouldDisableActivarButton = () => {
+   if (selectedItems.length === 0) return true;
+   
+   // Comprobar si hay estados mixtos
+   const hasActive = selectedItems.some(id => {
+     const tienda = tiendas.find(t => t.idLocalizacionRam === id);
+     return tienda && 
+            tienda.descripcionTipoEstadoLocalizacionRam && 
+            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('activ');
+   });
+   
+   const hasPaused = selectedItems.some(id => {
+     const tienda = tiendas.find(t => t.idLocalizacionRam === id);
+     return tienda && 
+            tienda.descripcionTipoEstadoLocalizacionRam && 
+            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
+   });
+   
+   // Si hay estados mixtos (algunos activos y algunos pausados) o todos están activos, deshabilitar
+   return (hasActive && hasPaused) || (hasActive && !hasPaused);
+ };
+
+ const shouldDisablePausarButton = () => {
+   if (selectedItems.length === 0) return true;
+   
+   // Comprobar si hay estados mixtos
+   const hasActive = selectedItems.some(id => {
+     const tienda = tiendas.find(t => t.idLocalizacionRam === id);
+     return tienda && 
+            tienda.descripcionTipoEstadoLocalizacionRam && 
+            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('activ');
+   });
+   
+   const hasPaused = selectedItems.some(id => {
+     const tienda = tiendas.find(t => t.idLocalizacionRam === id);
+     return tienda && 
+            tienda.descripcionTipoEstadoLocalizacionRam && 
+            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
+   });
+   
+   // Si hay estados mixtos (algunos activos y algunos pausados) o todos están pausados, deshabilitar
+   return (hasActive && hasPaused) || (!hasActive && hasPaused);
+ };
+
  useEffect(() => {
    fetchFilterOptions();
    fetchTiendas();
@@ -447,6 +492,54 @@ const ConsultaTienda = () => {
    setSelectAll(!selectAll);
  };
 
+ const handleActivarLocalizacion = async () => {
+   if (!selectedItems.length) return;
+   
+   try {
+     setLoading(true);
+     const response = await axios.put(`${BASE_URL}/tiendas/activar-localizacion`, {
+       ids: selectedItems
+     });
+     
+     if (response.data.success) {
+       alert(t('Las localizaciones han sido activadas correctamente'));
+       // Recargar datos
+       setSelectedItems([]);
+       setSelectAll(false);
+       await fetchTiendas();
+     }
+   } catch (error) {
+     console.error('Error al activar localizaciones:', error);
+     setError(t('Error al activar localizaciones'));
+   } finally {
+     setLoading(false);
+   }
+ };
+
+ const handlePausarLocalizacion = async () => {
+   if (!selectedItems.length) return;
+   
+   try {
+     setLoading(true);
+     const response = await axios.put(`${BASE_URL}/tiendas/pausar-localizacion`, {
+       ids: selectedItems
+     });
+     
+     if (response.data.success) {
+       alert(t('Las localizaciones han sido pausadas correctamente'));
+       // Recargar datos
+       setSelectedItems([]);
+       setSelectAll(false);
+       await fetchTiendas();
+     }
+   } catch (error) {
+     console.error('Error al pausar localizaciones:', error);
+     setError(t('Error al pausar localizaciones'));
+   } finally {
+     setLoading(false);
+   }
+ };
+
  const getEstadoClass = (estado) => {
    if (!estado || estado === 'Sin estado') return 'estado-desconocido';
    
@@ -455,6 +548,7 @@ const ConsultaTienda = () => {
    if (estadoLower.includes('reform')) return 'estado-reforma';
    if (estadoLower.includes('abiert')) return 'estado-abierta';
    if (estadoLower.includes('cerrad')) return 'estado-cerrada';
+   if (estadoLower.includes('pausad')) return 'estado-pausada';
    return 'estado-otro';
  };
 
@@ -575,6 +669,30 @@ const ConsultaTienda = () => {
            </span>
          </span>
        </div>
+
+       {selectedItems.length > 0 && (
+         <div className="selected-actions-tienda">
+           <span className="selected-count-tienda">
+             {t('{{count}} elementos seleccionados', { count: selectedItems.length })}
+           </span>
+           <div className="action-buttons-tienda">
+             <button 
+               className="activar-button-tienda"
+               onClick={handleActivarLocalizacion}
+               disabled={shouldDisableActivarButton()}
+             >
+               <span className="action-icon">⚡</span> {t('ACTIVAR LOCALIZACIÓN')}
+             </button>
+             <button 
+               className="pausar-button-tienda"
+               onClick={handlePausarLocalizacion}
+               disabled={shouldDisablePausarButton()}
+             >
+               <span className="action-icon">⏸️</span> {t('PAUSAR LOCALIZACIÓN')}
+             </button>
+           </div>
+         </div>
+       )}
 
        {error && (
          <div className="error-message-tienda">

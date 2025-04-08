@@ -89,7 +89,7 @@ const buildWhereClause = (filter) => {
        WHERE glclc.ID_GRUPO_LOCALIZACION_COMPRA IN (:idsGrupoLocalizacion))`);
     params.idsGrupoLocalizacion = Array.isArray(filter.idsGrupoLocalizacion) ? filter.idsGrupoLocalizacion : [filter.idsGrupoLocalizacion];
   }
-  
+
   if (filter.idLocalizacion || (filter.idsLocalizacion && filter.idsLocalizacion.length)) {
     whereClauses.push('lc.ID_LOCALIZACION_COMPRA IN (:idsLocalizacion)');
     
@@ -408,6 +408,53 @@ exports.getGruposLocalizacion = async (idIdioma = 1) => {
   } catch (error) {
     console.error('Error al obtener grupos de localización:', error);
     return [];
+  }
+};
+
+// En backend/node/repositories/tiendaRepository.js
+exports.cambiarEstadoLocalizaciones = async (ids, estado) => {
+  try {
+    // Obtener el ID del estado según el valor recibido
+    const estadoQuery = `
+      SELECT ID_TIPO_ESTADO_LOCALIZACION_RAM 
+      FROM AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA 
+      WHERE DESCRIPCION LIKE :estado
+    `;
+    
+    const estadoResult = await sequelizeAjenos.query(estadoQuery, {
+      replacements: { estado: `%${estado}%` },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    if (!estadoResult || estadoResult.length === 0) {
+      throw new Error(`Estado '${estado}' no encontrado`);
+    }
+    
+    const idEstado = estadoResult[0].ID_TIPO_ESTADO_LOCALIZACION_RAM;
+    
+    // Actualizar los registros
+    const updateQuery = `
+      UPDATE AJENOS.LOCALIZACION_COMPRA_RAM
+      SET ID_TIPO_ESTADO_LOCALIZACION_RAM = :idEstado,
+          FECHA_MODIFICACION = NOW()
+      WHERE ID_LOCALIZACION_COMPRA_RAM IN (:ids)
+    `;
+    
+    await sequelizeAjenos.query(updateQuery, {
+      replacements: { 
+        idEstado,
+        ids
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    // Invalidar caché relacionada
+    cache.clear('tiendas_');
+    
+    return { success: true, idsActualizados: ids.length };
+  } catch (error) {
+    console.error(`Error al cambiar estado a '${estado}':`, error);
+    throw error;
   }
 };
 

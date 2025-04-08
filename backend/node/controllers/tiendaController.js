@@ -266,3 +266,45 @@ exports.getCadenas = [measurePerformance, async (req, res) => {
     res.status(500).json({ message: 'Error del servidor', error: error.message });
   }
 }];
+
+exports.activarLocalizacion = [measurePerformance, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Se requiere un array de IDs válido' });
+    }
+    
+    const result = await tiendaRepository.cambiarEstadoLocalizaciones(ids, 'ACTIVA');
+    
+    res.json({
+      success: true,
+      message: `${ids.length} localizaciones activadas correctamente`,
+      result
+    });
+  } catch (error) {
+    console.error('Error al activar localizaciones:', error);
+    res.status(500).json({ message: 'Error al activar localizaciones', error: error.message });
+  }
+}];
+
+exports.pausarLocalizacion = [measurePerformance, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Se requiere un array de IDs válido' });
+    }
+    
+    const result = await tiendaRepository.cambiarEstadoLocalizaciones(ids, 'PAUSADA');
+    
+    res.json({
+      success: true,
+      message: `${ids.length} localizaciones pausadas correctamente`,
+      result
+    });
+  } catch (error) {
+    console.error('Error al pausar localizaciones:', error);
+    res.status(500).json({ message: 'Error al pausar localizaciones', error: error.message });
+  }
+}];
