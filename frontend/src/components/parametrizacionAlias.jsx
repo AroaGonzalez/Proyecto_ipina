@@ -156,6 +156,7 @@ const ParametrizacionAlias = () => {
       params.append('page', page);
       params.append('size', 50);
       
+      // Asegurarse de que se están usando correctamente los IDs de filtro
       const tiposAliasToFilter = selectedTiposAlias.filter(id => id !== 'selectAll');
       const estadosAliasToFilter = selectedEstadosAlias.filter(id => id !== 'selectAll');
       const estacionalidadesToFilter = selectedEstacionalidades.filter(id => id !== 'selectAll');
@@ -163,7 +164,11 @@ const ParametrizacionAlias = () => {
       const nombresAliasToFilter = selectedNombresAlias.filter(id => id !== 'selectAll');
       
       if (tiposAliasToFilter.length > 0) {
-        tiposAliasToFilter.forEach(id => params.append('tipoAlias', id));
+        // Añadir cada ID como un parámetro separado para asegurar que se envían correctamente
+        tiposAliasToFilter.forEach(id => {
+          params.append('tipoAlias', id);
+        });
+        console.log('Filtrando por tipos de alias:', tiposAliasToFilter);
       }
       
       if (nombresAliasToFilter.length > 0) {
@@ -173,18 +178,24 @@ const ParametrizacionAlias = () => {
       }
       
       if (estadosAliasToFilter.length > 0) {
-        estadosAliasToFilter.forEach(id => params.append('estadoAlias', id));
+        estadosAliasToFilter.forEach(id => {
+          params.append('estadoAlias', id);
+        });
       }
       
       if (estacionalidadesToFilter.length > 0) {
-        estacionalidadesToFilter.forEach(id => params.append('estacionalidad', id));
+        estacionalidadesToFilter.forEach(id => {
+          params.append('estacionalidad', id);
+        });
       }
       
       if (articulosToFilter.length > 0) {
-        articulosToFilter.forEach(id => params.append('articulos', id));
+        articulosToFilter.forEach(id => {
+          params.append('articulos', id);
+        });
       }
       
-      console.log('Sent parameters:', params.toString());
+      console.log('Parámetros enviados:', params.toString());
       
       const response = await axios.get(`${BASE_URL}/filter?${params.toString()}`);
       
