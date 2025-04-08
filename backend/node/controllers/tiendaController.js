@@ -109,8 +109,10 @@ exports.getTiendas = [measurePerformance, async (req, res) => {
         : [req.query.idsCadena];
     }
     
-    if (req.query.idLocalizacion) {
-      filter.idLocalizacion = req.query.idLocalizacion;
+    if (req.query.idsLocalizacion) {
+      filter.idsLocalizacion = Array.isArray(req.query.idsLocalizacion) 
+        ? req.query.idsLocalizacion 
+        : [req.query.idsLocalizacion];
     }
 
     if (req.query.idsGrupoLocalizacion) {

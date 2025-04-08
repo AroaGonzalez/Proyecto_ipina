@@ -36,14 +36,31 @@ const cache = {
   }
 };
 
-const correctCountryName = (name) => {
-  if (!name) return name;
+// Función para corregir problemas de codificación
+const correctEncoding = (text) => {
+  if (!text) return text;
   
-  if (name.includes('ESPA')) {
-    return 'ESPAÑA';
-  }
-  
-  return name;
+  return text
+    .replace(/Ã¡/g, 'á')
+    .replace(/Ã©/g, 'é')
+    .replace(/Ã­/g, 'í')
+    .replace(/Ã³/g, 'ó')
+    .replace(/Ãº/g, 'ú')
+    .replace(/Ã±/g, 'ñ')
+    .replace(/Ã\u0081/g, 'Á')
+    .replace(/Ã‰/g, 'É')
+    .replace(/Ã\u008D/g, 'Í')
+    .replace(/Ã"/g, 'Ó')
+    .replace(/Ãš/g, 'Ú')
+    .replace(/Ã'/g, 'Ñ')
+    .replace(/Ã¼/g, 'ü')
+    .replace(/Ãœ/g, 'Ü')
+    .replace(/RepÃºblica/g, 'República')
+    .replace(/REPÃšBLICA/g, 'REPÚBLICA')
+    .replace(/MacÃ©/g, 'Macé')
+    .replace(/MACÃ‰/g, 'MACÉ')
+    .replace(/MONTENEGR/g, 'MONTENEGRO')
+    .replace(/CONCHIÃ/g, 'CONCHÍ');
 };
 
 const buildWhereClause = (filter) => {
@@ -73,12 +90,17 @@ const buildWhereClause = (filter) => {
     params.idsGrupoLocalizacion = Array.isArray(filter.idsGrupoLocalizacion) ? filter.idsGrupoLocalizacion : [filter.idsGrupoLocalizacion];
   }
   
-  if (filter.idsLocalizacion && filter.idsLocalizacion.length) {
+  if (filter.idLocalizacion || (filter.idsLocalizacion && filter.idsLocalizacion.length)) {
     whereClauses.push('lc.ID_LOCALIZACION_COMPRA IN (:idsLocalizacion)');
-    params.idsLocalizacion = Array.isArray(filter.idsLocalizacion) ? filter.idsLocalizacion : [filter.idsLocalizacion];
-  } else if (filter.idLocalizacion) {
-    whereClauses.push('lc.ID_LOCALIZACION_COMPRA = :idLocalizacion');
-    params.idLocalizacion = filter.idLocalizacion;
+    
+    if (filter.idLocalizacion) {
+      // Si viene como idLocalizacion, convertirlo en array
+      params.idsLocalizacion = [filter.idLocalizacion];
+    } else {
+      // Si ya viene como idsLocalizacion, asegurarse que sea array
+      params.idsLocalizacion = Array.isArray(filter.idsLocalizacion) ? 
+        filter.idsLocalizacion : [filter.idsLocalizacion];
+    }
   }
   
   return { whereClauses, params };
@@ -185,16 +207,15 @@ exports.findTiendasByFilter = async (filter = {}, pageable = { page: 0, size: 50
       });
 
       processedResult = result.map(item => {
-        let nombreMercado = item.nombreMercado;
-        
-        if (nombreMercado && nombreMercado.includes('ESPA')) {
-          nombreMercado = 'ESPAÑA';
-        }
+        // Aplicar corrección de codificación a todos los campos relevantes
         return {
           ...item,
-          estadoTiendaMtu: item.estadoTiendaMtu || 'Sin estado',
-          descripcionTipoEstadoLocalizacionRam: item.descripcionTipoEstadoLocalizacionRam || '',
-          nombreMercado: nombreMercado
+          estadoTiendaMtu: correctEncoding(item.estadoTiendaMtu) || 'Sin estado',
+          descripcionTipoEstadoLocalizacionRam: correctEncoding(item.descripcionTipoEstadoLocalizacionRam) || '',
+          nombreMercado: correctEncoding(item.nombreMercado && item.nombreMercado.includes('ESPA') ? 'ESPAÑA' : item.nombreMercado),
+          nombreGrupoCadena: correctEncoding(item.nombreGrupoCadena),
+          nombreCadena: correctEncoding(item.nombreCadena),
+          nombreTienda: correctEncoding(item.nombreTienda)
         };
       });
     }
@@ -247,8 +268,7 @@ exports.getMercados = async (idIdioma = 1) => {
         FROM AJENOS.LOCALIZACION_COMPRA lc
         WHERE lc.FECHA_BAJA IS NULL
       )
-      ORDER BY descripcion ASC
-      LIMIT 100
+      ORDER BY mp.ID_PAIS
     `;
     
     const result = await sequelizeMaestros.query(query, {
@@ -257,15 +277,9 @@ exports.getMercados = async (idIdioma = 1) => {
     });
 
     const correctedResult = result.map(item => {
-      let descripcion = item.descripcion;
-      
-      if (descripcion && descripcion.includes('ESPA')) {
-        descripcion = 'ESPAÑA';
-      }
-      
       return {
         ...item,
-        descripcion: descripcion
+        descripcion: correctEncoding(item.descripcion && item.descripcion.includes('ESPA') ? 'ESPAÑA' : item.descripcion)
       };
     });
 
@@ -294,16 +308,21 @@ exports.getGruposCadena = async (idIdioma = 1) => {
       JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_CADENA = c.ID_CADENA
       WHERE gc.ID_TIPO_GRUPO_CADENA = 6
       AND lc.FECHA_BAJA IS NULL
-      ORDER BY descripcion ASC
-      LIMIT 50
+      ORDER BY gc.ID_GRUPO_CADENA
     `;
     
     const result = await sequelizeMaestros.query(query, {
       type: sequelizeMaestros.QueryTypes.SELECT
     });
 
-    cache.set(cacheKey, result);
-    return result;
+    // Corregir codificación
+    const correctedResult = result.map(item => ({
+      ...item,
+      descripcion: correctEncoding(item.descripcion)
+    }));
+
+    cache.set(cacheKey, correctedResult);
+    return correctedResult;
   } catch (error) {
     console.error('Error al obtener grupos de cadena:', error);
     return [];
@@ -336,15 +355,21 @@ exports.getCadenas = async (idGrupoCadena = null, idIdioma = 1) => {
       query += ` WHERE lc.FECHA_BAJA IS NULL`;
     }
     
-    query += ` ORDER BY descripcion ASC LIMIT 100`;
+    query += ` ORDER BY c.ID_CADENA `;
     
     const result = await sequelizeMaestros.query(query, {
       replacements,
       type: sequelizeMaestros.QueryTypes.SELECT
     });
 
-    cache.set(cacheKey, result);
-    return result;
+    // Corregir codificación
+    const correctedResult = result.map(item => ({
+      ...item,
+      descripcion: correctEncoding(item.descripcion)
+    }));
+
+    cache.set(cacheKey, correctedResult);
+    return correctedResult;
   } catch (error) {
     console.error('Error al obtener cadenas:', error);
     return [];
@@ -366,15 +391,20 @@ exports.getGruposLocalizacion = async (idIdioma = 1) => {
       JOIN AJENOS.GRUPO_LOCALIZACION_COMPRA_LOCALIZACION_COMPRA glclc ON glclc.ID_GRUPO_LOCALIZACION_COMPRA = glc.ID_GRUPO_LOCALIZACION_COMPRA
       JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = glclc.ID_LOCALIZACION_COMPRA
       WHERE lc.FECHA_BAJA IS NULL
-      ORDER BY glc.ID_GRUPO_LOCALIZACION_COMPRA ASC
+      ORDER BY glc.ID_GRUPO_LOCALIZACION_COMPRA
     `;
     
     const result = await sequelizeAjenos.query(query, {
       type: sequelizeAjenos.QueryTypes.SELECT
     });
 
-    cache.set(cacheKey, result);
-    return result;
+    const correctedResult = result.map(item => ({
+      ...item,
+      descripcion: correctEncoding(item.descripcion)
+    }));
+
+    cache.set(cacheKey, correctedResult);
+    return correctedResult;
   } catch (error) {
     console.error('Error al obtener grupos de localización:', error);
     return [];
