@@ -214,6 +214,7 @@ const ConsultaTienda = () => {
  const [filtroLocalizacion, setFiltroLocalizacion] = useState('');
  const tableEndRef = useRef(null);
  const tableContainerRef = useRef(null);
+ const [loadingAllItems, setLoadingAllItems] = useState(false);
 
  // Funciones para determinar si los botones deben estar deshabilitados
  const shouldDisableActivarButton = () => {
@@ -389,6 +390,51 @@ const ConsultaTienda = () => {
    fetchCadenas();
  }, [selectedGrupoCadena, languageId]);
 
+ const buildSearchParams = (page = 0, size = 50) => {
+   const params = new URLSearchParams();
+   params.append('idIdioma', languageId);
+   params.append('page', page);
+   params.append('size', size);
+   
+   // Añadir parámetros de filtro
+   if (selectedMercado && selectedMercado.length > 0) {
+     selectedMercado.forEach(id => {
+       params.append('idsMercado', id);
+     });
+   }
+   
+   if (selectedGrupoCadena && selectedGrupoCadena.length > 0) {
+     selectedGrupoCadena.forEach(id => {
+       params.append('idsGrupoCadena', id);
+     });
+   }
+   
+   if (selectedCadena && selectedCadena.length > 0) {
+     selectedCadena.forEach(id => {
+       params.append('idsCadena', id);
+     });
+   }
+   
+   if (selectedGrupoLocalizacion && selectedGrupoLocalizacion.length > 0) {
+     selectedGrupoLocalizacion.forEach(id => {
+       params.append('idsGrupoLocalizacion', id);
+     });
+   }
+   
+   if (filtroLocalizacion) {
+      const idsLocalizacion = filtroLocalizacion
+        .trim()
+        .split(/\s+/)
+        .filter(id => id.length > 0 && !isNaN(id));
+      
+      idsLocalizacion.forEach(id => {
+        params.append('idsLocalizacion', id);
+      });
+    }
+   
+   return params;
+ };
+
  const fetchTiendas = async (filters = {}, page = 0, append = false) => {
    if (page === 0) {
      setLoading(true);
@@ -397,47 +443,7 @@ const ConsultaTienda = () => {
    setError(null);
    
    try {
-     const params = new URLSearchParams();
-     params.append('idIdioma', languageId);
-     params.append('page', page);
-     params.append('size', 50);
-     
-     // Modificación para manejar múltiples selecciones
-     if (selectedMercado && selectedMercado.length > 0) {
-       selectedMercado.forEach(id => {
-         params.append('idsMercado', id);
-       });
-     }
-     
-     if (selectedGrupoCadena && selectedGrupoCadena.length > 0) {
-       selectedGrupoCadena.forEach(id => {
-         params.append('idsGrupoCadena', id);
-       });
-     }
-     
-     if (selectedCadena && selectedCadena.length > 0) {
-       selectedCadena.forEach(id => {
-         params.append('idsCadena', id);
-       });
-     }
-     
-     if (selectedGrupoLocalizacion && selectedGrupoLocalizacion.length > 0) {
-       selectedGrupoLocalizacion.forEach(id => {
-         params.append('idsGrupoLocalizacion', id);
-       });
-     }
-     
-     if (filtroLocalizacion) {
-        const idsLocalizacion = filtroLocalizacion
-          .trim()
-          .split(/\s+/)
-          .filter(id => id.length > 0 && !isNaN(id));
-        
-        idsLocalizacion.forEach(id => {
-          params.append('idsLocalizacion', id);
-        });
-      }
-     
+     const params = buildSearchParams(page);
      const response = await axios.get(`${BASE_URL}/tiendas?${params.toString()}`);
      
      if (response.data && response.data.content) {
@@ -487,7 +493,16 @@ const ConsultaTienda = () => {
    if (selectAll) {
      setSelectedItems([]);
    } else {
-     setSelectedItems(tiendas.map((item) => item.idLocalizacionRam));
+     // Si hay tiendas cargadas, seleccionar todas las tiendas cargadas
+     // Si no, intentar seleccionar todas según totalElements
+     if (tiendas.length > 0) {
+       setSelectedItems(tiendas.map((item) => item.idLocalizacionRam));
+     } else if (totalElements > 0) {
+       // Esto es solo una aproximación, ya que no tenemos los IDs de todas las tiendas
+       // Tendríamos que hacer una carga completa para obtener todos los IDs
+       alert(t('Para seleccionar todas las tiendas, es necesario cargarlas primero.'));
+       // Opcional: cargar todas las tiendas aquí
+     }
    }
    setSelectAll(!selectAll);
  };
@@ -564,6 +579,8 @@ const ConsultaTienda = () => {
 
  const handleSearch = () => {
    setCurrentPage(0);
+   setSelectedItems([]);
+   setSelectAll(false);
    fetchTiendas();
  };
 
@@ -571,6 +588,85 @@ const ConsultaTienda = () => {
    hour: '2-digit',
    minute: '2-digit'
  });
+
+ // Función para cargar todas las tiendas cuando se hace clic en "Seleccionar Todo"
+ const handleLoadAllAndSelectAll = async () => {
+   if (selectAll) {
+     // Si ya están seleccionadas todas, solo deseleccionamos
+     setSelectedItems([]);
+     setSelectAll(false);
+     return;
+   }
+
+   try {
+     setLoadingAllItems(true);
+     
+     // Primero, vamos a cargar todas las IDs de tiendas que coinciden con los filtros actuales
+     const allItemIds = await fetchAllTiendaIds();
+     
+     if (allItemIds.length > 0) {
+       setSelectedItems(allItemIds);
+       setSelectAll(true);
+     } else {
+       // Si no se pudieron obtener todas las IDs, seleccionar solo las tiendas visibles
+       const visibleIds = tiendas.map(item => item.idLocalizacionRam);
+       setSelectedItems(visibleIds);
+       setSelectAll(visibleIds.length > 0);
+     }
+   } catch (error) {
+     console.error('Error al seleccionar todas las tiendas:', error);
+     
+     // En caso de error, seleccionar sólo las tiendas visibles
+     const visibleIds = tiendas.map(item => item.idLocalizacionRam);
+     setSelectedItems(visibleIds);
+     setSelectAll(visibleIds.length > 0);
+     
+     alert(t('No se pudieron seleccionar todas las tiendas. Se han seleccionado solo las visibles.'));
+   } finally {
+     setLoadingAllItems(false);
+   }
+ };
+ 
+ // Función para obtener todos los IDs de tiendas que coinciden con los filtros actuales
+ const fetchAllTiendaIds = async () => {
+   // Utilizamos los mismos parámetros de filtro, pero solicitamos todos los elementos
+   // Para evitar problemas de rendimiento, podemos hacer varias solicitudes paginadas
+   
+   try {
+     // Primero obtener el número total de elementos para calcular las páginas necesarias
+     const initialParams = buildSearchParams(0, 1);
+     const initialResponse = await axios.get(`${BASE_URL}/tiendas?${initialParams.toString()}`);
+     
+     const totalElements = initialResponse.data.totalElements || 0;
+     if (totalElements === 0) return [];
+     
+     const pageSize = 500; // Tamaño de página grande para reducir el número de solicitudes
+     const totalPages = Math.ceil(totalElements / pageSize);
+     
+     // Preparar array de promesas para obtener todas las páginas en paralelo
+     const pagePromises = [];
+     for (let page = 0; page < totalPages; page++) {
+       const pageParams = buildSearchParams(page, pageSize);
+       pagePromises.push(axios.get(`${BASE_URL}/tiendas?${pageParams.toString()}`));
+     }
+     
+     // Ejecutar todas las solicitudes en paralelo
+     const responses = await Promise.all(pagePromises);
+     
+     // Extraer y unificar todos los IDs de tiendas
+     const allIds = responses.flatMap(response => {
+       if (response.data && response.data.content) {
+         return response.data.content.map(item => item.idLocalizacionRam);
+       }
+       return [];
+     });
+     
+     return allIds;
+   } catch (error) {
+     console.error('Error al obtener todos los IDs de tiendas:', error);
+     throw error;
+   }
+ };
 
  return (
    <div className="app-container-tienda">
@@ -665,7 +761,7 @@ const ConsultaTienda = () => {
            }
            <FaSyncAlt className="sync-icon-tienda" />
            <span className="update-time-tienda">
-             {t('Última actualización')}: {currentTime}
+             {currentTime}
            </span>
          </span>
        </div>
@@ -708,8 +804,8 @@ const ConsultaTienda = () => {
                  <input 
                    type="checkbox" 
                    checked={selectAll} 
-                   onChange={handleSelectAll} 
-                   disabled={tiendas.length === 0}
+                   onChange={handleLoadAllAndSelectAll} 
+                   disabled={tiendas.length === 0 || loading || loadingAllItems}
                  />
                </th>
                <th>{t('CÓDIGO DE TIENDA')}</th>
@@ -722,10 +818,10 @@ const ConsultaTienda = () => {
              </tr>
            </thead>
            <tbody>
-             {loading ? (
+             {loading || loadingAllItems ? (
                <tr>
                  <td colSpan="8" className="loading-cell-tienda">
-                   {t('Cargando datos...')}
+                   {loadingAllItems ? t('Seleccionando todas las tiendas...') : t('Cargando datos...')}
                  </td>
                </tr>
              ) : tiendas.length > 0 ? (
@@ -782,6 +878,6 @@ const ConsultaTienda = () => {
      </div>
    </div>
  );
-};
+}
 
 export default ConsultaTienda;
