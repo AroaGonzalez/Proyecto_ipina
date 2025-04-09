@@ -761,7 +761,7 @@ const ConsultaTienda = () => {
            }
            <FaSyncAlt className="sync-icon-tienda" />
            <span className="update-time-tienda">
-             {currentTime}
+             {t('Última actualización')}: {currentTime}
            </span>
          </span>
        </div>
@@ -879,5 +879,4 @@ const ConsultaTienda = () => {
    </div>
  );
 }
-
 export default ConsultaTienda;
