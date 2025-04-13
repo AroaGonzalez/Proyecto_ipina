@@ -4,6 +4,7 @@
   font-family: Arial, sans-serif;
   color: #333;
   background-color: #fff;
+  position: relative;
 }
 
 .header {
@@ -56,7 +57,6 @@
   background-color: #333;
 }
 
-/* Estilos para la sección de filtros */
 .filters-section {
   padding: 15px 20px;
   margin-bottom: 0;
@@ -229,7 +229,6 @@
   font-size: 12px;
 }
 
-/* Estilos para las pestañas */
 .tab-container {
   margin: 0;
   padding: 0 20px;
@@ -264,7 +263,84 @@
   color: #444;
 }
 
-/* Estilos para la información de resultados */
+/* Barra de selección */
+.selection-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: transparent;
+  padding: 0 20px 10px;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.selection-info {
+  font-size: 13px;
+  color: #444;
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+  position: relative;
+}
+
+.edit-button:hover {
+  color: #4682B4;
+}
+
+.delete-button:hover {
+  color: #d32f2f;
+}
+
+.action-button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  background-color: #000;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 3px;
+  z-index: 1000;
+}
+
+.relation-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.relation-button:hover {
+  background-color: #f0f0f0;
+}
+
+.action-icon {
+  font-size: 16px;
+}
+
 .results-info {
   display: flex;
   justify-content: space-between;
@@ -320,17 +396,17 @@
 .table-container {
   border: 1px solid #eee;
   border-radius: 0;
-  overflow-y: auto;  /* Explicitly set vertical scrolling */
-  overflow-x: auto;  /* Enable horizontal scrolling */
-  max-height: 600px; /* Limit height to force scrollbar */
+  overflow-y: auto; 
+  overflow-x: auto; 
+  max-height: 600px;
   margin: 0 20px;
-  width: calc(100% - 40px); /* Ensure full width */
+  width: calc(100% - 40px); 
 }
 
 .alias-table {
   width: 100%; 
   border-collapse: collapse;
-  min-width: 1200px; /* Ensure table is wider than container to trigger horizontal scroll */
+  min-width: 1200px;
 }
 
 .alias-table th {
@@ -398,7 +474,6 @@
   font-size: 13px;
 }
 
-/* Estilos específicos para las etiquetas en la tabla */
 .produccion {
   background-color: #4682B4;
 }
@@ -407,7 +482,19 @@
   background-color: #90EE90;
 }
 
-/* Estilos para el responsive */
+.activo {
+  background-color: #4682B4;
+}
+
+/* Estilo para filas seleccionadas */
+.selected-row {
+  background-color: #f0f7ff;
+}
+
+.selected-row:hover {
+  background-color: #e6f0fb;
+}
+
 @media (max-width: 1200px) {
   .filters-row {
     flex-wrap: wrap;
@@ -420,6 +507,17 @@
   
   .search-button-container {
     margin-top: 15px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .selection-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .selection-actions {
     width: 100%;
     justify-content: flex-end;
   }

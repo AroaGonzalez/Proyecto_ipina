@@ -9,5 +9,6 @@ router.get('/alias', aliasController.getAliasFilter);
 router.get('/tipos-estado', aliasController.getEstadosAlias);
 router.get('/tipos-estacionalidad', aliasController.getEstacionalidades);
 router.get('/ajeno', aliasController.getAjenos);
+router.get('/alias/ajenos/filter', aliasController.getAliasAjenos);
 
 module.exports = router;

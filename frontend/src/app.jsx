@@ -14,6 +14,7 @@ import EditProfile from './components/editProfile';
 import NuevoArticulo from './components/nuevoArticulo';
 import ConsultaTienda from './components/consultaTienda';
 import ParametrizacionAlias from './components/parametrizacionAlias';
+import EdicionAlias from './components/edicionAlias';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -91,7 +92,14 @@ function App() {
               <PrivateRoute>
                 <EditProfile />
               </PrivateRoute>
-            } />         
+            } />
+            <Route path="/edicion-alias/:id"
+              element={
+                <PrivateRoute>
+                  <EdicionAlias />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </Layout>
       </Router>

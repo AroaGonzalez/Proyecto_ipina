@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaSyncAlt, FaSearch, FaDownload, FaUpload, FaChevronDown } from 'react-icons/fa';
+import { FaSyncAlt, FaSearch, FaChevronDown, FaPencilAlt, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/parametrizacionAlias.css';
 
@@ -26,6 +27,16 @@ const ParametrizacionAlias = () => {
   const tableContainerRef = useRef(null);
   const tableEndRef = useRef(null);
 
+  // Estados para la pestaña de ARTÍCULOS
+  const [aliasAjenos, setAliasAjenos] = useState([]);
+  const [loadingAjenos, setLoadingAjenos] = useState(false);
+  const [loadingMoreAjenos, setLoadingMoreAjenos] = useState(false);
+  const [selectAllAjenos, setSelectAllAjenos] = useState(false);
+  const [selectedItemsAjenos, setSelectedItemsAjenos] = useState([]);
+  const [totalElementsAjenos, setTotalElementsAjenos] = useState(0);
+  const [currentPageAjenos, setCurrentPageAjenos] = useState(0);
+  const [hasMoreAjenos, setHasMoreAjenos] = useState(true);
+
   const [tiposAlias, setTiposAlias] = useState([]);
   const [estadosAlias, setEstadosAlias] = useState([]);
   const [estacionalidades, setEstacionalidades] = useState([]);
@@ -38,7 +49,12 @@ const ParametrizacionAlias = () => {
   const [selectedEstacionalidades, setSelectedEstacionalidades] = useState([]);
   const [selectedArticulos, setSelectedArticulos] = useState([]);
 
+  // Estados para los textos de búsqueda en cada filtro
   const [searchText, setSearchText] = useState('');
+  const [tipoAliasSearchText, setTipoAliasSearchText] = useState('');
+  const [estadoAliasSearchText, setEstadoAliasSearchText] = useState('');
+  const [estacionalidadSearchText, setEstacionalidadSearchText] = useState('');
+  const [articulosSearchText, setArticulosSearchText] = useState('');
 
   useEffect(() => {
     fetchFilterOptions();
@@ -49,8 +65,10 @@ const ParametrizacionAlias = () => {
     const handleScroll = () => {
       if (tableContainerRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = tableContainerRef.current;
-        if (!loadingMore && hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
+        if (activeTab === 'ALIAS' && !loadingMore && hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
           loadMoreData();
+        } else if (activeTab === 'ARTICULOS' && !loadingMoreAjenos && hasMoreAjenos && scrollTop + clientHeight >= scrollHeight - 100) {
+          loadMoreAjenosData();
         }
       }
     };
@@ -65,7 +83,7 @@ const ParametrizacionAlias = () => {
         tableContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [loadingMore, hasMore]);
+  }, [loadingMore, hasMore, loadingMoreAjenos, hasMoreAjenos, activeTab]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,6 +110,21 @@ const ParametrizacionAlias = () => {
       console.error('Error cargando más datos:', error);
     } finally {
       setLoadingMore(false);
+    }
+  };
+
+  const loadMoreAjenosData = async () => {
+    if (!hasMoreAjenos || loadingMoreAjenos) return;
+    
+    setLoadingMoreAjenos(true);
+    try {
+      const nextPage = currentPageAjenos + 1;
+      await fetchAliasAjenos(nextPage, true);
+      setCurrentPageAjenos(nextPage);
+    } catch (error) {
+      console.error('Error cargando más datos de artículos:', error);
+    } finally {
+      setLoadingMoreAjenos(false);
     }
   };
 
@@ -140,6 +173,70 @@ const ParametrizacionAlias = () => {
       console.error('Error al cargar opciones de filtro:', error);
     } finally {
       setLoadingFilters(false);
+    }
+  };
+
+  const fetchAliasAjenos = async (page = 0, append = false) => {
+    if (page === 0) {
+      setLoadingAjenos(true);
+      setHasMoreAjenos(true);
+    }
+    setError(null);
+    
+    try {
+      const params = new URLSearchParams();
+      params.append('idIdioma', languageId);
+      params.append('page', page);
+      params.append('size', 50);
+      
+      // Añadir los filtros aplicados actualmente
+      if (selectedNombresAlias.length > 0) {
+        const nombresAliasToFilter = selectedNombresAlias.filter(id => id !== 'selectAll');
+        nombresAliasToFilter.forEach(id => {
+          params.append('idAlias', id);
+        });
+      }
+      
+      // Otros filtros específicos para artículos si son necesarios
+      const articulosToFilter = selectedArticulos.filter(id => id !== 'selectAll');
+      if (articulosToFilter.length > 0) {
+        articulosToFilter.forEach(id => {
+          params.append('idAjeno', id);
+        });
+      }
+      
+      console.log('Parámetros enviados para alias ajenos:', params.toString());
+      
+      const response = await axios.get(`${BASE_URL}/alias/ajenos/filter?${params.toString()}`);
+      
+      if (response.data && response.data.content) {
+        if (append) {
+          setAliasAjenos(prev => [...prev, ...response.data.content]);
+        } else {
+          setAliasAjenos(response.data.content);
+          setCurrentPageAjenos(0);
+        }
+        
+        setTotalElementsAjenos(response.data.totalElements || 0);
+        
+        if (response.data.content.length === 0 || 
+            (response.data.totalPages && page >= response.data.totalPages - 1)) {
+          setHasMoreAjenos(false);
+        }
+      } else {
+        if (!append) {
+          setAliasAjenos([]);
+        }
+        setTotalElementsAjenos(0);
+        setHasMoreAjenos(false);
+      }
+    } catch (error) {
+      console.error('Error loading alias ajenos:', error);
+      setError(t('No se pudieron cargar los artículos de alias'));
+    } finally {
+      if (page === 0) {
+        setLoadingAjenos(false);
+      }
     }
   };
 
@@ -231,29 +328,77 @@ const ParametrizacionAlias = () => {
   };
 
   const handleSelectItem = (id) => {
-    setSelectedItems((prevSelected) =>
-      prevSelected.includes(id)
+    setSelectedItems((prevSelected) => {
+      // Verificar si ya hay 5 elementos seleccionados y estamos intentando añadir uno nuevo
+      if (!prevSelected.includes(id) && prevSelected.length >= 5) {
+        alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
+        return prevSelected;
+      }
+      
+      return prevSelected.includes(id)
         ? prevSelected.filter((item) => item !== id)
-        : [...prevSelected, id]
-    );
+        : [...prevSelected, id];
+    });
+  };
+
+  const handleSelectItemAjeno = (id) => {
+    setSelectedItemsAjenos((prevSelected) => {
+      // Verificar si ya hay 5 elementos seleccionados y estamos intentando añadir uno nuevo
+      if (!prevSelected.includes(id) && prevSelected.length >= 5) {
+        alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
+        return prevSelected;
+      }
+      
+      return prevSelected.includes(id)
+        ? prevSelected.filter((item) => item !== id)
+        : [...prevSelected, id];
+    });
   };
 
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(aliases.map((item) => item.id));
+      // Limitar a 5 elementos si hay más
+      const itemsToSelect = aliases.slice(0, 5).map((item) => item.id);
+      setSelectedItems(itemsToSelect);
+      
+      if (aliases.length > 5) {
+        alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
+      }
     }
     setSelectAll(!selectAll);
+  };
+
+  const handleSelectAllAjenos = () => {
+    if (selectAllAjenos) {
+      setSelectedItemsAjenos([]);
+    } else {
+      // Limitar a 5 elementos si hay más
+      const itemsToSelect = aliasAjenos.slice(0, 5).map((item) => `${item.idAlias}-${item.idAjeno}`);
+      setSelectedItemsAjenos(itemsToSelect);
+      
+      if (aliasAjenos.length > 5) {
+        alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
+      }
+    }
+    setSelectAllAjenos(!selectAllAjenos);
   };
 
   const handleSearch = () => {
     setCurrentPage(0);
     fetchAliases();
+    if (activeTab === 'ARTICULOS') {
+      setCurrentPageAjenos(0);
+      fetchAliasAjenos();
+    }
   };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    if (tab === 'ARTICULOS' && aliasAjenos.length === 0) {
+      fetchAliasAjenos();
+    }
   };
 
   const toggleFilter = (filterName) => {
@@ -292,10 +437,36 @@ const ParametrizacionAlias = () => {
     }
   };
 
-  const handleSearchTextChange = (e) => {
-    setSearchText(e.target.value);
+  // Manejadores para los eventos de búsqueda en cada filtro
+  const handleSearchTextChange = (e, setterFunction) => {
+    setterFunction(e.target.value);
   };
-  
+
+  const navigate = useNavigate();
+
+  const handleEdit = () => {
+    if (selectedItems.length === 1) {
+      const aliasId = selectedItems[0];
+      navigate(`/edicion-alias/${aliasId}`);
+    } else {
+      alert('Por favor, seleccione un único alias para editar');
+    }
+  };
+
+  const handleDelete = () => {
+    // Implementación futura: eliminar alias seleccionados
+    console.log('Eliminar alias:', selectedItems);
+    // Después de eliminar, actualizar la lista
+    setSelectedItems([]);
+    fetchAliases();
+  };
+
+  const handleEditRelations = () => {
+    // Implementación futura: editar relaciones
+    console.log('Editar relaciones de alias:', selectedItems);
+  };
+
+  // Funciones de filtrado para cada desplegable basado en los textos de búsqueda
   const filteredAliasOptions = searchText 
     ? aliasOptions.filter(alias => 
         alias.id.toString().includes(searchText) || 
@@ -303,10 +474,41 @@ const ParametrizacionAlias = () => {
       )
     : aliasOptions;
 
+  const filteredTiposAlias = tipoAliasSearchText
+    ? tiposAlias.filter(tipo => 
+        tipo.id.toString().includes(tipoAliasSearchText) || 
+        tipo.descripcion.toLowerCase().includes(tipoAliasSearchText.toLowerCase())
+      )
+    : tiposAlias;
+
+  const filteredEstadosAlias = estadoAliasSearchText
+    ? estadosAlias.filter(estado => 
+        estado.id.toString().includes(estadoAliasSearchText) || 
+        estado.descripcion.toLowerCase().includes(estadoAliasSearchText.toLowerCase())
+      )
+    : estadosAlias;
+
+  const filteredEstacionalidades = estacionalidadSearchText
+    ? estacionalidades.filter(estacionalidad => 
+        estacionalidad.id.toString().includes(estacionalidadSearchText) || 
+        estacionalidad.descripcion.toLowerCase().includes(estacionalidadSearchText.toLowerCase())
+      )
+    : estacionalidades;
+
+  const filteredArticulos = articulosSearchText
+    ? articulos.filter(articulo => 
+        articulo.id.toString().includes(articulosSearchText) || 
+        articulo.descripcion.toLowerCase().includes(articulosSearchText.toLowerCase())
+      )
+    : articulos;
+
   const currentTime = new Date().toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit'
   });
+
+  // Determinar si se muestran las acciones de selección
+  const showSelectionActions = activeTab === 'ALIAS' ? selectedItems.length > 0 : selectedItemsAjenos.length > 0;
 
   return (
     <div className="parametrizacion-alias-container">
@@ -348,12 +550,14 @@ const ParametrizacionAlias = () => {
                       <input 
                         type="text" 
                         placeholder="Buscar tipo de alias..." 
+                        value={tipoAliasSearchText}
+                        onChange={(e) => handleSearchTextChange(e, setTipoAliasSearchText)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                     <div className="dropdown-items-container">
                       <div className="dropdown-items">
-                        {tiposAlias.map((tipo) => (
+                        {filteredTiposAlias.map((tipo) => (
                           <div 
                             key={tipo.id} 
                             className="dropdown-item"
@@ -416,7 +620,7 @@ const ParametrizacionAlias = () => {
                         type="text" 
                         placeholder="Buscar alias..." 
                         value={searchText}
-                        onChange={handleSearchTextChange}
+                        onChange={(e) => handleSearchTextChange(e, setSearchText)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
@@ -484,12 +688,14 @@ const ParametrizacionAlias = () => {
                       <input 
                         type="text" 
                         placeholder="Buscar estado..." 
+                        value={estadoAliasSearchText}
+                        onChange={(e) => handleSearchTextChange(e, setEstadoAliasSearchText)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                     <div className="dropdown-items-container">
                       <div className="dropdown-items">
-                        {estadosAlias.map((estado) => (
+                        {filteredEstadosAlias.map((estado) => (
                           <div 
                             key={estado.id} 
                             className="dropdown-item"
@@ -551,12 +757,14 @@ const ParametrizacionAlias = () => {
                       <input 
                         type="text" 
                         placeholder="Buscar estacionalidad..." 
+                        value={estacionalidadSearchText}
+                        onChange={(e) => handleSearchTextChange(e, setEstacionalidadSearchText)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                     <div className="dropdown-items-container">
                       <div className="dropdown-items">
-                        {estacionalidades.map((estacionalidad) => (
+                        {filteredEstacionalidades.map((estacionalidad) => (
                           <div 
                             key={estacionalidad.id} 
                             className="dropdown-item"
@@ -618,12 +826,14 @@ const ParametrizacionAlias = () => {
                       <input 
                         type="text" 
                         placeholder="Buscar artículos..." 
+                        value={articulosSearchText}
+                        onChange={(e) => handleSearchTextChange(e, setArticulosSearchText)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                     <div className="dropdown-items-container">
                       <div className="dropdown-items">
-                        {articulos.map((articulo) => (
+                        {filteredArticulos.map((articulo) => (
                           <div 
                             key={articulo.id} 
                             className="dropdown-item"
@@ -669,7 +879,7 @@ const ParametrizacionAlias = () => {
               <button 
                 className="search-button"
                 onClick={handleSearch}
-                disabled={loading}
+                disabled={loading || loadingAjenos}
               >
                 <FaSearch className="search-icon" />
                 <span>{t('BUSCAR')}</span>
@@ -698,12 +908,19 @@ const ParametrizacionAlias = () => {
 
       <div className="results-info">
         <span className="results-count">
-          {loading ? t('Cargando...') : 
-            t('Cargados {{count}} resultados de {{total}} encontrados', {
-              count: aliases.length,
-              total: totalElements
-            })
-          }
+          {activeTab === 'ALIAS' ? (
+            loading ? t('Cargando...') : 
+              t('Cargados {{count}} resultados de {{total}} encontrados', {
+                count: aliases.length,
+                total: totalElements
+              })
+          ) : (
+            loadingAjenos ? t('Cargando...') : 
+              t('Cargados {{count}} resultados de {{total}} encontrados', {
+                count: aliasAjenos.length,
+                total: totalElementsAjenos
+              })
+          )}
           {' '}
           <FaSyncAlt className="sync-icon" />
           <span className="update-time">
@@ -711,6 +928,30 @@ const ParametrizacionAlias = () => {
           </span>
         </span>        
       </div>
+      
+      {/* Barra de selección que aparece cuando hay elementos seleccionados */}
+      {showSelectionActions && (
+        <div className="selection-toolbar">
+          <div className="selection-info">
+            <span>
+              {activeTab === 'ALIAS' 
+                ? `Seleccionados ${selectedItems.length} resultados de ${totalElements} encontrados` 
+                : `Seleccionados ${selectedItemsAjenos.length} resultados de ${totalElementsAjenos} encontrados`}
+            </span>
+          </div>
+          <div className="selection-actions">
+            <button className="action-button edit-button" onClick={handleEdit}>
+              <FaPencilAlt className="action-icon" />
+            </button>
+            <button className="action-button delete-button" onClick={handleDelete} title="Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo">
+              <FaTrash className="action-icon" />
+            </button>
+            <button className="action-button relation-button" onClick={handleEditRelations}>
+              <span>EDITAR RELACIONES</span>
+            </button>
+          </div>
+        </div>
+      )}
       
       {error && (
         <div className="error-message">
@@ -753,7 +994,7 @@ const ParametrizacionAlias = () => {
               ) : aliases.length > 0 ? (
                 <>
                   {aliases.map((alias) => (
-                    <tr key={alias.id}>
+                    <tr key={alias.id} className={selectedItems.includes(alias.id) ? 'selected-row' : ''}>
                       <td className="checkbox-column">
                         <input 
                           type="checkbox" 
@@ -804,9 +1045,89 @@ const ParametrizacionAlias = () => {
             </tbody>
           </table>
         ) : (
-          <div className="articulos-content">
-            <p>{t('Contenido de artículos')}</p>
-          </div>
+          <table className="alias-table">
+            <thead>
+              <tr>
+                <th className="checkbox-column">
+                  <input 
+                    type="checkbox" 
+                    checked={selectAllAjenos} 
+                    onChange={handleSelectAllAjenos} 
+                    disabled={aliasAjenos.length === 0}
+                  />
+                </th>
+                <th>{t('ID ALIAS')}</th>
+                <th>{t('ALIAS')}</th>
+                <th>{t('DESCRIPCIÓN DEL ALIAS')}</th>
+                <th>{t('ALIAS TIPO')}</th>
+                <th>{t('ID ARTÍCULO')}</th>
+                <th>{t('ARTÍCULO')}</th>
+                <th>{t('ESTADO ARTÍCULO SPI')}</th>
+                <th>{t('ESTADO ARTÍCULO RAM')}</th>
+                <th>{t('ESTADO ARTÍCULO')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingAjenos ? (
+                <tr>
+                  <td colSpan="10" className="loading-cell">
+                    {t('Cargando datos...')}
+                  </td>
+                </tr>
+              ) : aliasAjenos.length > 0 ? (
+                <>
+                  {aliasAjenos.map((item) => (
+                    <tr 
+                      key={`${item.idAlias}-${item.idAjeno}`}
+                      className={selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`) ? 'selected-row' : ''}
+                    >
+                      <td className="checkbox-column">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)} 
+                          onChange={() => handleSelectItemAjeno(`${item.idAlias}-${item.idAjeno}`)} 
+                        />
+                      </td>
+                      <td>{item.idAlias}</td>
+                      <td>{item.nombreAlias}</td>
+                      <td>{item.descripcionAlias || item.nombreAlias}</td>
+                      <td className="text-center">{item.idTipoAlias || "1"}</td>
+                      <td>{item.idAjeno}</td>
+                      <td>{item.nombreAjeno}</td>
+                      <td>
+                        <span className="estado-tag activo">
+                          ACTIVO
+                        </span>
+                      </td>
+                      <td>
+                        <span className="estado-tag activo">
+                          ACTIVO
+                        </span>
+                      </td>
+                      <td>
+                        <span className="estado-tag activo">
+                          ACTIVO
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {loadingMoreAjenos && (
+                    <tr>
+                      <td colSpan="10" className="loading-cell">
+                        {t('Cargando más datos...')}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ) : (
+                <tr>
+                  <td colSpan="10" className="empty-table-message">
+                    {t('No hay datos disponibles')}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

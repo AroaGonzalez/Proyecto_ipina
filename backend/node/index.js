@@ -5,10 +5,11 @@ const swaggerUi = require('swagger-ui-express');
 const cors = require('cors'); 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize } = require('sequelize');
 const tiendaRoutes = require('./routes/tiendaRoutes');
 const aliasRoutes = require('./routes/aliasRoutes');
 const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
+const edicionRoutes = require('./routes/edicionRoutes');
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; 
 
@@ -168,11 +169,12 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Rutas de API tradicionales
 app.use('/ajenos', ajenoRamRoutes);
 app.use('/inventario', ajenoRamRoutes);
 app.use('/tiendas', tiendaRoutes);
 app.use('/', aliasRoutes);
+app.use('/edicion', edicionRoutes);
+
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
