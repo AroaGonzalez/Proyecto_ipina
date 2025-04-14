@@ -1,7 +1,15 @@
 /* edicionAlias.css */
+body, html {
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  color: #000;
+}
+
 .edicion-alias-container {
   font-family: Arial, sans-serif;
-  color: #333;
+  color: #000;
   background-color: #fff;
   padding: 20px;
   max-width: 100%;
@@ -11,9 +19,9 @@
 .readonly-field {
   padding: 10px 15px;
   background-color: #f5f5f5;
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   border-radius: 4px;
-  color: #555;
+  color: #000;
   min-height: 40px;
   display: flex;
   align-items: center;
@@ -26,7 +34,7 @@
 .edicion-alias-title {
   font-size: 1.5rem;
   font-weight: 500;
-  color: #444;
+  color: #000;
   margin: 0;
 }
 
@@ -37,7 +45,8 @@
   align-items: center;
   padding: 40px;
   font-size: 16px;
-  color: #666;
+  color: #000;
+  background-color: #fff;
 }
 
 .edicion-alias-error {
@@ -46,10 +55,12 @@
 
 .edicion-alias-content {
   margin-bottom: 30px;
+  background-color: #fff;
 }
 
 .edicion-alias-section {
   margin-bottom: 30px;
+  background-color: #fff;
 }
 
 .paso-title {
@@ -58,55 +69,61 @@
   margin-bottom: 15px;
   display: flex;
   align-items: center;
+  background-color: #fff;
+  text-transform: uppercase;
+  color: #000;
 }
 
 .paso-descripcion {
   font-weight: 600;
+  text-transform: uppercase;
+  color: #000;
 }
 
 .paso-icon {
   font-size: 0.5rem;
   margin-left: 8px;
-}
-
-.paso-icon.completed {
   color: #4caf50;
 }
 
 .paso-content {
-  background-color: #f5f5f5;
-  padding: 20px;
-  border-radius: 4px;
+  background-color: #fff;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  color: #000;
 }
 
 .section-description {
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   margin-bottom: 20px;
 }
 
-/* Nueva estructura simplificada para Paso 1 */
+/* Estructura para Paso 1 */
 .simple-form-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr) 2fr;
-  gap: 40px;
+  gap: 20px;
   margin-bottom: 20px;
   align-items: start;
+  background-color: #fff;
 }
 
 .simple-form-group {
   display: flex;
   flex-direction: column;
+  background-color: #fff;
 }
 
 .simple-label {
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   margin-bottom: 8px;
 }
 
 .simple-value {
-  color: #333;
+  color: #000;
   font-size: 0.9rem;
   padding-bottom: 3px;
 }
@@ -114,6 +131,7 @@
 .estado-alias-group {
   display: flex;
   flex-direction: column;
+  background-color: #fff;
 }
 
 .estado-buttons {
@@ -127,12 +145,13 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   font-weight: 500;
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   background-color: #fff;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
-  border-radius: 2px;
+  border-radius: 0;
+  color: #000;
 }
 
 .estado-button.selected {
@@ -141,40 +160,45 @@
   border-color: #000;
 }
 
-/* Estilos anteriores modificados para compatibilidad */
+/* Estilos para formularios */
 .form-row {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
+  background-color: #fff;
 }
 
 .form-field {
   flex: 1;
   min-width: 0;
+  background-color: #fff;
 }
 
 .form-field label {
   display: block;
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   margin-bottom: 8px;
 }
 
 .dropdown-field {
   position: relative;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 10px 15px;
+  border: 1px solid #000;
+  border-radius: 0;
+  padding: 8px 12px;
   background-color: #fff;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 40px;
+  box-sizing: border-box;
+  color: #000;
 }
 
 .dropdown-arrow {
   font-size: 12px;
-  color: #777;
+  color: #000;
 }
 
 .dropdown-menu {
@@ -183,32 +207,40 @@
   left: 0;
   right: 0;
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #000;
+  border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 100;
   max-height: 300px;
   overflow-y: auto;
-  margin-top: 5px;
+  margin-top: 0;
 }
 
 .dropdown-search {
   padding: 10px;
   width: 100%;
   border: none;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #000;
   font-size: 14px;
+  color: #000;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .dropdown-items {
   max-height: 250px;
   overflow-y: auto;
+  background-color: #fff;
 }
 
 .dropdown-item {
   padding: 10px 15px;
   cursor: pointer;
   font-size: 14px;
+  color: #000;
+  display: flex;
+  align-items: center;
 }
 
 .dropdown-item:hover {
@@ -221,7 +253,7 @@
 
 .estados-label {
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   flex: 0 0 120px;
 }
 
@@ -232,16 +264,17 @@
 }
 
 .estado-option {
-  border: 1px solid #ccc;
+  border: 1px solid #000;
   padding: 10px 20px;
   background-color: #fff;
   cursor: pointer;
   text-align: center;
   min-width: 100px;
-  border-radius: 2px;
+  border-radius: 0;
   font-size: 0.85rem;
   text-transform: uppercase;
   font-weight: 500;
+  color: #000;
 }
 
 .estado-option.selected {
@@ -252,7 +285,7 @@
 
 .idiomas-description {
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   width: 100%;
   margin: 0;
 }
@@ -261,51 +294,188 @@
   margin-bottom: 10px;
 }
 
+/* Estilos para el dropdown de idiomas */
 .idiomas-dropdown {
-  flex: 0 0 250px;
+  position: relative;
+  width: 250px;
 }
 
-.idiomas-count,
+.idiomas-dropdown-field {
+  border: 1px solid #000;
+  border-radius: 0;
+  padding: 8px 12px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  box-sizing: border-box;
+  color: #000;
+}
+
+.idiomas-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 300px;
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  margin-top: 0;
+}
+
+.idiomas-dropdown-search {
+  padding: 10px;
+  border-bottom: 1px solid #000;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+}
+
+.idiomas-dropdown-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 5px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #000;
+}
+
+.search-icon {
+  color: #000;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.clear-search-icon {
+  color: #000;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.idiomas-dropdown-items {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.idiomas-dropdown-item {
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background-color: #fff;
+  color: #000;
+}
+
+.idiomas-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.idiomas-dropdown-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.idiomas-dropdown-item label {
+  display: flex;
+  flex: 1;
+  cursor: pointer;
+}
+
+.select-all {
+  border-bottom: 1px solid #000;
+  font-weight: 500;
+}
+
+.idiomas-count {
+  font-size: 1rem;
+  color: #000;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
 .articulos-count {
   font-size: 0.85rem;
-  color: #666;
+  color: #000;
   margin-bottom: 10px;
 }
 
-.idiomas-table-container,
-.articulos-table-container {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 20px;
+/* Updated styles for idiomas count above the table */
+.idiomas-count {
+  font-size: 1rem;
+  color: #000;
+  margin-bottom: 10px;
+  font-weight: 500;
+  display: block;
 }
 
+.idiomas-table-container,
+.articulos-table-container,
+.ambitos-table-container {
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 0;
+  overflow: hidden;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+/* Updated table styles */
 .idiomas-table,
 .articulos-table,
 .ambitos-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: #fff;
+  color: #000;
 }
 
 .idiomas-table th,
 .articulos-table th,
 .ambitos-table th {
-  background-color: #f0f0f0;
+  background-color: #fff;
   padding: 12px 15px;
   text-align: left;
   font-weight: 500;
   font-size: 0.8rem;
   text-transform: uppercase;
-  color: #555;
+  color: #000;
+  border-bottom: 1px solid #000;
+  white-space: nowrap;
+}
+
+/* Add right border to all th elements in idiomas-table */
+.idiomas-table th {
+  border-right: 1px solid #000;
+}
+
+.idiomas-table th:last-child {
+  border-right: none;
 }
 
 .idiomas-table td,
 .articulos-table td,
 .ambitos-table td {
   padding: 12px 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #000;
   font-size: 0.9rem;
+  background-color: #fff;
+  color: #000;
+}
+
+/* Add right border to all td elements in idiomas-table */
+.idiomas-table td {
+  border-right: 1px solid #000;
+}
+
+.idiomas-table td:last-child {
+  border-right: none;
 }
 
 .checkbox-column {
@@ -313,87 +483,260 @@
   text-align: center;
 }
 
+.id-column {
+  white-space: nowrap;
+}
+
 .editable-cell {
   position: relative;
   display: flex;
   align-items: center;
+  background-color: #fff;
 }
 
 .editable-cell input {
   width: 100%;
   padding: 6px 30px 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: none;
+  border-bottom: 1px solid #000;
+  border-radius: 0;
   font-size: 0.9rem;
+  background-color: #fff;
+  color: #000;
 }
 
 .clear-input {
   position: absolute;
   right: 10px;
-  color: #888;
+  color: #000;
   cursor: pointer;
   font-size: 0.8rem;
 }
 
-.search-bar-container {
+/* NUEVOS ESTILOS PARA EL DROPDOWN DE ARTÍCULOS */
+.articulos-search-container {
   display: flex;
   gap: 15px;
   margin-bottom: 15px;
+  background-color: #fff;
+  max-width: 50%;
+  position: relative;
 }
 
-.search-bar {
-  flex: 1;
+.articulos-search-input-container {
   position: relative;
+  flex: 1;
   display: flex;
   align-items: center;
 }
 
-.search-bar input {
-  flex: 1;
-  padding: 10px 40px 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.articulos-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 60px 8px 15px;
+  border: 1px solid #000;
+  border-radius: 0;
   font-size: 0.9rem;
+  color: #000;
+  background-color: #fff;
 }
 
-.search-dropdown-arrow {
+.articulos-search-input:focus {
+  outline: none;
+}
+
+.articulos-search-clear-btn {
   position: absolute;
-  right: 15px;
-  color: #777;
-  font-size: 12px;
+  right: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
 }
 
-.add-button {
-  padding: 10px 20px;
-  background-color: #000;
-  color: #fff;
+.articulos-search-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
   border: none;
-  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.articulos-add-btn {
+  padding: 0 20px;
+  height: 40px;
+  background-color: #fff;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   text-transform: uppercase;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.articulo-name {
-  max-width: 300px;
+.articulos-add-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.articulos-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 400px;
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 2px;
+}
+
+.articulos-search-box {
+  padding: 10px;
+  border-bottom: 1px solid #000;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.articulos-search-icon {
+  position: absolute;
+  left: 20px;
+  color: #000;
+  font-size: 14px;
+}
+
+.articulos-dropdown-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 35px;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  font-size: 14px;
+  color: #000;
+}
+
+.articulos-dropdown-search-input:focus {
+  outline: none;
+}
+
+.articulos-dropdown-clear-btn {
+  position: absolute;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.articulos-dropdown-items {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.articulos-dropdown-item {
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  min-height: 40px;
+}
+
+.articulos-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.articulos-dropdown-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.articulos-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.articulos-item-id {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.articulos-item-nombre {
+  font-size: 0.85rem;
+  color: #000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.articulos-select-all {
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-top: 1px solid #000;
+  background-color: #f5f5f5;
+  font-weight: 500;
+  position: sticky;
+  bottom: 0;
+}
+
+.articulos-select-all input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.articulos-no-results {
+  padding: 20px;
+  text-align: center;
+  color: #666;
 }
 
 .estado-tag {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 2px;
+  border-radius: 4px;
   font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 500;
   text-align: center;
+  width: 80px;
 }
 
 .activo {
-  background-color: #4682B4;
+  background-color: #4CAF50;
   color: white;
 }
 
@@ -403,41 +746,42 @@
 
 .ambito-row {
   align-items: flex-end;
+  background-color: #fff;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .ambito-field {
   flex: 0 0 200px;
+  background-color: #fff;
 }
 
 .ambito-label {
   font-size: 0.9rem;
-  color: #555;
+  color: #000;
   display: block;
   margin-bottom: 8px;
 }
 
 .ambito-value {
   font-weight: 500;
-  padding: 12px 0;
+  padding: 8px 0;
+  color: #000;
 }
 
 .grupo-cadena-field,
 .cadena-field,
 .mercado-field {
   flex: 1;
-}
-
-.ambitos-table-container {
   background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
 }
 
 .mercado-column {
   display: flex;
   align-items: center;
   gap: 10px;
+  background-color: #fff;
 }
 
 .mercado-flag {
@@ -449,14 +793,15 @@
   justify-content: flex-end;
   gap: 15px;
   padding: 20px 0;
+  background-color: #fff;
 }
 
 .cancel-button {
   padding: 10px 25px;
   background-color: #fff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 0;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -468,7 +813,7 @@
   background-color: #000;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -483,61 +828,129 @@
   background-color: #222;
 }
 
-@media screen and (max-width: 1200px) {
-  .simple-form-row {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  
-  .estado-alias-group {
-    margin-top: 10px;
-  }
-  
-  .estado-buttons {
-    justify-content: flex-start;
-  }
-  
-  .form-row {
-    flex-wrap: wrap;
-  }
-  
-  .form-field {
-    flex: 0 0 100%;
-    margin-bottom: 15px;
-  }
-  
-  .estados-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .estados-label {
-    margin-bottom: 10px;
-  }
-  
-  .estados-options {
-    width: 100%;
-  }
-  
-  .estado-option {
-    flex: 1;
-  }
-  
-  .ambito-row {
-    flex-direction: column;
-  }
-  
-  .ambito-field,
-  .grupo-cadena-field,
-  .cadena-field,
-  .mercado-field {
-    width: 100%;
-  }
-  
-  .idiomas-table,
-  .articulos-table,
-  .ambitos-table {
-    display: block;
-    overflow-x: auto;
-  }
+/* Estilos específicos para que coincida con las imágenes */
+.paso-2 {
+  margin-top: 30px;
+}
+
+.paso-3 {
+  margin-top: 30px;
+}
+
+/* Eliminar algunos bordes redondeados y ajustar alturas */
+button, input, select, textarea {
+  border-radius: 0;
+}
+
+/* Asegurar que los botones de estado tienen la apariencia correcta */
+.estado-buttons {
+  height: 40px;
+}
+
+.estado-button {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+}
+
+/* Ajustes para tabla con imágenes */
+.articulo-imagen {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Estilos para las tablas que coincidan con las imágenes */
+.articulos-table th, .idiomas-table th, .ambitos-table th {
+  font-weight: normal;
+  background-color: #fff;
+  border-top: 1px solid #000;
+  padding: 10px 15px;
+  white-space: nowrap;
+}
+
+.articulos-table td, .idiomas-table td, .ambitos-table td {
+  padding: 8px 15px;
+  vertical-align: middle;
+  border-top: 1px solid #ddd;
+}
+
+.articulos-table input[type="checkbox"],
+.idiomas-table input[type="checkbox"] {
+  margin: 0;
+}
+
+.dropdown-field, .idiomas-dropdown-field {
+  font-size: 0.9rem;
+}
+
+/* Ajustes específicos para alinearse con la referencia */
+.articulos-table {
+  table-layout: fixed;
+  border: none;
+  min-width: 100%;
+}
+
+.articulos-table th.checkbox-column {
+  width: 40px;
+}
+
+.articulos-table th.id-column {
+  width: 120px;
+}
+
+.articulos-table th.articulo-column {
+  width: 200px;
+}
+
+.articulos-table th.unidades-column {
+  width: 130px;
+}
+
+.articulos-table th.unidad-column {
+  width: 150px;
+}
+
+.articulos-table th.multiplo-column {
+  width: 90px;
+}
+
+.articulos-table th.estado-spi-column,
+.articulos-table th.estado-ram-column,
+.articulos-table th.estado-alias-column {
+  width: 120px;
+  text-align: center;
+}
+
+.articulos-table th.fecha-column {
+  width: 120px;
+}
+
+.articulos-table th.sint-column {
+  width: 100px;
+}
+
+.articulos-table th {
+  line-height: 1.2;
+  padding: 8px;
+}
+
+.articulos-table th div {
+  white-space: nowrap;
+}
+
+.articulos-table .estado-column {
+  text-align: center;
+}
+
+.articulos-table .unidades-box {
+  text-align: left;
+}
+
+.articulos-table .estado-tag.activo {
+  width: auto;
+  min-width: 80px;
+  font-size: 0.65rem;
 }

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaChevronDown, FaTimes, FaCircle } from 'react-icons/fa';
+import { FaChevronDown, FaTimes, FaCircle, FaSearch } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/edicionAlias.css';
@@ -30,12 +30,15 @@ const EdicionAlias = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
+  const dropdownRef = useRef(null);
+  const articulosDropdownRef = useRef(null);
 
   // Estados principales
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [alias, setAlias] = useState(null);
   const [articulos, setArticulos] = useState([]);
+  const [articulosDisponibles, setArticulosDisponibles] = useState([]);
   const [idiomas, setIdiomas] = useState([]);
   const [ambitos, setAmbitos] = useState([]);
 
@@ -51,15 +54,39 @@ const EdicionAlias = () => {
   const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
   const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
   const [selectedEstadoAlias, setSelectedEstadoAlias] = useState('');
-  const [estadoDesc, setEstadoDesc] = useState(''); // Nuevo estado para guardar la descripción
+  const [estadoDesc, setEstadoDesc] = useState(''); // Estado para guardar la descripción
   const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
   const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
   const [selectedCadena, setSelectedCadena] = useState('');
   const [selectedMercado, setSelectedMercado] = useState('');
+  const [selectedIdiomas, setSelectedIdiomas] = useState([]);
 
   // Estados para dropdowns
   const [openDropdown, setOpenDropdown] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [checkAll, setCheckAll] = useState(false);
+  const [checkAllArticulos, setCheckAllArticulos] = useState(false);
+  const [filteredArticulos, setFilteredArticulos] = useState([]);
+  
+  // Estado para el input de búsqueda en el nuevo dropdown
+  const [articuloSearchText, setArticuloSearchText] = useState('');
+  const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
+
+  // Función para manejar clicks fuera del dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+      if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
+        setIsArticulosDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Función para mapear el estado del alias
   const getEstadoNormalizado = (estadoId, estadoDesc) => {
@@ -113,6 +140,7 @@ const EdicionAlias = () => {
         const idiomasResponse = await axios.get(`${BASE_URL}/edicion/alias/${id}/idiomas?idIdioma=${languageId}`);
         const idiomasData = idiomasResponse.data || [];
         setIdiomas(idiomasData);
+        setSelectedIdiomas(idiomasData.map(i => i.idIdioma));
 
         // Create idiomas values map
         const idiomasValues = {};
@@ -126,7 +154,7 @@ const EdicionAlias = () => {
 
         // Fetch ambitos (cadenas, grupos y mercados)
         const ambitosResponse = await axios.get(`${BASE_URL}/edicion/alias/${id}/ambitos?idIdioma=${languageId}`);
-        setAmbitos(ambitosResponse.data || []);
+        setAmbitos(ambitosResponse.data || {});
         if (ambitosResponse.data && ambitosResponse.data.gruposCadena && ambitosResponse.data.gruposCadena.length > 0) {
           setSelectedGrupoCadena(ambitosResponse.data.gruposCadena[0].id);
         }
@@ -143,13 +171,15 @@ const EdicionAlias = () => {
           idiomasDisponiblesRes,
           gruposCadenaRes,
           cadenasRes,
-          mercadosRes
+          mercadosRes,
+          articulosDisponiblesRes
         ] = await Promise.all([
           axios.get(`${BASE_URL}/tipos-alias?idIdioma=${languageId}`),
           axios.get(`${BASE_URL}/edicion/idiomas?idIdioma=${languageId}`),
           axios.get(`${BASE_URL}/edicion/grupos-cadena?idIdioma=${languageId}`),
           axios.get(`${BASE_URL}/edicion/cadenas?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/mercados?idIdioma=${languageId}`)
+          axios.get(`${BASE_URL}/edicion/mercados?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/edicion/all?idIdioma=${languageId}`)
         ]);
 
         setTiposAlias(tiposAliasRes.data || []);
@@ -157,6 +187,8 @@ const EdicionAlias = () => {
         setGruposCadena(gruposCadenaRes.data || []);
         setCadenas(cadenasRes.data || []);
         setMercados(mercadosRes.data || []);
+        setArticulosDisponibles(articulosDisponiblesRes.data || []);
+        setFilteredArticulos(articulosDisponiblesRes.data || []);
       } catch (error) {
         console.error('Error fetching alias data:', error);
         setError('No se pudieron cargar los datos del alias');
@@ -172,10 +204,91 @@ const EdicionAlias = () => {
 
   const handleDropdownToggle = (dropdownName) => {
     setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
+    setSearchText('');
   };
 
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);
+    
+    // Filtrar artículos si estamos en el dropdown de artículos
+    if (openDropdown === 'articulos') {
+      const searchValue = e.target.value.toLowerCase();
+      const filtered = articulosDisponibles.filter(
+        articulo => 
+          articulo.idAjeno?.toString().toLowerCase().includes(searchValue) || 
+          articulo.nombreAjeno?.toLowerCase().includes(searchValue)
+      );
+      setFilteredArticulos(filtered);
+    }
+  };
+
+  // Función para manejar la búsqueda en el nuevo dropdown
+  const handleArticuloSearchChange = (e) => {
+    const value = e.target.value;
+    setArticuloSearchText(value);
+    
+    // Filtrar artículos basado en la búsqueda
+    if (value) {
+      const searchValue = value.toLowerCase();
+      const filtered = articulosDisponibles.filter(
+        articulo => 
+          articulo.idAjeno?.toString().toLowerCase().includes(searchValue) || 
+          articulo.nombreAjeno?.toLowerCase().includes(searchValue)
+      );
+      setFilteredArticulos(filtered);
+    } else {
+      setFilteredArticulos(articulosDisponibles);
+    }
+  };
+
+  // Funciones para el nuevo dropdown de artículos
+  const toggleArticulosDropdown = () => {
+    setIsArticulosDropdownOpen(!isArticulosDropdownOpen);
+    if (!isArticulosDropdownOpen) {
+      // Reset filtros al abrir el dropdown
+      setArticuloSearchText('');
+      setFilteredArticulos(articulosDisponibles);
+    }
+  };
+
+  const clearArticuloSearch = () => {
+    setArticuloSearchText('');
+    setFilteredArticulos(articulosDisponibles);
+  };
+
+  // Funciones para manejar la selección de artículos
+  const handleSelectAllArticulos = () => {
+    const newCheckAllArticulos = !checkAllArticulos;
+    setCheckAllArticulos(newCheckAllArticulos);
+    
+    if (newCheckAllArticulos) {
+      // Obtener solo los artículos filtrados que no están ya seleccionados
+      const articulosToAdd = filteredArticulos.filter(
+        articulo => !articulos.some(a => a.idAjeno === articulo.idAjeno)
+      );
+      
+      if (articulosToAdd.length > 0) {
+        setArticulos(prev => [...prev, ...articulosToAdd]);
+      }
+    } else {
+      // Deseleccionar solo los que están en la lista filtrada
+      const filteredIds = filteredArticulos.map(a => a.idAjeno);
+      setArticulos(prev => prev.filter(a => !filteredIds.includes(a.idAjeno)));
+    }
+  };
+
+  const handleArticuloSelect = (articulo) => {
+    const isSelected = articulos.some(a => a.idAjeno === articulo.idAjeno);
+    
+    if (isSelected) {
+      setArticulos(prev => prev.filter(a => a.idAjeno !== articulo.idAjeno));
+    } else {
+      setArticulos(prev => [...prev, articulo]);
+    }
+  };
+
+  const handleAddArticulo = () => {
+    setIsArticulosDropdownOpen(false);
   };
 
   const handleEstadoAliasChange = (estadoId) => {
@@ -190,6 +303,69 @@ const EdicionAlias = () => {
         [field]: value
       }
     }));
+  };
+
+  const handleIdiomaCheckboxChange = (idiomaId, isChecked) => {
+    if (isChecked) {
+      // Añadir idioma si no está ya seleccionado
+      if (!selectedIdiomas.includes(idiomaId)) {
+        setSelectedIdiomas([...selectedIdiomas, idiomaId]);
+        // Inicializar valores vacíos para este idioma si no existen
+        if (!idiomasAliasValues[idiomaId]) {
+          setIdiomasAliasValues(prev => ({
+            ...prev,
+            [idiomaId]: { nombre: '', descripcion: '' }
+          }));
+        }
+      }
+    } else {
+      // Eliminar idioma de la selección
+      setSelectedIdiomas(selectedIdiomas.filter(id => id !== idiomaId));
+    }
+  };
+
+  const handleSelectAllIdiomas = (isChecked) => {
+    setCheckAll(isChecked);
+    if (isChecked) {
+      // Seleccionar todos los idiomas visibles (filtrados)
+      const filteredIdiomas = idiomasDisponibles
+        .filter(idioma => 
+          searchText === '' || 
+          idioma.descripcion.toLowerCase().includes(searchText.toLowerCase())
+        )
+        .map(idioma => idioma.id);
+      
+      // Combinar con los ya seleccionados para no perder selecciones
+      const allSelected = [...new Set([...selectedIdiomas, ...filteredIdiomas])];
+      setSelectedIdiomas(allSelected);
+      
+      // Inicializar valores vacíos para los nuevos idiomas
+      let newValues = {...idiomasAliasValues};
+      filteredIdiomas.forEach(id => {
+        if (!newValues[id]) {
+          newValues[id] = { nombre: '', descripcion: '' };
+        }
+      });
+      setIdiomasAliasValues(newValues);
+    } else {
+      // Deseleccionar solo los idiomas visibles (filtrados)
+      const filteredIdiomas = idiomasDisponibles
+        .filter(idioma => 
+          searchText === '' || 
+          idioma.descripcion.toLowerCase().includes(searchText.toLowerCase())
+        )
+        .map(idioma => idioma.id);
+      
+      setSelectedIdiomas(selectedIdiomas.filter(id => !filteredIdiomas.includes(id)));
+    }
+  };
+
+  const handleClearSearchText = () => {
+    setSearchText('');
+  };
+
+  const handleClearInputValue = (idiomaId, field) => {
+    handleIdiomaAliasChange(idiomaId, field, '');
   };
 
   const handleGrupoCadenaSelect = (grupoId) => {
@@ -220,10 +396,10 @@ const EdicionAlias = () => {
         idTipoConexion: selectedTipoConexion,
         idEstacionalidad: selectedEstacionalidad,
         idEstado: selectedEstadoAlias,
-        idiomas: Object.keys(idiomasAliasValues).map(idIdioma => ({
+        idiomas: selectedIdiomas.map(idIdioma => ({
           idIdioma,
-          nombre: idiomasAliasValues[idIdioma].nombre,
-          descripcion: idiomasAliasValues[idIdioma].descripcion
+          nombre: idiomasAliasValues[idIdioma]?.nombre || '',
+          descripcion: idiomasAliasValues[idIdioma]?.descripcion || ''
         })),
         ambitos: [{
           idGrupoCadena: selectedGrupoCadena,
@@ -290,7 +466,7 @@ const EdicionAlias = () => {
     <div className="edicion-alias-container">
       <div className="edicion-alias-header">
         <h1 className="edicion-alias-title">
-          {t('EDICIÓN DE ALIAS')} - {alias.id} / {alias.descripcion || alias.nombreAlias}
+          {t('EDICIÓN DE ALIAS')} - {alias.idAlias} / {alias.descripcion || alias.nombreAlias}
         </h1>
       </div>
 
@@ -350,13 +526,72 @@ const EdicionAlias = () => {
             </div>
             
             <div className="form-row idiomas-dropdown-row">
-              <div className="readonly-field idiomas-dropdown">
-                <span>{idiomas.length} {t('seleccionados')}</span>
+              <div className="idiomas-dropdown" ref={dropdownRef}>
+                <div 
+                  className="idiomas-dropdown-field" 
+                  onClick={() => handleDropdownToggle('idiomas')}
+                >
+                  <span>{selectedIdiomas.length} {t('seleccionados')}</span>
+                  <FaChevronDown className="dropdown-arrow" />
+                </div>
+                
+                {openDropdown === 'idiomas' && (
+                  <div className="idiomas-dropdown-menu">
+                    <div className="idiomas-dropdown-search">
+                      <FaSearch className="search-icon" />
+                      <input 
+                        type="text" 
+                        placeholder={t('Buscar idioma...')}
+                        value={searchText}
+                        onChange={handleSearchChange}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      {searchText && (
+                        <FaTimes className="clear-search-icon" onClick={handleClearSearchText} />
+                      )}
+                    </div>
+                    
+                    <div className="idiomas-dropdown-items">
+                      <div className="idiomas-dropdown-item select-all">
+                        <input 
+                          type="checkbox" 
+                          checked={checkAll}
+                          onChange={(e) => handleSelectAllIdiomas(e.target.checked)}
+                        />
+                        <span>{t('Seleccionar todo')}</span>
+                      </div>
+                      
+                      {idiomasDisponibles
+                        .filter(idioma => 
+                          searchText === '' || 
+                          idioma.descripcion.toLowerCase().includes(searchText.toLowerCase())
+                        )
+                        .map(idioma => (
+                          <div key={idioma.id} className="idiomas-dropdown-item">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedIdiomas.includes(idioma.id)}
+                              onChange={(e) => handleIdiomaCheckboxChange(idioma.id, e.target.checked)}
+                              id={`idioma-${idioma.id}`}
+                            />
+                            <label 
+                              htmlFor={`idioma-${idioma.id}`}
+                              onClick={() => handleIdiomaCheckboxChange(idioma.id, !selectedIdiomas.includes(idioma.id))}
+                            >
+                              {idioma.descripcion}
+                            </label>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
+            <div className="idiomas-count">{selectedIdiomas.length} {t('idiomas añadidos')}</div>
+            
             <div className="idiomas-table-container">
-              <div className="idiomas-count">{idiomas.length} {t('idiomas añadidos')}</div>
               <table className="idiomas-table">
                 <thead>
                   <tr>
@@ -367,30 +602,46 @@ const EdicionAlias = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {idiomas.map(idioma => (
-                    <tr key={idioma.idIdioma}>
+                  {selectedIdiomas.map(idiomaId => (
+                    <tr key={idiomaId}>
                       <td className="checkbox-column">
-                        <input type="checkbox" checked readOnly />
+                        <input 
+                          type="checkbox" 
+                          checked 
+                          onChange={() => handleIdiomaCheckboxChange(idiomaId, false)}
+                        />
                       </td>
-                      <td>{getIdiomaNombre(idioma.idIdioma)}</td>
+                      <td>{getIdiomaNombre(idiomaId)}</td>
                       <td>
                         <div className="editable-cell">
                           <input 
                             type="text" 
-                            value={idiomasAliasValues[idioma.idIdioma]?.nombre || ''} 
-                            onChange={(e) => handleIdiomaAliasChange(idioma.idIdioma, 'nombre', e.target.value)}
+                            value={idiomasAliasValues[idiomaId]?.nombre || ''} 
+                            onChange={(e) => handleIdiomaAliasChange(idiomaId, 'nombre', e.target.value)}
+                            placeholder="QA Prueba"
                           />
-                          <FaTimes className="clear-input" />
+                          {idiomasAliasValues[idiomaId]?.nombre && (
+                            <FaTimes 
+                              className="clear-input" 
+                              onClick={() => handleClearInputValue(idiomaId, 'nombre')}
+                            />
+                          )}
                         </div>
                       </td>
                       <td>
                         <div className="editable-cell">
                           <input 
                             type="text" 
-                            value={idiomasAliasValues[idioma.idIdioma]?.descripcion || ''} 
-                            onChange={(e) => handleIdiomaAliasChange(idioma.idIdioma, 'descripcion', e.target.value)}
+                            value={idiomasAliasValues[idiomaId]?.descripcion || ''} 
+                            onChange={(e) => handleIdiomaAliasChange(idiomaId, 'descripcion', e.target.value)}
+                            placeholder="QA Prueba"
                           />
-                          <FaTimes className="clear-input" />
+                          {idiomasAliasValues[idiomaId]?.descripcion && (
+                            <FaTimes 
+                              className="clear-input" 
+                              onClick={() => handleClearInputValue(idiomaId, 'descripcion')}
+                            />
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -410,69 +661,176 @@ const EdicionAlias = () => {
           <div className="paso-content">
             <p className="section-description">{t('Busca y añade los artículos que desea incluir en el alias.')}</p>
             
-            <div className="search-bar-container">
-              <div className="search-bar">
+            {/* Nuevo dropdown de artículos */}
+            <div className="articulos-search-container" ref={articulosDropdownRef}>
+              <div className="articulos-search-input-container">
                 <input 
                   type="text" 
-                  placeholder={t('Buscar por id o nombre de artículo')} 
+                  value={articuloSearchText}
+                  onChange={handleArticuloSearchChange}
+                  onClick={toggleArticulosDropdown}
+                  className="articulos-search-input"
+                  placeholder={t('Buscar por id o nombre de artículo')}
                 />
-                <FaChevronDown className="search-dropdown-arrow" />
+                
+                {articuloSearchText && (
+                  <button
+                    className="articulos-search-clear-btn"
+                    onClick={clearArticuloSearch}
+                  >
+                    <FaTimes />
+                  </button>
+                )}
+                
+                <button 
+                  className="articulos-search-toggle-btn" 
+                  onClick={toggleArticulosDropdown}
+                >
+                  <FaChevronDown />
+                </button>
               </div>
               
-              <button className="add-button">{t('AÑADIR')}</button>
+              <button className="articulos-add-btn" onClick={handleAddArticulo}>
+                {t('AÑADIR')}
+              </button>
+              
+              {isArticulosDropdownOpen && (
+                <div className="articulos-dropdown">
+                  <div className="articulos-search-box">
+                    <FaSearch className="articulos-search-icon" />
+                    <input 
+                      type="text"
+                      value={articuloSearchText}
+                      onChange={handleArticuloSearchChange}
+                      placeholder={t('Buscar artículo...')}
+                      className="articulos-dropdown-search-input"
+                      autoFocus
+                    />
+                    {articuloSearchText && (
+                      <button
+                        className="articulos-dropdown-clear-btn"
+                        onClick={clearArticuloSearch}
+                      >
+                        <FaTimes />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="articulos-dropdown-items">
+                    {filteredArticulos.length === 0 ? (
+                      <div className="articulos-no-results">{t('No se encontraron artículos')}</div>
+                    ) : (
+                      <>
+                        {filteredArticulos.map(articulo => (
+                          <div 
+                            key={articulo.idAjeno || articulo.id} 
+                            className="articulos-dropdown-item"
+                            onClick={() => handleArticuloSelect(articulo)}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={articulos.some(a => a.idAjeno === articulo.idAjeno)}
+                              readOnly
+                            />
+                            <div className="articulos-item-info">
+                              <div className="articulos-item-id">
+                                ID: {articulo.idAjeno || articulo.id}
+                              </div>
+                              <div className="articulos-item-nombre">
+                                {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <div className="articulos-select-all" onClick={handleSelectAllArticulos}>
+                          <input 
+                            type="checkbox" 
+                            checked={checkAllArticulos}
+                            readOnly
+                          />
+                          <span>{t('Seleccionar todo')}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="articulos-count">{articulos.length} {t('artículos añadidos')}</div>
             
             <div className="articulos-table-container">
-              <table className="articulos-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column"></th>
-                    <th>{t('ID ARTÍCULO')}</th>
-                    <th>{t('ARTÍCULO')}</th>
-                    <th>{t('UNIDADES BOX')}</th>
-                    <th>{t('UNIDAD DE EMPAQUETADO')}</th>
-                    <th>{t('MÚLTIPLO MÍNIMO')}</th>
-                    <th>{t('ESTADO ARTÍCULO SPI')}</th>
-                    <th>{t('ESTADO ARTÍCULO RAM')}</th>
-                    <th>{t('ESTADO ARTÍCULO EN EL ALIAS')}</th>
-                    <th>{t('FECHA DE ALTA')}</th>
-                    <th>{t('ID SINT')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articulos.map(articulo => (
-                    <tr key={articulo.idAjeno || articulo.id}>
-                      <td className="checkbox-column">
-                        <input type="checkbox" checked readOnly />
-                      </td>
-                      <td>{articulo.idAjeno || articulo.id}</td>
-                      <td className="articulo-name">{articulo.nombreAjeno || articulo.descripcion || articulo.nombre}</td>
-                      <td>{articulo.unidadesBox || '-'}</td>
-                      <td>{articulo.unidadEmpaquetado || articulo.unidadesMedida?.descripcion || 'UNIDAD'}</td>
-                      <td className="text-center">{articulo.multiploMinimo || '1'}</td>
-                      <td>
-                        <span className="estado-tag activo">
-                          {articulo.tipoEstadoCompras?.descripcion || 'ACTIVO'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="estado-tag activo">
-                          {articulo.tipoEstadoRam?.descripcion || 'ACTIVO'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="estado-tag activo">
-                          {articulo.descripcionTipoEstadoAliasAjenoRam || 'ACTIVO'}
-                        </span>
-                      </td>
-                      <td>{articulo.fechaAlta || '2025-04-11'}</td>
-                      <td>{articulo.idSint || '-'}</td>
+              <div className="articulos-table-scroll">
+                <table className="articulos-table">
+                  <thead>
+                    <tr>
+                      <th className="checkbox-column"></th>
+                      <th className="id-column">{t('ID ARTÍCULO')}</th>
+                      <th className="articulo-column">{t('ARTÍCULO')}</th>
+                      <th className="unidades-column">{t('UNIDADES BOX')}</th>
+                      <th className="unidad-column">
+                        <div>{t('UNIDAD DE')}</div>
+                        <div>{t('EMPAQUETADO')}</div>
+                      </th>
+                      <th className="multiplo-column">
+                        <div>{t('MÚLTIPLO')}</div>
+                        <div>{t('MÍNIMO')}</div>
+                      </th>
+                      <th className="estado-spi-column">
+                        <div>{t('ESTADO ARTÍCULO')}</div>
+                        <div>{t('SFI')}</div>
+                      </th>
+                      <th className="estado-ram-column">
+                        <div>{t('ESTADO ARTÍCULO')}</div>
+                        <div>{t('RAM')}</div>
+                      </th>
+                      <th className="estado-alias-column">
+                        <div>{t('ESTADO ARTÍCULO')}</div>
+                        <div>{t('EN EL ALIAS')}</div>
+                      </th>
+                      <th className="fecha-column">
+                        <div>{t('FECHA DE')}</div>
+                        <div>{t('ALTA')}</div>
+                      </th>
+                      <th className="sint-column">{t('ID SINT')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {articulos.map(articulo => (
+                      <tr key={articulo.idAjeno || articulo.id}>
+                        <td className="checkbox-column">
+                          <input type="checkbox" checked readOnly />
+                        </td>
+                        <td>{articulo.idAjeno || articulo.id}</td>
+                        <td className="articulo-name">
+                          {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                        </td>
+                        <td className="unidades-box">{articulo.unidadesBox || 'UNIDAD'}</td>
+                        <td>{articulo.unidadEmpaquetado || 'BULTO-PACKAGE'}</td>
+                        <td className="text-center">{articulo.multiploMinimo || '1'}</td>
+                        <td className="estado-column">
+                          <span className="estado-tag activo">
+                            {articulo.tipoEstadoCompras?.descripcion || 'ACTIVO'}
+                          </span>
+                        </td>
+                        <td className="estado-column">
+                          <span className="estado-tag activo">
+                            {articulo.tipoEstadoRam?.descripcion || 'ACTIVO'}
+                          </span>
+                        </td>
+                        <td className="estado-column">
+                          <span className="estado-tag activo">
+                            {articulo.descripcionTipoEstadoAliasAjenoRam || 'ACTIVO'}
+                          </span>
+                        </td>
+                        <td>{articulo.fechaAlta || '2025-04-11'}</td>
+                        <td>{articulo.idSint || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -520,7 +878,7 @@ const EdicionAlias = () => {
                               className="dropdown-item"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleGrupoCadenaSelect(grupo.id, grupo.descripcion);
+                                handleGrupoCadenaSelect(grupo.id);
                               }}
                             >
                               {grupo.id} - {grupo.descripcion}
@@ -561,7 +919,7 @@ const EdicionAlias = () => {
                               className="dropdown-item"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCadenaSelect(cadena.id, cadena.descripcion);
+                                handleCadenaSelect(cadena.id);
                               }}
                             >
                               {cadena.id} - {cadena.descripcion}
@@ -602,7 +960,7 @@ const EdicionAlias = () => {
                               className="dropdown-item"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleMercadoSelect(mercado.id, mercado.descripcion);
+                                handleMercadoSelect(mercado.id);
                               }}
                             >
                               {mercado.id} - {mercado.descripcion}
@@ -635,12 +993,6 @@ const EdicionAlias = () => {
                           <td>{getGrupoCadenaNombre(grupo.id)}</td>
                           <td>{cadena ? getCadenaNombre(cadena.id) : '-'}</td>
                           <td className="mercado-column">
-                            {mercado && mercado.codigoIsoMercado && (
-                              <span className="mercado-flag">
-                                {mercado.codigoIsoMercado === 'ES' ? '🇪🇸' : 
-                                 mercado.codigoIsoMercado === 'FR' ? '🇫🇷' : '🌐'}
-                              </span>
-                            )}
                             <span>{mercado ? getMercadoNombre(mercado.id) : '-'}</span>
                           </td>
                         </tr>

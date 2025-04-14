@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const aliasController = require('../controllers/aliasController');
+const ajenoController = require('../controllers/ajenoController');
 
 // Rutas para edición de alias
 router.get('/alias/:id', aliasController.getAliasInfoUpdate);
@@ -14,5 +15,6 @@ router.get('/idiomas', aliasController.getIdiomas);
 router.get('/grupos-cadena', aliasController.getGruposCadena);
 router.get('/cadenas', aliasController.getCadenas);
 router.get('/mercados', aliasController.getMercados);
+router.get('/all', ajenoController.getAllAjenos);
 
 module.exports = router;

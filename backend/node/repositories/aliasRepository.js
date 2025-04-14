@@ -805,7 +805,6 @@ exports.findMercadosByIdAlias = async (idAlias, idIdioma = 1) => {
   }
 };
 
-// Mantén este método para compatibilidad
 exports.findAmbitosByIdAlias = async (idAlias, idIdioma = 1) => {
   try {
     console.log(`Consultando ámbitos para el alias ID: ${idAlias}, idIdioma: ${idIdioma}`);
@@ -830,8 +829,6 @@ exports.findAmbitosByIdAlias = async (idAlias, idIdioma = 1) => {
     };
   }
 };
-
-// En aliasRepository.js, añade estos métodos:
 
 exports.getIdiomas = async () => {
   try {
