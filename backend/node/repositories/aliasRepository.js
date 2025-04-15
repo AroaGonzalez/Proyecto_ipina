@@ -507,9 +507,6 @@ exports.findAliasAjenosByFilter = async (filter = {}, pageable = { page: 0, size
   }
 };
 
-// En aliasRepository.js
-
-// Obtener un alias por ID
 exports.findAliasById = async (id, idIdioma = 1) => {
   try {
     const query = `
@@ -573,7 +570,6 @@ exports.findAliasById = async (id, idIdioma = 1) => {
   }
 };
 
-// Obtener los idiomas de un alias
 exports.findIdiomasByIdAlias = async (idAlias) => {
   try {
     const query = `
@@ -603,7 +599,6 @@ exports.findIdiomasByIdAlias = async (idAlias) => {
   }
 };
 
-// Obtener los artículos de un alias
 exports.findAliasAjenoInfoByIdAlias = async (idAlias, idIdioma = 1) => {
   try {
     const query = `

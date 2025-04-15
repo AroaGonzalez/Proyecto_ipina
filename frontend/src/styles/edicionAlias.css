@@ -16,17 +16,6 @@ body, html {
   overflow-y: auto;
 }
 
-.readonly-field {
-  padding: 10px 15px;
-  background-color: #f5f5f5;
-  border: 1px solid #000;
-  border-radius: 4px;
-  color: #000;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-}
-
 .edicion-alias-header {
   margin-bottom: 20px;
 }
@@ -100,7 +89,6 @@ body, html {
   margin-bottom: 20px;
 }
 
-/* Estructura para Paso 1 */
 .simple-form-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr) 2fr;
@@ -137,11 +125,12 @@ body, html {
 .estado-buttons {
   display: flex;
   gap: 10px;
+  height: 40px;
 }
 
 .estado-button {
   flex: 1;
-  padding: 10px 15px;
+  padding: 0 15px;
   font-size: 0.8rem;
   text-transform: uppercase;
   font-weight: 500;
@@ -152,6 +141,10 @@ body, html {
   text-align: center;
   border-radius: 0;
   color: #000;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .estado-button.selected {
@@ -160,7 +153,6 @@ body, html {
   border-color: #000;
 }
 
-/* Estilos para formularios */
 .form-row {
   display: flex;
   gap: 20px;
@@ -168,19 +160,25 @@ body, html {
   background-color: #fff;
 }
 
-.form-field {
-  flex: 1;
-  min-width: 0;
+/* Custom Checkbox Styles */
+.custom-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   background-color: #fff;
+  position: relative;
 }
 
-.form-field label {
-  display: block;
-  font-size: 0.9rem;
+.checkbox-icon {
+  font-size: 10px;
   color: #000;
-  margin-bottom: 8px;
 }
 
+/* Dropdown Styles */
 .dropdown-field {
   position: relative;
   border: 1px solid #000;
@@ -188,12 +186,14 @@ body, html {
   padding: 8px 12px;
   background-color: #fff;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   justify-content: space-between;
   align-items: center;
   height: 40px;
   box-sizing: border-box;
   color: #000;
+  font-size: 0.9rem;
+  z-index: 9000;
 }
 
 .dropdown-arrow {
@@ -201,7 +201,8 @@ body, html {
   color: #000;
 }
 
-.dropdown-menu {
+.dropdown-menu,
+.filter-dropdown-content {
   position: absolute;
   top: 100%;
   left: 0;
@@ -210,10 +211,11 @@ body, html {
   border: 1px solid #000;
   border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 9999;
   max-height: 300px;
   overflow-y: auto;
   margin-top: 0;
+  display: block !important;
 }
 
 .dropdown-search {
@@ -228,10 +230,21 @@ body, html {
   align-items: center;
 }
 
+.dropdown-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 5px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #000;
+}
+
 .dropdown-items {
   max-height: 250px;
   overflow-y: auto;
   background-color: #fff;
+  display: block !important;
 }
 
 .dropdown-item {
@@ -243,44 +256,38 @@ body, html {
   align-items: center;
 }
 
+.dropdown-item-text {
+  margin-left: 10px;
+}
+
 .dropdown-item:hover {
   background-color: #f5f5f5;
 }
 
-.estados-row {
-  align-items: center;
-}
-
-.estados-label {
-  font-size: 0.9rem;
-  color: #000;
-  flex: 0 0 120px;
-}
-
-.estados-options {
-  display: flex;
-  gap: 15px;
-  flex: 1;
-}
-
-.estado-option {
-  border: 1px solid #000;
-  padding: 10px 20px;
-  background-color: #fff;
-  cursor: pointer;
-  text-align: center;
-  min-width: 100px;
-  border-radius: 0;
-  font-size: 0.85rem;
-  text-transform: uppercase;
+.dropdown-item.select-all {
+  border-top: 1px solid #000;
+  background-color: #f5f5f5;
   font-weight: 500;
-  color: #000;
+  position: sticky;
+  bottom: 0;
 }
 
-.estado-option.selected {
-  background-color: #000;
-  color: #fff;
-  border-color: #000;
+.search-icon {
+  color: #000;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.clear-search-icon {
+  color: #000;
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.mercado-flag-small {
+  font-size: 1rem;
+  margin-right: 5px;
 }
 
 .idiomas-description {
@@ -294,7 +301,6 @@ body, html {
   margin-bottom: 10px;
 }
 
-/* Estilos para el dropdown de idiomas */
 .idiomas-dropdown {
   position: relative;
   width: 250px;
@@ -312,6 +318,7 @@ body, html {
   height: 40px;
   box-sizing: border-box;
   color: #000;
+  font-size: 0.9rem;
 }
 
 .idiomas-dropdown-menu {
@@ -345,19 +352,6 @@ body, html {
   color: #000;
 }
 
-.search-icon {
-  color: #000;
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-.clear-search-icon {
-  color: #000;
-  margin-left: 8px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
 .idiomas-dropdown-items {
   max-height: 300px;
   overflow-y: auto;
@@ -377,14 +371,11 @@ body, html {
   background-color: #f5f5f5;
 }
 
-.idiomas-dropdown-item input[type="checkbox"] {
-  margin-right: 10px;
-}
-
 .idiomas-dropdown-item label {
   display: flex;
   flex: 1;
   cursor: pointer;
+  margin-left: 10px;
 }
 
 .select-all {
@@ -397,21 +388,13 @@ body, html {
   color: #000;
   margin-bottom: 10px;
   font-weight: 500;
+  display: block;
 }
 
 .articulos-count {
   font-size: 0.85rem;
   color: #000;
   margin-bottom: 10px;
-}
-
-/* Updated styles for idiomas count above the table */
-.idiomas-count {
-  font-size: 1rem;
-  color: #000;
-  margin-bottom: 10px;
-  font-weight: 500;
-  display: block;
 }
 
 .idiomas-table-container,
@@ -425,7 +408,6 @@ body, html {
   overflow-x: auto;
 }
 
-/* Updated table styles */
 .idiomas-table,
 .articulos-table,
 .ambitos-table {
@@ -448,9 +430,10 @@ body, html {
   color: #000;
   border-bottom: 1px solid #000;
   white-space: nowrap;
+  border-top: 1px solid #000;
+  line-height: 1.2;
 }
 
-/* Add right border to all th elements in idiomas-table */
 .idiomas-table th {
   border-right: 1px solid #000;
 }
@@ -463,13 +446,13 @@ body, html {
 .articulos-table td,
 .ambitos-table td {
   padding: 12px 15px;
-  border-top: 1px solid #000;
+  border-top: 1px solid #ddd;
   font-size: 0.9rem;
   background-color: #fff;
   color: #000;
+  vertical-align: middle;
 }
 
-/* Add right border to all td elements in idiomas-table */
 .idiomas-table td {
   border-right: 1px solid #000;
 }
@@ -513,7 +496,6 @@ body, html {
   font-size: 0.8rem;
 }
 
-/* NUEVOS ESTILOS PARA EL DROPDOWN DE ARTÍCULOS */
 .articulos-search-container {
   display: flex;
   gap: 15px;
@@ -677,14 +659,11 @@ body, html {
   background-color: #f5f5f5;
 }
 
-.articulos-dropdown-item input[type="checkbox"] {
-  margin-right: 10px;
-}
-
 .articulos-item-info {
   display: flex;
   flex-direction: column;
   flex: 1;
+  margin-left: 10px;
 }
 
 .articulos-item-id {
@@ -714,8 +693,8 @@ body, html {
   bottom: 0;
 }
 
-.articulos-select-all input[type="checkbox"] {
-  margin-right: 10px;
+.articulos-select-all span {
+  margin-left: 10px;
 }
 
 .articulos-no-results {
@@ -753,7 +732,7 @@ body, html {
 }
 
 .ambito-field {
-  flex: 0 0 200px;
+  flex: 1;
   background-color: #fff;
 }
 
@@ -762,19 +741,6 @@ body, html {
   color: #000;
   display: block;
   margin-bottom: 8px;
-}
-
-.ambito-value {
-  font-weight: 500;
-  padding: 8px 0;
-  color: #000;
-}
-
-.grupo-cadena-field,
-.cadena-field,
-.mercado-field {
-  flex: 1;
-  background-color: #fff;
 }
 
 .mercado-column {
@@ -828,65 +794,10 @@ body, html {
   background-color: #222;
 }
 
-/* Estilos específicos para que coincida con las imágenes */
-.paso-2 {
-  margin-top: 30px;
+.articulos-table-scroll {
+  overflow-x: auto;
 }
 
-.paso-3 {
-  margin-top: 30px;
-}
-
-/* Eliminar algunos bordes redondeados y ajustar alturas */
-button, input, select, textarea {
-  border-radius: 0;
-}
-
-/* Asegurar que los botones de estado tienen la apariencia correcta */
-.estado-buttons {
-  height: 40px;
-}
-
-.estado-button {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 15px;
-}
-
-/* Ajustes para tabla con imágenes */
-.articulo-imagen {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-
-/* Estilos para las tablas que coincidan con las imágenes */
-.articulos-table th, .idiomas-table th, .ambitos-table th {
-  font-weight: normal;
-  background-color: #fff;
-  border-top: 1px solid #000;
-  padding: 10px 15px;
-  white-space: nowrap;
-}
-
-.articulos-table td, .idiomas-table td, .ambitos-table td {
-  padding: 8px 15px;
-  vertical-align: middle;
-  border-top: 1px solid #ddd;
-}
-
-.articulos-table input[type="checkbox"],
-.idiomas-table input[type="checkbox"] {
-  margin: 0;
-}
-
-.dropdown-field, .idiomas-dropdown-field {
-  font-size: 0.9rem;
-}
-
-/* Ajustes específicos para alinearse con la referencia */
 .articulos-table {
   table-layout: fixed;
   border: none;
@@ -932,11 +843,6 @@ button, input, select, textarea {
   width: 100px;
 }
 
-.articulos-table th {
-  line-height: 1.2;
-  padding: 8px;
-}
-
 .articulos-table th div {
   white-space: nowrap;
 }
@@ -953,4 +859,38 @@ button, input, select, textarea {
   width: auto;
   min-width: 80px;
   font-size: 0.65rem;
+}
+
+.remove-ambito-icon {
+  cursor: pointer;
+}
+
+/* Nuevos estilos para los dropdowns del Paso 3 (ámbitos) */
+.ambito-field {
+  position: relative;
+}
+
+.filter-dropdown-content {
+  width: 100%;
+  margin-top: 2px;
+}
+
+/* z-index para manejar la superposición de dropdowns */
+.grupo-cadena-field .filter-dropdown-content {
+  z-index: 1003;
+}
+
+.cadena-field .filter-dropdown-content {
+  z-index: 1002;
+}
+
+.mercado-field .filter-dropdown-content {
+  z-index: 1001;
+}
+
+.filter-placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }

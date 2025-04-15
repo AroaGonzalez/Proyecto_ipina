@@ -209,7 +209,6 @@ exports.getAliasAjenos = async (req, res) => {
   }
 };
 
-// En aliasController.js
 exports.getAliasInfoUpdate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -217,14 +216,12 @@ exports.getAliasInfoUpdate = async (req, res) => {
     
     console.log(`Consultando información completa del alias ID: ${id}, idIdioma: ${idIdioma}`);
     
-    // Obtener la información básica del alias
     const alias = await aliasRepository.findAliasById(id, parseInt(idIdioma));
     
     if (!alias) {
       return res.status(404).json({ message: 'Alias no encontrado' });
     }
     
-    // Construir el objeto con la estructura de AliasInfoUpdate
     const aliasInfoUpdate = {
       idAlias: alias.id,
       nombreAlias: alias.nombreAlias,
@@ -243,7 +240,6 @@ exports.getAliasInfoUpdate = async (req, res) => {
       fechaModificacion: alias.ultimaModificacion
     };
     
-    // Obtener cada una de las propiedades adicionales utilizando métodos separados
     try {
       const [idiomas, acoples, ajenos, gruposCadena, cadenas, mercados] = await Promise.all([
         aliasRepository.findIdiomasByIdAlias(id),
@@ -254,7 +250,6 @@ exports.getAliasInfoUpdate = async (req, res) => {
         aliasRepository.findMercadosByIdAlias(id, parseInt(idIdioma))
       ]);
       
-      // Añadir las propiedades adicionales al objeto
       aliasInfoUpdate.aliasIdioma = idiomas;
       aliasInfoUpdate.acoples = acoples;
       aliasInfoUpdate.ajenos = ajenos;
@@ -264,7 +259,6 @@ exports.getAliasInfoUpdate = async (req, res) => {
       
     } catch (error) {
       console.error(`Error al obtener datos adicionales:`, error);
-      // Asegurar que al menos hay arrays vacíos en caso de error
       aliasInfoUpdate.aliasIdioma = aliasInfoUpdate.aliasIdioma || [];
       aliasInfoUpdate.acoples = [];
       aliasInfoUpdate.ajenos = [];
@@ -280,7 +274,6 @@ exports.getAliasInfoUpdate = async (req, res) => {
   }
 };
 
-// Obtener solo la información básica de un alias
 exports.getAliasById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -301,7 +294,6 @@ exports.getAliasById = async (req, res) => {
   }
 };
 
-// Obtener idiomas de un alias
 exports.getAliasIdiomas = async (req, res) => {
   try {
     const { id } = req.params;
@@ -317,7 +309,6 @@ exports.getAliasIdiomas = async (req, res) => {
   }
 };
 
-// Obtener artículos de un alias
 exports.getAliasArticulos = async (req, res) => {
   try {
     const { id } = req.params;
@@ -334,7 +325,6 @@ exports.getAliasArticulos = async (req, res) => {
   }
 };
 
-// Obtener ámbitos de un alias
 exports.getAliasAmbitos = async (req, res) => {
   try {
     const { id } = req.params;
