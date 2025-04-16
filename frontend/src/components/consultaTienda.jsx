@@ -25,9 +25,7 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
    };
  }, []);
 
- // Procesar y eliminar duplicados, y formatear correctamente los datos
  const processedOptions = options.map(option => {
-   // Si la descripción ya contiene el ID (como "1 - FRANCIA"), extraer solo la descripción
    let descripcion = option.descripcion;
    const idPattern = new RegExp(`^${option.id}\\s*-\\s*`);
    if (idPattern.test(descripcion)) {
@@ -40,7 +38,6 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
    };
  });
 
- // Eliminar opciones duplicadas
  const uniqueOptions = processedOptions.reduce((acc, current) => {
    const isDuplicate = acc.find(item => item.id === current.id);
    if (!isDuplicate) {
@@ -109,18 +106,14 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
                onClick={(e) => {
                  e.stopPropagation();
                  
-                 // Si no es array, inicializar como array
-                 const currentSelections = Array.isArray(value) ? [...value] : 
-                                          (value ? [value] : []);
+                 const currentSelections = Array.isArray(value) ? [...value] : (value ? [value] : []);
                  
                  const optionId = option.id.toString();
                  const index = currentSelections.indexOf(optionId);
                  
                  if (index === -1) {
-                   // Si no está seleccionado, añadirlo
                    onChange([...currentSelections, optionId]);
                  } else {
-                   // Si ya está seleccionado, quitarlo
                    const newSelections = [...currentSelections];
                    newSelections.splice(index, 1);
                    onChange(newSelections);
@@ -131,7 +124,6 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
                type="checkbox"
                checked={Array.isArray(value) ? value.includes(option.id.toString()) : value === option.id.toString()}
                onChange={(e) => {
-                 // Añadir lógica para que funcione cuando se hace clic en el checkbox
                  e.stopPropagation();
                  
                  const currentSelections = Array.isArray(value) ? [...value] : 
@@ -205,7 +197,6 @@ const ConsultaTienda = () => {
  const [cadenas, setCadenas] = useState([]);
  const [gruposLocalizacion, setGruposLocalizacion] = useState([]);
 
- // Inicializar con arrays vacíos en lugar de strings
  const [selectedMercado, setSelectedMercado] = useState([]);
  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState([]);
  const [selectedCadena, setSelectedCadena] = useState([]);
@@ -216,33 +207,29 @@ const ConsultaTienda = () => {
  const tableContainerRef = useRef(null);
  const [loadingAllItems, setLoadingAllItems] = useState(false);
 
- // Funciones para determinar si los botones deben estar deshabilitados
  const shouldDisableActivarButton = () => {
    if (selectedItems.length === 0) return true;
    
-   // Comprobar si hay estados mixtos
    const hasActive = selectedItems.some(id => {
      const tienda = tiendas.find(t => t.idLocalizacionRam === id);
      return tienda && 
-            tienda.descripcionTipoEstadoLocalizacionRam && 
-            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('activ');
-   });
+        tienda.descripcionTipoEstadoLocalizacionRam && 
+        tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('activ');
+    });
    
    const hasPaused = selectedItems.some(id => {
      const tienda = tiendas.find(t => t.idLocalizacionRam === id);
      return tienda && 
-            tienda.descripcionTipoEstadoLocalizacionRam && 
-            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
-   });
+        tienda.descripcionTipoEstadoLocalizacionRam && 
+        tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
+    });
    
-   // Si hay estados mixtos (algunos activos y algunos pausados) o todos están activos, deshabilitar
    return (hasActive && hasPaused) || (hasActive && !hasPaused);
  };
 
  const shouldDisablePausarButton = () => {
    if (selectedItems.length === 0) return true;
    
-   // Comprobar si hay estados mixtos
    const hasActive = selectedItems.some(id => {
      const tienda = tiendas.find(t => t.idLocalizacionRam === id);
      return tienda && 
@@ -253,11 +240,10 @@ const ConsultaTienda = () => {
    const hasPaused = selectedItems.some(id => {
      const tienda = tiendas.find(t => t.idLocalizacionRam === id);
      return tienda && 
-            tienda.descripcionTipoEstadoLocalizacionRam && 
-            tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
+        tienda.descripcionTipoEstadoLocalizacionRam && 
+        tienda.descripcionTipoEstadoLocalizacionRam.toLowerCase().includes('pausad');
    });
    
-   // Si hay estados mixtos (algunos activos y algunos pausados) o todos están pausados, deshabilitar
    return (hasActive && hasPaused) || (!hasActive && hasPaused);
  };
 
@@ -313,7 +299,6 @@ const ConsultaTienda = () => {
        axios.get(`${BASE_URL}/tiendas/grupos-localizacion?idIdioma=${languageId}&formatoSelector=true`)
      ]);
 
-     // Procesar y eliminar duplicados por ID
      const processMercados = [...new Map(
        (mercadosRes.data || [])
          .filter(item => item && item.id !== 'all')
@@ -353,14 +338,11 @@ const ConsultaTienda = () => {
    const fetchCadenas = async () => {
      try {
        if (selectedGrupoCadena && selectedGrupoCadena.length > 0) {
-         // Solo pasar el primer grupo de cadena seleccionado para simplificar
-         // En una implementación completa, se podría considerar manejar múltiples grupos
          const grupoCadenaParam = selectedGrupoCadena[0];
          const response = await axios.get(
            `${BASE_URL}/tiendas/cadenas?idGrupoCadena=${grupoCadenaParam}&idIdioma=${languageId}&formatoSelector=true`
          );
          
-         // Procesar y eliminar duplicados
          const processCadenas = [...new Map(
            (response.data || [])
              .filter(item => item && item.id !== 'all')
@@ -373,7 +355,6 @@ const ConsultaTienda = () => {
            `${BASE_URL}/tiendas/cadenas?idIdioma=${languageId}&formatoSelector=true`
          );
          
-         // Procesar y eliminar duplicados
          const processCadenas = [...new Map(
            (response.data || [])
              .filter(item => item && item.id !== 'all')
@@ -396,7 +377,6 @@ const ConsultaTienda = () => {
    params.append('page', page);
    params.append('size', size);
    
-   // Añadir parámetros de filtro
    if (selectedMercado && selectedMercado.length > 0) {
      selectedMercado.forEach(id => {
        params.append('idsMercado', id);
@@ -489,24 +469,6 @@ const ConsultaTienda = () => {
    );
  };
 
- const handleSelectAll = () => {
-   if (selectAll) {
-     setSelectedItems([]);
-   } else {
-     // Si hay tiendas cargadas, seleccionar todas las tiendas cargadas
-     // Si no, intentar seleccionar todas según totalElements
-     if (tiendas.length > 0) {
-       setSelectedItems(tiendas.map((item) => item.idLocalizacionRam));
-     } else if (totalElements > 0) {
-       // Esto es solo una aproximación, ya que no tenemos los IDs de todas las tiendas
-       // Tendríamos que hacer una carga completa para obtener todos los IDs
-       alert(t('Para seleccionar todas las tiendas, es necesario cargarlas primero.'));
-       // Opcional: cargar todas las tiendas aquí
-     }
-   }
-   setSelectAll(!selectAll);
- };
-
  const handleActivarLocalizacion = async () => {
    if (!selectedItems.length) return;
    
@@ -518,7 +480,6 @@ const ConsultaTienda = () => {
      
      if (response.data.success) {
        alert(t('Las localizaciones han sido activadas correctamente'));
-       // Recargar datos
        setSelectedItems([]);
        setSelectAll(false);
        await fetchTiendas();
@@ -542,7 +503,6 @@ const ConsultaTienda = () => {
      
      if (response.data.success) {
        alert(t('Las localizaciones han sido pausadas correctamente'));
-       // Recargar datos
        setSelectedItems([]);
        setSelectAll(false);
        await fetchTiendas();
@@ -589,10 +549,8 @@ const ConsultaTienda = () => {
    minute: '2-digit'
  });
 
- // Función para cargar todas las tiendas cuando se hace clic en "Seleccionar Todo"
  const handleLoadAllAndSelectAll = async () => {
    if (selectAll) {
-     // Si ya están seleccionadas todas, solo deseleccionamos
      setSelectedItems([]);
      setSelectAll(false);
      return;
@@ -601,14 +559,12 @@ const ConsultaTienda = () => {
    try {
      setLoadingAllItems(true);
      
-     // Primero, vamos a cargar todas las IDs de tiendas que coinciden con los filtros actuales
      const allItemIds = await fetchAllTiendaIds();
      
      if (allItemIds.length > 0) {
        setSelectedItems(allItemIds);
        setSelectAll(true);
      } else {
-       // Si no se pudieron obtener todas las IDs, seleccionar solo las tiendas visibles
        const visibleIds = tiendas.map(item => item.idLocalizacionRam);
        setSelectedItems(visibleIds);
        setSelectAll(visibleIds.length > 0);
@@ -616,7 +572,6 @@ const ConsultaTienda = () => {
    } catch (error) {
      console.error('Error al seleccionar todas las tiendas:', error);
      
-     // En caso de error, seleccionar sólo las tiendas visibles
      const visibleIds = tiendas.map(item => item.idLocalizacionRam);
      setSelectedItems(visibleIds);
      setSelectAll(visibleIds.length > 0);
@@ -627,33 +582,26 @@ const ConsultaTienda = () => {
    }
  };
  
- // Función para obtener todos los IDs de tiendas que coinciden con los filtros actuales
  const fetchAllTiendaIds = async () => {
-   // Utilizamos los mismos parámetros de filtro, pero solicitamos todos los elementos
-   // Para evitar problemas de rendimiento, podemos hacer varias solicitudes paginadas
    
    try {
-     // Primero obtener el número total de elementos para calcular las páginas necesarias
      const initialParams = buildSearchParams(0, 1);
      const initialResponse = await axios.get(`${BASE_URL}/tiendas?${initialParams.toString()}`);
      
      const totalElements = initialResponse.data.totalElements || 0;
      if (totalElements === 0) return [];
      
-     const pageSize = 500; // Tamaño de página grande para reducir el número de solicitudes
+     const pageSize = 500;
      const totalPages = Math.ceil(totalElements / pageSize);
      
-     // Preparar array de promesas para obtener todas las páginas en paralelo
      const pagePromises = [];
      for (let page = 0; page < totalPages; page++) {
        const pageParams = buildSearchParams(page, pageSize);
        pagePromises.push(axios.get(`${BASE_URL}/tiendas?${pageParams.toString()}`));
      }
      
-     // Ejecutar todas las solicitudes en paralelo
      const responses = await Promise.all(pagePromises);
      
-     // Extraer y unificar todos los IDs de tiendas
      const allIds = responses.flatMap(response => {
        if (response.data && response.data.content) {
          return response.data.content.map(item => item.idLocalizacionRam);

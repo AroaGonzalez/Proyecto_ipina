@@ -1,10 +1,7 @@
-const handleRemoveAmbito = (ambitoId) => {
-  setAmbitosTable(prev => prev.filter(a => a.id !== ambitoId));
-  setSelectedAmbitos(prev => prev.filter(id => id !== ambitoId));
-};import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaChevronDown, FaTimes, FaCircle, FaSearch, FaCheck, FaPlus } from 'react-icons/fa';
+import { FaChevronDown, FaTimes, FaCircle, FaSearch, FaCheck, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/edicionAlias.css';
@@ -26,6 +23,7 @@ const ESTADO_MAPPING = {
 
 const EdicionAlias = () => {
 const { id } = useParams();
+
 const navigate = useNavigate();
 const { t } = useTranslation();
 const { languageId } = useContext(LanguageContext);
@@ -62,8 +60,9 @@ const [articuloSearchText, setArticuloSearchText] = useState('');
 const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
 const [ambitosTable, setAmbitosTable] = useState([]);
 const [selectedAmbitos, setSelectedAmbitos] = useState([]);
+const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
+const [showDeleteIcon, setShowDeleteIcon] = useState(false);
 
-// Estados para filtros de ámbito
 const [grupoSearchText, setGrupoSearchText] = useState('');
 const [cadenaSearchText, setCadenaSearchText] = useState('');
 const [mercadoSearchText, setMercadoSearchText] = useState('');
@@ -79,19 +78,6 @@ const [ambitoToAdd, setAmbitoToAdd] = useState({
   mercado: null
 });
 
-// Función para ejecutar handleAddAmbito después de actualizar el estado
-const updateAmbitoAndCheck = (newAmbito, callback) => {
-  setAmbitoToAdd(newAmbito);
-  // Usamos setTimeout para asegurar que el estado se ha actualizado
-  setTimeout(() => {
-    if (newAmbito.grupoCadena && newAmbito.cadena && newAmbito.mercado) {
-      handleAddAmbito();
-    }
-    if (callback) callback();
-  }, 0);
-};
-
-// Refs para detectar clicks fuera de los dropdowns
 const grupoCadenaDropdownRef = useRef(null);
 const cadenaDropdownRef = useRef(null);
 const mercadoDropdownRef = useRef(null);
@@ -121,6 +107,36 @@ useEffect(() => {
   };
 }, []);
 
+const handleArticuloCheckboxChange = (articuloId) => {
+  setSelectedArticulosIds(prev => {
+    // Si ya está seleccionado, lo quitamos
+    if (prev.includes(articuloId)) {
+      const newSelected = prev.filter(id => id !== articuloId);
+      setShowDeleteIcon(newSelected.length > 0);
+      return newSelected;
+    } 
+    // Si no está seleccionado, lo añadimos
+    else {
+      setShowDeleteIcon(true);
+      return [...prev, articuloId];
+    }
+  });
+};
+
+const handleDeleteSelectedArticulos = () => {
+  setArticulos(prev => prev.filter(articulo => 
+    !selectedArticulosIds.includes(articulo.idAjeno || articulo.id)
+  ));
+  // Resetear selecciones
+  setSelectedArticulosIds([]);
+  setShowDeleteIcon(false);
+};
+
+const handleRemoveAmbito = (ambitoId) => {
+  setAmbitosTable(prev => prev.filter(a => a.id !== ambitoId));
+  setSelectedAmbitos(prev => prev.filter(id => id !== ambitoId));
+};
+
 const getEstadoNormalizado = (estadoId, estadoDesc) => {
   if (ESTADO_MAPPING[estadoId]) {
     return ESTADO_MAPPING[estadoId];
@@ -136,6 +152,7 @@ const getEstadoNormalizado = (estadoId, estadoDesc) => {
   return 'PRODUCCION';
 };
 
+// En useEffect, cuando cargamos los datos iniciales
 useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
@@ -158,7 +175,8 @@ useEffect(() => {
       setEstadoDesc(estadoDescripcion || '');
 
       const articulosResponse = await axios.get(`${BASE_URL}/edicion/alias/${id}/articulos?idIdioma=${languageId}`);
-      setArticulos(articulosResponse.data || []);
+      const articulosAliasData = articulosResponse.data || [];
+      setArticulos(articulosAliasData);
 
       const idiomasResponse = await axios.get(`${BASE_URL}/edicion/alias/${id}/idiomas?idIdioma=${languageId}`);
       const idiomasData = idiomasResponse.data || [];
@@ -276,8 +294,18 @@ useEffect(() => {
       setMercadosDisponibles(mercados);
       setFilteredMercados(mercados);
       
-      setArticulosDisponibles(articulosDisponiblesRes.data || []);
-      setFilteredArticulos(articulosDisponiblesRes.data || []);
+      // Añadimos la propiedad 'selected' a cada artículo para controlar su selección en el dropdown
+      // y marcamos los que ya están en la tabla
+      const articulosConSelected = (articulosDisponiblesRes.data || []).map(articulo => ({
+        ...articulo,
+        selected: articulosAliasData.some(a => 
+          a.idAjeno === articulo.idAjeno || 
+          a.id === articulo.idAjeno
+        )
+      }));
+      
+      setArticulosDisponibles(articulosConSelected);
+      setFilteredArticulos(articulosConSelected);
     } catch (error) {
       console.error('Error fetching alias data:', error);
       setError('No se pudieron cargar los datos del alias');
@@ -321,9 +349,24 @@ const handleArticuloSearchChange = (e) => {
         articulo.idAjeno?.toString().toLowerCase().includes(searchValue) || 
         articulo.nombreAjeno?.toLowerCase().includes(searchValue)
     );
-    setFilteredArticulos(filtered);
+    
+    // Mantenemos el estado de selección y marcamos los que ya están en la tabla
+    setFilteredArticulos(filtered.map(articulo => ({
+      ...articulo,
+      selected: articulo.selected || articulos.some(a => 
+        a.idAjeno === articulo.idAjeno || 
+        a.id === articulo.idAjeno
+      )
+    })));
   } else {
-    setFilteredArticulos(articulosDisponibles);
+    // Si se limpia la búsqueda, reseteamos al estado original con los artículos de la tabla marcados
+    setFilteredArticulos(articulosDisponibles.map(articulo => ({
+      ...articulo,
+      selected: articulo.selected || articulos.some(a => 
+        a.idAjeno === articulo.idAjeno || 
+        a.id === articulo.idAjeno
+      )
+    })));
   }
 };
 
@@ -379,14 +422,23 @@ const handleMercadoSearchChange = (e) => {
 };
 
 const toggleArticulosDropdown = () => {
+  // Al abrir el dropdown, actualizamos las selecciones para reflejar los artículos ya añadidos
+  if (!isArticulosDropdownOpen) {
+    setArticuloSearchText('');
+    // Actualizamos la lista filtrada marcando los artículos que ya están en la tabla
+    setFilteredArticulos(articulosDisponibles.map(articulo => ({
+      ...articulo,
+      selected: articulos.some(a => 
+        a.idAjeno === articulo.idAjeno || 
+        a.id === articulo.idAjeno
+      )
+    })));
+  }
+  
   setIsArticulosDropdownOpen(!isArticulosDropdownOpen);
   setIsGrupoCadenaDropdownOpen(false);
   setIsCadenaDropdownOpen(false);
   setIsMercadoDropdownOpen(false);
-  if (!isArticulosDropdownOpen) {
-    setArticuloSearchText('');
-    setFilteredArticulos(articulosDisponibles);
-  }
 };
 
 const toggleGrupoCadenaDropdown = () => {
@@ -424,7 +476,14 @@ const toggleMercadoDropdown = () => {
 
 const clearArticuloSearch = () => {
   setArticuloSearchText('');
-  setFilteredArticulos(articulosDisponibles);
+  // Al limpiar la búsqueda mantenemos marcados los artículos que ya están en la tabla
+  setFilteredArticulos(articulosDisponibles.map(articulo => ({
+    ...articulo,
+    selected: articulo.selected || articulos.some(a => 
+      a.idAjeno === articulo.idAjeno || 
+      a.id === articulo.idAjeno
+    )
+  })));
 };
 
 const clearGrupoSearch = () => {
@@ -443,21 +502,16 @@ const clearMercadoSearch = () => {
 };
 
 const handleSelectAllArticulos = () => {
-  const newCheckAllArticulos = !checkAllArticulos;
-  setCheckAllArticulos(newCheckAllArticulos);
+  // Comprobar si todos los artículos filtrados están seleccionados
+  const allSelected = filteredArticulos.every(articulo => articulo.selected);
   
-  if (newCheckAllArticulos) {
-    const articulosToAdd = filteredArticulos.filter(
-      articulo => !articulos.some(a => a.idAjeno === articulo.idAjeno)
-    );
-    
-    if (articulosToAdd.length > 0) {
-      setArticulos(prev => [...prev, ...articulosToAdd]);
-    }
-  } else {
-    const filteredIds = filteredArticulos.map(a => a.idAjeno);
-    setArticulos(prev => prev.filter(a => !filteredIds.includes(a.idAjeno)));
-  }
+  // Actualizar el estado para indicar si todos están seleccionados
+  setCheckAllArticulos(!allSelected);
+  
+  // Actualizar todos los artículos filtrados con el nuevo estado de selección
+  setFilteredArticulos(prev => 
+    prev.map(a => ({...a, selected: !allSelected}))
+  );
 };
 
 const handleGrupoCadenaSelect = (grupo) => {
@@ -548,13 +602,18 @@ const handleMercadoSelect = (mercado) => {
 };
 
 const handleArticuloSelect = (articulo) => {
-  const isSelected = articulos.some(a => a.idAjeno === articulo.idAjeno);
+  // Verificar si el artículo ya está seleccionado en la lista temporal
+  const isSelected = filteredArticulos.find(a => a.selected)?.idAjeno === articulo.idAjeno;
   
-  if (isSelected) {
-    setArticulos(prev => prev.filter(a => a.idAjeno !== articulo.idAjeno));
-  } else {
-    setArticulos(prev => [...prev, articulo]);
-  }
+  // Recorremos el array y actualizamos la propiedad selected
+  setFilteredArticulos(prev => 
+    prev.map(a => {
+      if (a.idAjeno === articulo.idAjeno || a.id === articulo.idAjeno) {
+        return { ...a, selected: !isSelected };
+      }
+      return a;
+    })
+  );
 };
 
 const handleAmbitoSelect = (ambitoId) => {
@@ -566,7 +625,46 @@ const handleAmbitoSelect = (ambitoId) => {
 };
 
 const handleAddArticulo = () => {
+  // Obtenemos todos los artículos seleccionados en el dropdown
+  const selectedArticulosToAdd = filteredArticulos.filter(a => a.selected);
+  
+  // Formateamos los artículos seleccionados y los añadimos al estado
+  const formattedArticulos = selectedArticulosToAdd.map(articulo => ({
+    idAjeno: articulo.idAjeno,
+    nombreAjeno: articulo.nombreAjeno,
+    unidadesMedida: {
+      descripcion: articulo.descripcionUnidadesMedida
+    },
+    unidadesEmpaquetado: articulo.unidadesEmpaquetado,
+    multiploMinimo: articulo.multiploMinimo,
+    tipoEstadoCompras: {
+      descripcion: articulo.descripcionEstadoCompras
+    },
+    tipoEstadoRam: {
+      descripcion: articulo.descripcionTipoEstadoRam
+    },
+    // Valor por defecto para ESTADO ARTÍCULO EN EL ALIAS
+    descripcionTipoEstadoAliasAjenoRam: 'ACTIVO',
+    fechaAlta: new Date().toISOString().split('T')[0], // Fecha actual como fecha de alta
+    idSint: articulo.idSint || '-'
+  }));
+  
+  // Añadimos solo los artículos que no están ya en la lista principal
+  const newArticulos = formattedArticulos.filter(newArticulo => 
+    !articulos.some(existingArticulo => 
+      existingArticulo.idAjeno === newArticulo.idAjeno || 
+      existingArticulo.id === newArticulo.idAjeno
+    )
+  );
+  
+  if (newArticulos.length > 0) {
+    setArticulos(prev => [...prev, ...newArticulos]);
+  }
+  
+  // Cerramos el dropdown y limpiamos las selecciones
   setIsArticulosDropdownOpen(false);
+  setFilteredArticulos(prev => prev.map(a => ({ ...a, selected: false })));
+  setArticuloSearchText('');
 };
 
 // Función auxiliar para añadir ámbito usando valores específicos
@@ -806,13 +904,6 @@ return (
                   </div>
                   
                   <div className="idiomas-dropdown-items">
-                    <div className="idiomas-dropdown-item select-all">
-                      <div className="custom-checkbox">
-                        {checkAll && <FaCheck className="checkbox-icon" />}
-                      </div>
-                      <span>{t('Seleccionar todo')}</span>
-                    </div>
-                    
                     {idiomasDisponibles
                       .filter(idioma => 
                         searchText === '' || 
@@ -833,6 +924,38 @@ return (
                         </div>
                       ))
                     }
+                    
+                    <div className="idiomas-dropdown-item select-all" onClick={() => {
+                      const allIds = idiomasDisponibles
+                        .filter(idioma => searchText === '' || idioma.descripcion.toLowerCase().includes(searchText.toLowerCase()))
+                        .map(idioma => idioma.id);
+                        
+                      // Si todos están seleccionados, desmarcamos todos, si no, seleccionamos todos
+                      const isAllSelected = allIds.every(id => selectedIdiomas.includes(id));
+                      setCheckAll(!isAllSelected);
+                      
+                      if (isAllSelected) {
+                        setSelectedIdiomas(selectedIdiomas.filter(id => !allIds.includes(id)));
+                      } else {
+                        // Añadimos solo los que no estén ya seleccionados
+                        const newIds = allIds.filter(id => !selectedIdiomas.includes(id));
+                        setSelectedIdiomas([...selectedIdiomas, ...newIds]);
+                        
+                        // Inicializamos valores para nuevos idiomas
+                        const newIdiomasValues = { ...idiomasAliasValues };
+                        newIds.forEach(id => {
+                          if (!newIdiomasValues[id]) {
+                            newIdiomasValues[id] = { nombre: '', descripcion: '' };
+                          }
+                        });
+                        setIdiomasAliasValues(newIdiomasValues);
+                      }
+                    }}>
+                      <div className="custom-checkbox">
+                        {checkAll && <FaCheck className="checkbox-icon" />}
+                      </div>
+                      <span>{t('Seleccionar todo')}</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -975,7 +1098,7 @@ return (
                           onClick={() => handleArticuloSelect(articulo)}
                         >
                           <div className="custom-checkbox">
-                            {articulos.some(a => a.idAjeno === articulo.idAjeno) && <FaCheck className="checkbox-icon" />}
+                            {articulo.selected && <FaCheck className="checkbox-icon" />}
                           </div>
                           <div className="articulos-item-info">
                             <div className="articulos-item-id">
@@ -1002,81 +1125,115 @@ return (
           </div>
           
           <div className="articulos-count">{articulos.length} {t('artículos añadidos')}</div>
+
+          <div className="articulos-actions-bar">
+  <div className="articulos-selection-info">
+    {selectedArticulosIds.length > 0 && (
+      <span className="articulos-selected-count">
+        {selectedArticulosIds.length} {t('seleccionados')}
+      </span>
+    )}
+  </div>
+  {selectedArticulosIds.length > 0 && (
+    <button
+      className="articulos-action-btn delete-btn"
+      onClick={handleDeleteSelectedArticulos}
+      title={t('Eliminar artículos seleccionados')}
+    >
+      <FaTrash className="action-icon" />
+      <span>{t('Eliminar')}</span>
+    </button>
+  )}
+</div>
           
           <div className="articulos-table-container">
-            <div className="articulos-table-scroll">
-              <table className="articulos-table">
-                <thead>
-                  <tr>
-                    <th className="checkbox-column"></th>
-                    <th className="id-column">{t('ID ARTÍCULO')}</th>
-                    <th className="articulo-column">{t('ARTÍCULO')}</th>
-                    <th className="unidades-column">{t('UNIDADES BOX')}</th>
-                    <th className="unidad-column">
-                      <div>{t('UNIDAD DE')}</div>
-                      <div>{t('EMPAQUETADO')}</div>
-                    </th>
-                    <th className="multiplo-column">
-                      <div>{t('MÚLTIPLO')}</div>
-                      <div>{t('MÍNIMO')}</div>
-                    </th>
-                    <th className="estado-spi-column">
-                      <div>{t('ESTADO ARTÍCULO')}</div>
-                      <div>{t('SFI')}</div>
-                    </th>
-                    <th className="estado-ram-column">
-                      <div>{t('ESTADO ARTÍCULO')}</div>
-                      <div>{t('RAM')}</div>
-                    </th>
-                    <th className="estado-alias-column">
-                      <div>{t('ESTADO ARTÍCULO')}</div>
-                      <div>{t('EN EL ALIAS')}</div>
-                    </th>
-                    <th className="fecha-column">
-                      <div>{t('FECHA DE')}</div>
-                      <div>{t('ALTA')}</div>
-                    </th>
-                    <th className="sint-column">{t('ID SINT')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articulos.map(articulo => (
-                    <tr key={articulo.idAjeno || articulo.id}>
-                      <td className="checkbox-column">
-                        <div className="custom-checkbox">
-                          <FaCheck className="checkbox-icon" />
-                        </div>
-                      </td>
-                      <td>{articulo.idAjeno || articulo.id}</td>
-                      <td className="articulo-name">
-                        {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
-                      </td>
-                      <td className="unidades-box">{articulo.unidadesMedida?.descripcion}</td>
-                      <td>{articulo.unidadesEmpaquetado}</td>
-                      <td className="text-center">{articulo.multiploMinimo}</td>
-                      <td className="estado-column">
-                        <span className="estado-tag activo">
-                          {articulo.tipoEstadoCompras?.descripcion}
-                        </span>
-                      </td>
-                      <td className="estado-column">
-                        <span className="estado-tag activo">
-                          {articulo.tipoEstadoRam?.descripcion}
-                        </span>
-                      </td>
-                      <td className="estado-column">
-                        <span className="estado-tag activo">
-                          {articulo.descripcionTipoEstadoAliasAjenoRam}
-                        </span>
-                      </td>
-                      <td>{articulo.fechaAlta}</td>
-                      <td>{articulo.idSint || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+  {articulos.length === 0 ? (
+    <div className="articulos-empty-state">
+      {t('No hay artículos seleccionados. Utilice la búsqueda para añadir artículos al alias.')}
+    </div>
+  ) : (
+    <div className="articulos-table-scroll">
+      <table className="articulos-table">
+        <thead>
+          <tr>
+            <th className="checkbox-column"></th>
+            <th className="id-column">{t('ID ARTÍCULO')}</th>
+            <th className="articulo-column">{t('ARTÍCULO')}</th>
+            <th className="unidades-column">{t('UNIDADES BOX')}</th>
+            <th className="unidad-column">
+              <div>{t('UNIDAD DE')}</div>
+              <div>{t('EMPAQUETADO')}</div>
+            </th>
+            <th className="multiplo-column">
+              <div>{t('MÚLTIPLO')}</div>
+              <div>{t('MÍNIMO')}</div>
+            </th>
+            <th className="estado-spi-column">
+              <div>{t('ESTADO ARTÍCULO')}</div>
+              <div>{t('SFI')}</div>
+            </th>
+            <th className="estado-ram-column">
+              <div>{t('ESTADO ARTÍCULO')}</div>
+              <div>{t('RAM')}</div>
+            </th>
+            <th className="estado-alias-column">
+              <div>{t('ESTADO ARTÍCULO')}</div>
+              <div>{t('EN EL ALIAS')}</div>
+            </th>
+            <th className="fecha-column">
+              <div>{t('FECHA DE')}</div>
+              <div>{t('ALTA')}</div>
+            </th>
+            <th className="sint-column">{t('ID SINT')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {articulos.map(articulo => {
+            const articuloId = articulo.idAjeno || articulo.id;
+            const isSelected = selectedArticulosIds.includes(articuloId);
+            
+            return (
+              <tr key={articuloId} className={isSelected ? 'selected-row' : ''}>
+                <td className="checkbox-column">
+                  <div 
+                    className="custom-checkbox"
+                    onClick={() => handleArticuloCheckboxChange(articuloId)}
+                  >
+                    {isSelected && <FaCheck className="checkbox-icon" />}
+                  </div>
+                </td>
+                <td>{articuloId}</td>
+                <td className="articulo-name">
+                  {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                </td>
+                <td className="unidades-box">{articulo.unidadesMedida?.descripcion || articulo.descripcionUnidadesMedida}</td>
+                <td>{articulo.unidadesEmpaquetado}</td>
+                <td className="text-center">{articulo.multiploMinimo}</td>
+                <td className="estado-column">
+                  <span className="estado-tag activo">
+                    {articulo.tipoEstadoCompras?.descripcion || articulo.descripcionEstadoCompras}
+                  </span>
+                </td>
+                <td className="estado-column">
+                  <span className="estado-tag activo">
+                    {articulo.tipoEstadoRam?.descripcion || articulo.descripcionTipoEstadoRam}
+                  </span>
+                </td>
+                <td className="estado-column">
+                  <span className="estado-tag activo">
+                    {articulo.descripcionTipoEstadoAliasAjenoRam || 'ACTIVO'}
+                  </span>
+                </td>
+                <td>{articulo.fechaAlta}</td>
+                <td>{articulo.idSint || '-'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
         </div>
       </div>
       
@@ -1320,6 +1477,7 @@ return (
                             {isInTable && <FaCheck className="checkbox-icon" />}
                           </div>
                           <span className="dropdown-item-text">
+                            {mercado.codigoIsoMercado && <span className="mercado-flag-small">{mercado.codigoIsoMercado === 'ES' ? '🇪🇸' : mercado.codigoIsoMercado} </span>}
                             {mercado.id} - {mercado.descripcion}
                           </span>
                         </div>
@@ -1352,6 +1510,9 @@ return (
                     <td>{ambito.grupoCadena.id} - {ambito.grupoCadena.descripcion}</td>
                     <td>{ambito.cadena.id} - {ambito.cadena.descripcion}</td>
                     <td className="mercado-column">
+                      {ambito.mercado.codigoIsoMercado && (
+                        <span className="mercado-flag">{ambito.mercado.codigoIsoMercado === 'ES' ? '🇪🇸' : ambito.mercado.codigoIsoMercado}</span>
+                      )}
                       <span>{ambito.mercado.id} - {ambito.mercado.descripcion}</span>
                       <FaTimes 
                         className="remove-ambito-icon" 
@@ -1378,6 +1539,5 @@ return (
     </div>
   </div>
 );
-};
-
+}
 export default EdicionAlias;

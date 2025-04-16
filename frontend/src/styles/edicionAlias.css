@@ -50,6 +50,7 @@ body, html {
 .edicion-alias-section {
   margin-bottom: 30px;
   background-color: #fff;
+  position: relative;
 }
 
 .paso-title {
@@ -81,6 +82,7 @@ body, html {
   border-radius: 0;
   border: none;
   color: #000;
+  position: relative;
 }
 
 .section-description {
@@ -330,7 +332,7 @@ body, html {
   border: 1px solid #000;
   border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 9900;
   margin-top: 0;
 }
 
@@ -356,6 +358,7 @@ body, html {
   max-height: 300px;
   overflow-y: auto;
   background-color: #fff;
+  position: relative;
 }
 
 .idiomas-dropdown-item {
@@ -379,8 +382,11 @@ body, html {
 }
 
 .select-all {
-  border-bottom: 1px solid #000;
+  border-top: 1px solid #000;
+  background-color: #f5f5f5;
   font-weight: 500;
+  position: sticky !important;
+  bottom: 0;
 }
 
 .idiomas-count {
@@ -503,6 +509,7 @@ body, html {
   background-color: #fff;
   max-width: 50%;
   position: relative;
+  z-index: 9900;
 }
 
 .articulos-search-input-container {
@@ -590,7 +597,7 @@ body, html {
   border: 1px solid #000;
   border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 9950;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -691,6 +698,7 @@ body, html {
   font-weight: 500;
   position: sticky;
   bottom: 0;
+  z-index: 10;
 }
 
 .articulos-select-all span {
@@ -798,6 +806,12 @@ body, html {
   overflow-x: auto;
 }
 
+.articulos-table-container {
+  position: relative;
+  min-height: 60px;
+  background-color: #fff;
+}
+
 .articulos-table {
   table-layout: fixed;
   border: none;
@@ -865,9 +879,56 @@ body, html {
   cursor: pointer;
 }
 
-/* Nuevos estilos para los dropdowns del Paso 3 (ámbitos) */
 .ambito-field {
   position: relative;
+}
+
+.articulos-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-bottom: none;
+}
+
+.articulos-selection-info {
+  display: flex;
+  align-items: center;
+}
+
+.articulos-selected-count {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.articulos-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+.action-icon {
+  font-size: 14px;
 }
 
 .filter-dropdown-content {
@@ -875,17 +936,16 @@ body, html {
   margin-top: 2px;
 }
 
-/* z-index para manejar la superposición de dropdowns */
 .grupo-cadena-field .filter-dropdown-content {
-  z-index: 1003;
+  z-index: 9903;
 }
 
 .cadena-field .filter-dropdown-content {
-  z-index: 1002;
+  z-index: 9902;
 }
 
 .mercado-field .filter-dropdown-content {
-  z-index: 1001;
+  z-index: 9901;
 }
 
 .filter-placeholder {
@@ -893,4 +953,13 @@ body, html {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+}
+
+.articulos-empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  border: 1px dashed #ddd;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
 }

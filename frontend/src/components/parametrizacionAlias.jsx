@@ -253,7 +253,6 @@ const ParametrizacionAlias = () => {
       params.append('page', page);
       params.append('size', 50);
       
-      // Asegurarse de que se están usando correctamente los IDs de filtro
       const tiposAliasToFilter = selectedTiposAlias.filter(id => id !== 'selectAll');
       const estadosAliasToFilter = selectedEstadosAlias.filter(id => id !== 'selectAll');
       const estacionalidadesToFilter = selectedEstacionalidades.filter(id => id !== 'selectAll');
@@ -261,7 +260,6 @@ const ParametrizacionAlias = () => {
       const nombresAliasToFilter = selectedNombresAlias.filter(id => id !== 'selectAll');
       
       if (tiposAliasToFilter.length > 0) {
-        // Añadir cada ID como un parámetro separado para asegurar que se envían correctamente
         tiposAliasToFilter.forEach(id => {
           params.append('tipoAlias', id);
         });
@@ -329,7 +327,6 @@ const ParametrizacionAlias = () => {
 
   const handleSelectItem = (id) => {
     setSelectedItems((prevSelected) => {
-      // Verificar si ya hay 5 elementos seleccionados y estamos intentando añadir uno nuevo
       if (!prevSelected.includes(id) && prevSelected.length >= 5) {
         alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
         return prevSelected;
@@ -343,7 +340,6 @@ const ParametrizacionAlias = () => {
 
   const handleSelectItemAjeno = (id) => {
     setSelectedItemsAjenos((prevSelected) => {
-      // Verificar si ya hay 5 elementos seleccionados y estamos intentando añadir uno nuevo
       if (!prevSelected.includes(id) && prevSelected.length >= 5) {
         alert('Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo');
         return prevSelected;
@@ -359,7 +355,6 @@ const ParametrizacionAlias = () => {
     if (selectAll) {
       setSelectedItems([]);
     } else {
-      // Limitar a 5 elementos si hay más
       const itemsToSelect = aliases.slice(0, 5).map((item) => item.id);
       setSelectedItems(itemsToSelect);
       
@@ -374,7 +369,6 @@ const ParametrizacionAlias = () => {
     if (selectAllAjenos) {
       setSelectedItemsAjenos([]);
     } else {
-      // Limitar a 5 elementos si hay más
       const itemsToSelect = aliasAjenos.slice(0, 5).map((item) => `${item.idAlias}-${item.idAjeno}`);
       setSelectedItemsAjenos(itemsToSelect);
       
@@ -437,7 +431,6 @@ const ParametrizacionAlias = () => {
     }
   };
 
-  // Manejadores para los eventos de búsqueda en cada filtro
   const handleSearchTextChange = (e, setterFunction) => {
     setterFunction(e.target.value);
   };
@@ -454,19 +447,15 @@ const ParametrizacionAlias = () => {
   };
 
   const handleDelete = () => {
-    // Implementación futura: eliminar alias seleccionados
     console.log('Eliminar alias:', selectedItems);
-    // Después de eliminar, actualizar la lista
     setSelectedItems([]);
     fetchAliases();
   };
 
   const handleEditRelations = () => {
-    // Implementación futura: editar relaciones
     console.log('Editar relaciones de alias:', selectedItems);
   };
 
-  // Funciones de filtrado para cada desplegable basado en los textos de búsqueda
   const filteredAliasOptions = searchText 
     ? aliasOptions.filter(alias => 
         alias.id.toString().includes(searchText) || 
@@ -507,7 +496,6 @@ const ParametrizacionAlias = () => {
     minute: '2-digit'
   });
 
-  // Determinar si se muestran las acciones de selección
   const showSelectionActions = activeTab === 'ALIAS' ? selectedItems.length > 0 : selectedItemsAjenos.length > 0;
 
   return (
@@ -929,7 +917,6 @@ const ParametrizacionAlias = () => {
         </span>        
       </div>
       
-      {/* Barra de selección que aparece cuando hay elementos seleccionados */}
       {showSelectionActions && (
         <div className="selection-toolbar">
           <div className="selection-info">
@@ -1007,23 +994,23 @@ const ParametrizacionAlias = () => {
                       <td>{alias.descripcion}</td>
                       <td>
                         <span className="tipo-tag produccion">
-                          {alias.tipo || "PRODUCCIÓN"}
+                          {alias.tipo}
                         </span>
                       </td>
                       <td>
                         <span className="estado-tag">
-                          {alias.estado || "PRODUCCIÓN"}
+                          {alias.estado}
                         </span>
                       </td>
-                      <td>{alias.numArticulos || 3}</td>
+                      <td>{alias.numArticulos}</td>
                       <td>
                         <span className="estacionalidad-tag">
-                          {alias.estacionalidad || "SIEMPRE"}
+                          {alias.estacionalidad}
                         </span>
                       </td>
-                      <td>{alias.ultimaModificacion || "2025-04-02"}</td>
-                      <td>{alias.fechaAlta || "2025-04-02"}</td>
-                      <td>{alias.usuario || "antoniommpu"}</td>
+                      <td>{alias.ultimaModificacion}</td>
+                      <td>{alias.fechaAlta}</td>
+                      <td>{alias.usuario}</td>
                     </tr>
                   ))}
                   {loadingMore && (
@@ -1091,7 +1078,7 @@ const ParametrizacionAlias = () => {
                       <td>{item.idAlias}</td>
                       <td>{item.nombreAlias}</td>
                       <td>{item.descripcionAlias || item.nombreAlias}</td>
-                      <td className="text-center">{item.idTipoAlias || "1"}</td>
+                      <td className="text-center">{item.idTipoAlias}</td>
                       <td>{item.idAjeno}</td>
                       <td>{item.nombreAjeno}</td>
                       <td>
