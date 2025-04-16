@@ -457,9 +457,20 @@ const toggleCadenaDropdown = () => {
   setIsGrupoCadenaDropdownOpen(false);
   setIsMercadoDropdownOpen(false);
   setIsArticulosDropdownOpen(false);
+  
   if (!isCadenaDropdownOpen) {
     setCadenaSearchText('');
-    setFilteredCadenas(cadenasDisponibles);
+    
+    // NUEVA LÓGICA: Solo mostrar cadenas del grupo seleccionado
+    if (selectedGrupoCadena) {
+      const cadenasFiltradas = cadenasDisponibles.filter(
+        cadena => cadena.idGrupoCadena === selectedGrupoCadena
+      );
+      setFilteredCadenas(cadenasFiltradas);
+    } else {
+      // Si no hay grupo seleccionado, no mostramos cadenas
+      setFilteredCadenas([]);
+    }
   }
 };
 
@@ -536,6 +547,23 @@ const handleGrupoCadenaSelect = (grupo) => {
   
   setSelectedGrupoCadena(grupo.id);
   setAmbitoToAdd(newAmbitoToAdd);
+  
+  // NUEVA LÓGICA: Filtrar las cadenas según el grupo seleccionado
+  const cadenasFiltradas = cadenasDisponibles.filter(
+    cadena => cadena.idGrupoCadena === grupo.id
+  );
+  setFilteredCadenas(cadenasFiltradas);
+  setCadenasDisponibles(cadenasFiltradas);
+  
+  // Limpiar la selección actual de cadena si no pertenece al nuevo grupo
+  const cadenaActualValida = cadenasFiltradas.some(c => c.id === selectedCadena);
+  if (!cadenaActualValida) {
+    setSelectedCadena('');
+    setAmbitoToAdd(prev => ({
+      ...prev,
+      cadena: null
+    }));
+  }
   
   // Verificamos si tenemos todos los campos con los nuevos valores
   if (newAmbitoToAdd.cadena && newAmbitoToAdd.mercado) {
@@ -1335,6 +1363,9 @@ return (
               >
                 <span>
                   {(() => {
+                    if (!selectedGrupoCadena) {
+                      return t('Seleccione primero un grupo cadena');
+                    }
                     // Contar cuántas cadenas únicas están seleccionadas
                     const cadenasSeleccionadas = new Set();
                     ambitosTable.forEach(ambito => {

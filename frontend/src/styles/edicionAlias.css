@@ -918,6 +918,13 @@ body, html {
   transition: all 0.2s ease;
 }
 
+.dropdown-empty-message {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
 .delete-btn {
   background-color: #f44336;
   color: white;
