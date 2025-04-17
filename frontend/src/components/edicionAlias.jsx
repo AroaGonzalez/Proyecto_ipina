@@ -108,6 +108,43 @@ useEffect(() => {
   };
 }, []);
 
+const normalizeText = (text) => {
+  if (!text) return '';
+
+  let normalizedText = text;
+
+  normalizedText = normalizedText
+  .replace(/ESPA.?.'A/g, 'ESPAÑA')
+  .replace(/ESPA.?.A/g, 'ESPAÑA')
+  .replace(/ESPA.A/g, 'ESPAÑA')
+  .replace('ESPAÃ\'A', 'ESPAÑA')
+  .replace('ESPAÃA', 'ESPAÑA')
+  .replace('ESPAÃ±A', 'ESPAÑA')
+  .replace('ESPAÑA', 'ESPAÑA');
+
+  const replacements = {
+    'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+    'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+    'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+    'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+    'Âº': 'º', 'Âª': 'ª',
+    'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+    'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+    'â‚¬': '€',
+    'â€"': '–', 'â€"': '—',
+    'â€œ': '"', 'â€': '"',
+    'â€¢': '•',
+    'â€¦': '…',
+    'Â¡': '¡', 'Â¿': '¿'
+  };
+
+  Object.entries(replacements).forEach(([badChar, goodChar]) => {
+    normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+  });
+
+  return normalizedText;
+};
+
 const handleArticuloCheckboxChange = (articuloId) => {
   setSelectedArticulosIds(prev => {
     if (prev.includes(articuloId)) {
@@ -184,7 +221,7 @@ useEffect(() => {
       idiomasData.forEach(idioma => {
         idiomasValues[idioma.idIdioma] = {
           nombre: idioma.nombre || '',
-          descripcion: idioma.descripcion || ''
+          descripcion: normalizeText(idioma.descripcion) || ''
         };
       });
       setIdiomasAliasValues(idiomasValues);
@@ -1015,7 +1052,7 @@ return (
                             {selectedIdiomas.includes(idioma.id) && <FaCheck className="checkbox-icon" />}
                           </div>
                           <label>
-                            {idioma.descripcion}
+                            {normalizeText(idioma.descripcion)}
                           </label>
                         </div>
                       ))
@@ -1047,7 +1084,7 @@ return (
                       <div className="custom-checkbox">
                         {checkAll && <FaCheck className="checkbox-icon" />}
                       </div>
-                      <span>{t('Seleccionar todo')}</span>
+                      <span>{t(' Seleccionar todo')}</span>
                     </div>
                   </div>
                 </div>
@@ -1061,7 +1098,6 @@ return (
             <table className="idiomas-table">
               <thead>
                 <tr>
-                  <th className="checkbox-column"></th>
                   <th>{t('IDIOMA')}</th>
                   <th>{t('ALIAS EN CADA IDIOMA*')}</th>
                   <th>{t('DESCRIPCIÓN DEL ALIAS*')}</th>
@@ -1070,11 +1106,6 @@ return (
               <tbody>
                 {selectedIdiomas.map(idiomaId => (
                   <tr key={idiomaId}>
-                    <td className="checkbox-column">
-                      <div className="custom-checkbox" onClick={() => handleIdiomaCheckboxChange(idiomaId, false)}>
-                        <FaCheck className="checkbox-icon" />
-                      </div>
-                    </td>
                     <td>{getIdiomaNombre(idiomaId)}</td>
                     <td>
                       <div className="editable-cell">
@@ -1208,7 +1239,7 @@ return (
                         <div className="custom-checkbox">
                           {checkAllArticulos && <FaCheck className="checkbox-icon" />}
                         </div>
-                        <span>{t('Seleccionar todo')}</span>
+                        <span>{t(' Seleccionar todo')}</span>
                       </div>
                     </>
                   )}
@@ -1353,7 +1384,7 @@ return (
                     } else if (selectedGruposCadena.length === 1) {
                       const grupoId = selectedGruposCadena[0];
                       const grupo = gruposCadenaDisponibles.find(g => g.id === grupoId);
-                      return grupo ? `${grupo.id} - ${grupo.descripcion}` : grupoId;
+                      return grupo ? `${grupo.id} - ${normalizeText(grupo.descripcion)}` : grupoId;
                     } else {
                       return `${selectedGruposCadena.length} ${t('seleccionados')}`;
                     }
@@ -1363,25 +1394,25 @@ return (
               </div>
               
               {isGrupoCadenaDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar grupo cadena...')}
-                      value={grupoSearchText}
-                      onChange={handleGrupoSearchChange}
-                      onClick={(e) => e.stopPropagation()}
+              <div className="filter-dropdown-content">
+                <div className="dropdown-search">
+                  <FaSearch className="search-icon" />
+                  <input 
+                    type="text" 
+                    placeholder={t('Buscar grupo cadena...')}
+                    value={grupoSearchText}
+                    onChange={handleGrupoSearchChange}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {grupoSearchText && (
+                    <FaTimes 
+                      className="clear-search-icon" 
+                      onClick={clearGrupoSearch} 
                     />
-                    {grupoSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearGrupoSearch} 
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="dropdown-items">
+                  )}
+                </div>
+                
+                <div className="dropdown-items">
                   {filteredGruposCadena.map((grupo) => {
                     const isSelected = selectedGruposCadena.includes(grupo.id);
                     
@@ -1398,14 +1429,64 @@ return (
                           {isSelected && <FaCheck className="checkbox-icon" />}
                         </div>
                         <span className="dropdown-item-text">
-                          {grupo.id} - {grupo.descripcion}
+                          {grupo.id} - {normalizeText(grupo.descripcion)}
                         </span>
                       </div>
                     );
                   })}
+                  
+                  <div className="dropdown-item select-all" onClick={(e) => {
+                    e.stopPropagation();
+                    const allSelected = filteredGruposCadena.every(grupo => 
+                      selectedGruposCadena.includes(grupo.id)
+                    );
+                    
+                    if (allSelected) {
+                      setSelectedGruposCadena([]);
+                      setSelectedGrupoCadena('');
+                      
+                      filteredGruposCadena.forEach(grupo => {
+                        removeAmbitoIfExists(grupo.id, null, null);
+                      });
+                    } else {
+                      const nuevosGruposIds = filteredGruposCadena
+                        .filter(grupo => !selectedGruposCadena.includes(grupo.id))
+                        .map(grupo => grupo.id);
+                      
+                      const nuevosGrupos = filteredGruposCadena
+                        .filter(grupo => !selectedGruposCadena.includes(grupo.id));
+                      
+                      setSelectedGruposCadena([...selectedGruposCadena, ...nuevosGruposIds]);
+                      
+                      if (!selectedGrupoCadena && nuevosGruposIds.length > 0) {
+                        setSelectedGrupoCadena(nuevosGruposIds[0]);
+                      }
+                      
+                      // Añadir ámbitos para cada nuevo grupo
+                      nuevosGrupos.forEach(grupo => {
+                        setAmbitoToAdd(prev => ({
+                          ...prev,
+                          grupoCadena: grupo
+                        }));
+                        addCadenasForGrupoCadena(grupo);
+                      });
+                    }
+                    
+                    // Actualizar las cadenas filtradas
+                    updateCadenasBySelectedGrupos(
+                      allSelected ? [] : [...selectedGruposCadena, ...filteredGruposCadena.map(g => g.id)]
+                    );
+                  }}>
+                    <div className="custom-checkbox">
+                      {filteredGruposCadena.every(grupo => selectedGruposCadena.includes(grupo.id)) && 
+                        <FaCheck className="checkbox-icon" />
+                      }
+                    </div>
+                    <span>{t(' Seleccionar todo')}</span>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
             
             <div className="ambito-field cadena-field" ref={cadenaDropdownRef}>
@@ -1431,7 +1512,7 @@ return (
                     } else if (cadenasSeleccionadas.size === 1) {
                       const cadenaId = [...cadenasSeleccionadas][0];
                       const cadena = ambitosTable.find(a => a.cadena.id === cadenaId)?.cadena;
-                      return `${cadena.id} - ${cadena.descripcion}`;
+                      return `${cadena.id} - ${normalizeText(cadena.descripcion)}`;
                     } else {
                       return `${cadenasSeleccionadas.size} ${t('seleccionados')}`;
                     }
@@ -1441,52 +1522,112 @@ return (
               </div>
               
               {isCadenaDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar cadena...')}
-                      value={cadenaSearchText}
-                      onChange={handleCadenaSearchChange}
-                      onClick={(e) => e.stopPropagation()}
+              <div className="filter-dropdown-content">
+                <div className="dropdown-search">
+                  <FaSearch className="search-icon" />
+                  <input 
+                    type="text" 
+                    placeholder={t('Buscar cadena...')}
+                    value={cadenaSearchText}
+                    onChange={handleCadenaSearchChange}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {cadenaSearchText && (
+                    <FaTimes 
+                      className="clear-search-icon" 
+                      onClick={clearCadenaSearch} 
                     />
-                    {cadenaSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearCadenaSearch} 
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="dropdown-items">
-                    {filteredCadenas.map((cadena) => {
-                      const isInTable = ambitosTable.some(ambito => 
-                        ambito.cadena.id === cadena.id && 
-                        selectedAmbitos.includes(ambito.id)
-                      );
-                      
-                      return (
-                        <div 
-                          key={cadena.id} 
-                          className="dropdown-item"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCadenaSelect(cadena);
-                          }}
-                        >
-                          <div className="custom-checkbox">
-                            {isInTable && <FaCheck className="checkbox-icon" />}
-                          </div>
-                          <span className="dropdown-item-text">
-                            {cadena.id} - {cadena.descripcion}
-                          </span>
+                  )}
+                </div>
+                
+                <div className="dropdown-items">
+                  {filteredCadenas.map((cadena) => {
+                    const isInTable = ambitosTable.some(ambito => 
+                      ambito.cadena.id === cadena.id && 
+                      selectedAmbitos.includes(ambito.id)
+                    );
+                    
+                    return (
+                      <div 
+                        key={cadena.id} 
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCadenaSelect(cadena);
+                        }}
+                      >
+                        <div className="custom-checkbox">
+                          {isInTable && <FaCheck className="checkbox-icon" />}
                         </div>
-                      );
-                    })}
+                        <span className="dropdown-item-text">
+                          {cadena.id} - {normalizeText(cadena.descripcion)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="dropdown-item select-all" onClick={(e) => {
+                    e.stopPropagation();
+                    const cadenasIds = filteredCadenas.map(c => c.id);
+                    
+                    const allSelected = cadenasIds.every(cadenaId => 
+                      ambitosTable.some(ambito => 
+                        ambito.cadena.id === cadenaId && 
+                        selectedAmbitos.includes(ambito.id)
+                      )
+                    );
+                    
+                    if (allSelected) {
+                      filteredCadenas.forEach(cadena => {
+                        removeAmbitoIfExists(null, cadena.id, null);
+                      });
+                    } else {
+                      filteredCadenas.forEach(cadena => {
+                        const grupoCadena = gruposCadenaDisponibles.find(g => g.id === cadena.idGrupoCadena);
+                        
+                        if (grupoCadena) {
+                          const mercadosSeleccionados = new Set();
+                          ambitosTable.forEach(ambito => {
+                            if (selectedAmbitos.includes(ambito.id)) {
+                              mercadosSeleccionados.add(JSON.stringify(ambito.mercado));
+                            }
+                          });
+                          
+                          if (mercadosSeleccionados.size === 0 && ambitoToAdd.mercado) {
+                            const newAmbitoToAdd = {
+                              grupoCadena: grupoCadena,
+                              cadena: cadena,
+                              mercado: ambitoToAdd.mercado
+                            };
+                            addAmbitoWithValues(newAmbitoToAdd);
+                          } else if (mercadosSeleccionados.size > 0) {
+                            mercadosSeleccionados.forEach(mercadoStr => {
+                              const mercado = JSON.parse(mercadoStr);
+                              const newAmbitoToAdd = {
+                                grupoCadena: grupoCadena,
+                                cadena: cadena,
+                                mercado: mercado
+                              };
+                              addAmbitoWithValues(newAmbitoToAdd);
+                            });
+                          }
+                        }
+                      });
+                    }
+                  }}>
+                    <div className="custom-checkbox">
+                      {filteredCadenas.length > 0 && filteredCadenas.every(cadena => 
+                        ambitosTable.some(ambito => 
+                          ambito.cadena.id === cadena.id && 
+                          selectedAmbitos.includes(ambito.id)
+                        )
+                      ) && <FaCheck className="checkbox-icon" />}
+                    </div>
+                    <span>{t(' Seleccionar todo')}</span>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
             
             <div className="ambito-field mercado-field" ref={mercadoDropdownRef}>
@@ -1509,7 +1650,7 @@ return (
                     } else if (mercadosSeleccionados.size === 1) {
                       const mercadoId = [...mercadosSeleccionados][0];
                       const mercado = ambitosTable.find(a => a.mercado.id === mercadoId)?.mercado;
-                      return `${mercado.id} - ${mercado.descripcion}`;
+                      return `${mercado.id} - ${normalizeText(mercado.descripcion)}`;
                     } else {
                       return `${mercadosSeleccionados.size} ${t('seleccionados')}`;
                     }
@@ -1519,52 +1660,115 @@ return (
               </div>
               
               {isMercadoDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar mercado...')}
-                      value={mercadoSearchText}
-                      onChange={handleMercadoSearchChange}
-                      onClick={(e) => e.stopPropagation()}
+              <div className="filter-dropdown-content">
+                <div className="dropdown-search">
+                  <FaSearch className="search-icon" />
+                  <input 
+                    type="text" 
+                    placeholder={t('Buscar mercado...')}
+                    value={mercadoSearchText}
+                    onChange={handleMercadoSearchChange}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {mercadoSearchText && (
+                    <FaTimes 
+                      className="clear-search-icon" 
+                      onClick={clearMercadoSearch} 
                     />
-                    {mercadoSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearMercadoSearch} 
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="dropdown-items">
-                    {filteredMercados.map((mercado) => {
-                      const isInTable = ambitosTable.some(ambito => 
-                        ambito.mercado.id === mercado.id && 
-                        selectedAmbitos.includes(ambito.id)
-                      );
-                      
-                      return (
-                        <div 
-                          key={mercado.id} 
-                          className="dropdown-item"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMercadoSelect(mercado);
-                          }}
-                        >
-                          <div className="custom-checkbox">
-                            {isInTable && <FaCheck className="checkbox-icon" />}
-                          </div>
-                          <span className="dropdown-item-text">
-                            {mercado.id} - {mercado.descripcion}
-                          </span>
+                  )}
+                </div>
+                
+                <div className="dropdown-items">
+                  {filteredMercados.map((mercado) => {
+                    const isInTable = ambitosTable.some(ambito => 
+                      ambito.mercado.id === mercado.id && 
+                      selectedAmbitos.includes(ambito.id)
+                    );
+                    
+                    return (
+                      <div 
+                        key={mercado.id} 
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMercadoSelect(mercado);
+                        }}
+                      >
+                        <div className="custom-checkbox">
+                          {isInTable && <FaCheck className="checkbox-icon" />}
                         </div>
-                      );
-                    })}
+                        <span className="dropdown-item-text">
+                          {mercado.id} - {normalizeText(mercado.descripcion)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  
+                  <div className="dropdown-item select-all" onClick={(e) => {
+                    e.stopPropagation();
+                    // Verificar si todos los mercados están seleccionados
+                    const mercadosIds = filteredMercados.map(m => m.id);
+                    
+                    const allSelected = mercadosIds.every(mercadoId => 
+                      ambitosTable.some(ambito => 
+                        ambito.mercado.id === mercadoId && 
+                        selectedAmbitos.includes(ambito.id)
+                      )
+                    );
+                    
+                    if (allSelected) {
+                      filteredMercados.forEach(mercado => {
+                        removeAmbitoIfExists(null, null, mercado.id);
+                      });
+                    } else {
+                      const gruposCadenaCombinations = new Map();
+                      
+                      ambitosTable.forEach(ambito => {
+                        if (selectedAmbitos.includes(ambito.id)) {
+                          const key = `${ambito.grupoCadena.id}-${ambito.cadena.id}`;
+                          if (!gruposCadenaCombinations.has(key)) {
+                            gruposCadenaCombinations.set(key, {
+                              grupoCadena: ambito.grupoCadena,
+                              cadena: ambito.cadena
+                            });
+                          }
+                        }
+                      });
+                      
+                      filteredMercados.forEach(mercado => {
+                        if (gruposCadenaCombinations.size === 0 && ambitoToAdd.grupoCadena && ambitoToAdd.cadena) {
+                          const newAmbitoToAdd = {
+                            grupoCadena: ambitoToAdd.grupoCadena,
+                            cadena: ambitoToAdd.cadena,
+                            mercado: mercado
+                          };
+                          addAmbitoWithValues(newAmbitoToAdd);
+                        } else {
+                          gruposCadenaCombinations.forEach((combination) => {
+                            const newAmbitoToAdd = {
+                              grupoCadena: combination.grupoCadena,
+                              cadena: combination.cadena,
+                              mercado: mercado
+                            };
+                            addAmbitoWithValues(newAmbitoToAdd);
+                          });
+                        }
+                      });
+                    }
+                  }}>
+                    <div className="custom-checkbox">
+                      {filteredMercados.length > 0 && filteredMercados.every(mercado => 
+                        ambitosTable.some(ambito => 
+                          ambito.mercado.id === mercado.id && 
+                          selectedAmbitos.includes(ambito.id)
+                        )
+                      ) && <FaCheck className="checkbox-icon" />}
+                    </div>
+                    <span>{t(' Seleccionar todo')}</span>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
           </div>
           
@@ -1580,10 +1784,10 @@ return (
               <tbody>
                 {ambitosTable.map(ambito => (
                   <tr key={ambito.id}>
-                    <td>{ambito.grupoCadena.id} - {ambito.grupoCadena.descripcion}</td>
-                    <td>{ambito.cadena.id} - {ambito.cadena.descripcion}</td>
+                    <td>{ambito.grupoCadena.id} - {normalizeText(ambito.grupoCadena.descripcion)}</td>
+                    <td>{ambito.cadena.id} - {normalizeText(ambito.cadena.descripcion)}</td>
                     <td className="mercado-column">
-                      <span>{ambito.mercado.id} - {ambito.mercado.descripcion}</span>
+                      <span>{ambito.mercado.id} - {normalizeText(ambito.mercado.descripcion)}</span>
                     </td>
                   </tr>
                 ))}
