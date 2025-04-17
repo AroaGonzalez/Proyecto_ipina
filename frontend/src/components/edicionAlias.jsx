@@ -515,19 +515,21 @@ const handleGrupoCadenaSelect = (grupo) => {
   
   if (grupoIndex >= 0) {
     newSelectedGrupos = selectedGruposCadena.filter(g => g !== grupo.id);
+    
+    removeAmbitoIfExists(grupo.id, null, null);
   } else {
     newSelectedGrupos = [...selectedGruposCadena, grupo.id];
-  }
-  
-  setSelectedGruposCadena(newSelectedGrupos);
-  setSelectedGrupoCadena(newSelectedGrupos.length > 0 ? newSelectedGrupos[0] : '');
-  
-  if (grupoIndex < 0) {
+    
     setAmbitoToAdd(prev => ({
       ...prev,
       grupoCadena: grupo
     }));
+    
+    addCadenasForGrupoCadena(grupo);
   }
+  
+  setSelectedGruposCadena(newSelectedGrupos);
+  setSelectedGrupoCadena(newSelectedGrupos.length > 0 ? newSelectedGrupos[0] : '');
   
   updateCadenasBySelectedGrupos(newSelectedGrupos);
 };
@@ -545,11 +547,60 @@ const updateCadenasBySelectedGrupos = (selectedGrupos) => {
   setFilteredCadenas(cadenasFiltradas);
 };
 
+const addCadenasForGrupoCadena = (grupo) => {
+  // Obtenemos todas las cadenas que pertenecen a este grupo
+  const cadenasDelGrupo = cadenasDisponibles.filter(
+    cadena => cadena.idGrupoCadena === grupo.id
+  );
+  
+  // En vez de usar todos los mercados disponibles, solo usamos los que ya están seleccionados
+  // Obtenemos los mercados únicos que ya están en la tabla de ámbitos
+  const mercadosSeleccionados = new Set();
+  ambitosTable.forEach(ambito => {
+    if (selectedAmbitos.includes(ambito.id)) {
+      mercadosSeleccionados.add(JSON.stringify(ambito.mercado)); // Convertimos a string para poder usar Set
+    }
+  });
+  
+  // Si no hay mercados seleccionados, usamos solo el mercado que está actualmente seleccionado (si existe)
+  if (mercadosSeleccionados.size === 0 && ambitoToAdd.mercado) {
+    // Para cada cadena del grupo, creamos un ámbito con el mercado seleccionado actualmente
+    cadenasDelGrupo.forEach(cadena => {
+      const ambitoToAddWithCadena = {
+        grupoCadena: grupo,
+        cadena: cadena,
+        mercado: ambitoToAdd.mercado
+      };
+      
+      // Añadimos este ámbito a la tabla
+      addAmbitoWithValues(ambitoToAddWithCadena);
+    });
+  } 
+  else if (mercadosSeleccionados.size > 0) {
+    // Para cada cadena del grupo, creamos un ámbito con cada mercado seleccionado
+    cadenasDelGrupo.forEach(cadena => {
+      mercadosSeleccionados.forEach(mercadoStr => {
+        const mercado = JSON.parse(mercadoStr);
+        const ambitoToAddWithCadena = {
+          grupoCadena: grupo,
+          cadena: cadena,
+          mercado: mercado
+        };
+        
+        // Añadimos este ámbito a la tabla
+        addAmbitoWithValues(ambitoToAddWithCadena);
+      });
+    });
+  }
+};
+
 const handleCadenaSelect = (cadena) => {
+  // Verificamos si esta cadena ya está en algún ámbito
   const existingAmbitos = ambitosTable.filter(
     ambito => ambito.cadena.id === cadena.id && selectedAmbitos.includes(ambito.id)
   );
   
+  // Si ya existe, los eliminamos todos 
   if (existingAmbitos.length > 0) {
     existingAmbitos.forEach(ambito => {
       removeAmbitoIfExists(null, cadena.id, null);
@@ -557,24 +608,59 @@ const handleCadenaSelect = (cadena) => {
     return;
   }
   
-  const newAmbitoToAdd = {
-    ...ambitoToAdd,
-    cadena: cadena
-  };
-  
+  // Guardamos la cadena seleccionada en el estado
   setSelectedCadena(cadena.id);
-  setAmbitoToAdd(newAmbitoToAdd);
+  setAmbitoToAdd(prev => ({
+    ...prev,
+    cadena: cadena
+  }));
   
-  if (newAmbitoToAdd.grupoCadena && newAmbitoToAdd.mercado) {
-    addAmbitoWithValues(newAmbitoToAdd);
+  // Buscamos el grupo cadena al que pertenece esta cadena
+  const grupoCadena = gruposCadenaDisponibles.find(g => g.id === cadena.idGrupoCadena);
+  
+  if (!grupoCadena) {
+    console.error("No se encontró el grupo cadena para esta cadena");
+    return;
   }
+  
+  // Obtenemos todos los mercados únicos que ya están seleccionados en la tabla
+  const mercadosSeleccionados = new Set();
+  ambitosTable.forEach(ambito => {
+    if (selectedAmbitos.includes(ambito.id)) {
+      mercadosSeleccionados.add(JSON.stringify(ambito.mercado)); // Convertimos a string para poder usar Set
+    }
+  });
+  
+  // Si no hay mercados seleccionados, usamos el mercado actual (si existe)
+  if (mercadosSeleccionados.size === 0 && ambitoToAdd.mercado) {
+    const newAmbitoToAdd = {
+      grupoCadena: grupoCadena,
+      cadena: cadena,
+      mercado: ambitoToAdd.mercado
+    };
+    addAmbitoWithValues(newAmbitoToAdd);
+    return;
+  }
+  
+  // Si hay mercados seleccionados, creamos un ámbito para cada uno con la nueva cadena
+  mercadosSeleccionados.forEach((mercadoStr) => {
+    const mercado = JSON.parse(mercadoStr);
+    const newAmbitoToAdd = {
+      grupoCadena: grupoCadena,
+      cadena: cadena,
+      mercado: mercado
+    };
+    addAmbitoWithValues(newAmbitoToAdd);
+  });
 };
 
 const handleMercadoSelect = (mercado) => {
+  // Verificamos si este mercado ya está en algún ámbito
   const existingAmbitos = ambitosTable.filter(
     ambito => ambito.mercado.id === mercado.id && selectedAmbitos.includes(ambito.id)
   );
   
+  // Si ya existe, los eliminamos todos
   if (existingAmbitos.length > 0) {
     existingAmbitos.forEach(ambito => {
       removeAmbitoIfExists(null, null, mercado.id);
@@ -582,17 +668,47 @@ const handleMercadoSelect = (mercado) => {
     return;
   }
   
-  const newAmbitoToAdd = {
-    ...ambitoToAdd,
-    mercado: mercado
-  };
-  
+  // Guardamos el mercado en el estado
   setSelectedMercado(mercado.id);
-  setAmbitoToAdd(newAmbitoToAdd);
+  setAmbitoToAdd(prev => ({
+    ...prev,
+    mercado: mercado
+  }));
   
-  if (newAmbitoToAdd.grupoCadena && newAmbitoToAdd.cadena) {
+  // Conseguimos todas las combinaciones únicas de grupo cadena - cadena que ya están en la tabla
+  const gruposCadenaCombinations = new Map();
+  
+  ambitosTable.forEach(ambito => {
+    if (selectedAmbitos.includes(ambito.id)) {
+      // Usamos como clave la combinación de IDs de grupo y cadena
+      const key = `${ambito.grupoCadena.id}-${ambito.cadena.id}`;
+      if (!gruposCadenaCombinations.has(key)) {
+        gruposCadenaCombinations.set(key, {
+          grupoCadena: ambito.grupoCadena,
+          cadena: ambito.cadena
+        });
+      }
+    }
+  });
+  
+  if (gruposCadenaCombinations.size === 0 && ambitoToAdd.grupoCadena && ambitoToAdd.cadena) {
+    const newAmbitoToAdd = {
+      grupoCadena: ambitoToAdd.grupoCadena,
+      cadena: ambitoToAdd.cadena,
+      mercado: mercado
+    };
     addAmbitoWithValues(newAmbitoToAdd);
+    return;
   }
+  
+  gruposCadenaCombinations.forEach((combination) => {
+    const newAmbitoToAdd = {
+      grupoCadena: combination.grupoCadena,
+      cadena: combination.cadena,
+      mercado: mercado
+    };
+    addAmbitoWithValues(newAmbitoToAdd);
+  });
 };
 
 const handleArticuloSelect = (articulo) => {
@@ -1221,8 +1337,7 @@ return (
         </div>
         
         <div className="paso-content">
-          <p className="section-description">{t('Define el ámbito de aplicación del alias seleccionando el grupo cadena y mercado.')}</p>
-          
+
           <div className="ambito-row">
             <div className="ambito-field grupo-cadena-field" ref={grupoCadenaDropdownRef}>
               <label className="ambito-label">{t('Id o Grupo Cadena (T6)*')}</label>
@@ -1442,7 +1557,6 @@ return (
                             {isInTable && <FaCheck className="checkbox-icon" />}
                           </div>
                           <span className="dropdown-item-text">
-                            {mercado.codigoIsoMercado && <span className="mercado-flag-small">{mercado.codigoIsoMercado === 'ES' ? '🇪🇸' : mercado.codigoIsoMercado} </span>}
                             {mercado.id} - {mercado.descripcion}
                           </span>
                         </div>
@@ -1475,9 +1589,6 @@ return (
                     <td>{ambito.grupoCadena.id} - {ambito.grupoCadena.descripcion}</td>
                     <td>{ambito.cadena.id} - {ambito.cadena.descripcion}</td>
                     <td className="mercado-column">
-                      {ambito.mercado.codigoIsoMercado && (
-                        <span className="mercado-flag">{ambito.mercado.codigoIsoMercado === 'ES' ? '🇪🇸' : ambito.mercado.codigoIsoMercado}</span>
-                      )}
                       <span>{ambito.mercado.id} - {ambito.mercado.descripcion}</span>
                       <FaTimes 
                         className="remove-ambito-icon" 
