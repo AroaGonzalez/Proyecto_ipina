@@ -1572,7 +1572,6 @@ return (
             <table className="ambitos-table">
               <thead>
                 <tr>
-                  <th className="checkbox-column"></th>
                   <th>{t('ID/GRUPO CADENA')}</th>
                   <th>{t('ID/CADENA')}</th>
                   <th>{t('MERCADO')}</th>
@@ -1581,20 +1580,10 @@ return (
               <tbody>
                 {ambitosTable.map(ambito => (
                   <tr key={ambito.id}>
-                    <td className="checkbox-column">
-                      <div className="custom-checkbox" onClick={() => handleAmbitoSelect(ambito.id)}>
-                        {selectedAmbitos.includes(ambito.id) && <FaCheck className="checkbox-icon" />}
-                      </div>
-                    </td>
                     <td>{ambito.grupoCadena.id} - {ambito.grupoCadena.descripcion}</td>
                     <td>{ambito.cadena.id} - {ambito.cadena.descripcion}</td>
                     <td className="mercado-column">
                       <span>{ambito.mercado.id} - {ambito.mercado.descripcion}</span>
-                      <FaTimes 
-                        className="remove-ambito-icon" 
-                        onClick={() => handleRemoveAmbito(ambito.id)}
-                        style={{ marginLeft: 'auto', cursor: 'pointer', color: '#999' }}
-                      />
                     </td>
                   </tr>
                 ))}
