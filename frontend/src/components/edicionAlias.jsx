@@ -22,66 +22,67 @@ const ESTADO_MAPPING = {
 };
 
 const EdicionAlias = () => {
-const { id } = useParams();
+  const { id } = useParams();
 
-const navigate = useNavigate();
-const { t } = useTranslation();
-const { languageId } = useContext(LanguageContext);
-const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { languageId } = useContext(LanguageContext);
+  const dropdownRef = useRef(null);
 
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState(null);
-const [alias, setAlias] = useState(null);
-const [articulos, setArticulos] = useState([]);
-const [articulosDisponibles, setArticulosDisponibles] = useState([]);
-const [idiomas, setIdiomas] = useState([]);
-const [ambitosData, setAmbitosData] = useState({});
-const [tiposAlias, setTiposAlias] = useState([]);
-const [idiomasDisponibles, setIdiomasDisponibles] = useState([]);
-const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
-const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
-const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
-const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
-const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
-const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
-const [selectedEstadoAlias, setSelectedEstadoAlias] = useState('');
-const [estadoDesc, setEstadoDesc] = useState('');
-const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
-const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
-const [selectedCadena, setSelectedCadena] = useState('');
-const [selectedMercado, setSelectedMercado] = useState('');
-const [selectedIdiomas, setSelectedIdiomas] = useState([]);
-const [openDropdown, setOpenDropdown] = useState(null);
-const [searchText, setSearchText] = useState('');
-const [checkAll, setCheckAll] = useState(false);
-const [checkAllArticulos, setCheckAllArticulos] = useState(false);
-const [filteredArticulos, setFilteredArticulos] = useState([]);
-const [articuloSearchText, setArticuloSearchText] = useState('');
-const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
-const [ambitosTable, setAmbitosTable] = useState([]);
-const [selectedAmbitos, setSelectedAmbitos] = useState([]);
-const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
-const [showDeleteIcon, setShowDeleteIcon] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [alias, setAlias] = useState(null);
+  const [articulos, setArticulos] = useState([]);
+  const [articulosDisponibles, setArticulosDisponibles] = useState([]);
+  const [idiomas, setIdiomas] = useState([]);
+  const [idiomasDisponibles, setIdiomasDisponibles] = useState([]);
+  const [tiposAlias, setTiposAlias] = useState([]);
+  const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
+  const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
+  const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
+  const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
+  const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
+  const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
+  const [selectedEstadoAlias, setSelectedEstadoAlias] = useState('');
+  const [estadoDesc, setEstadoDesc] = useState('');
+  const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
+  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
+  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+  const [selectedCadena, setSelectedCadena] = useState('');
+  const [selectedMercado, setSelectedMercado] = useState('');
+  const [selectedIdiomas, setSelectedIdiomas] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [checkAll, setCheckAll] = useState(false);
+  const [checkAllArticulos, setCheckAllArticulos] = useState(false);
+  const [filteredArticulos, setFilteredArticulos] = useState([]);
+  const [articuloSearchText, setArticuloSearchText] = useState('');
+  const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
+  const [ambitosTable, setAmbitosTable] = useState([]);
+  const [ambitosData, setAmbitosData] = useState({});
+  const [selectedAmbitos, setSelectedAmbitos] = useState([]);
+  const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
+  const [showDeleteIcon, setShowDeleteIcon] = useState(false);
+  
+  const [grupoSearchText, setGrupoSearchText] = useState('');
+  const [cadenaSearchText, setCadenaSearchText] = useState('');
+  const [mercadoSearchText, setMercadoSearchText] = useState('');
+  const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
+  const [filteredCadenas, setFilteredCadenas] = useState([]);
+  const [filteredMercados, setFilteredMercados] = useState([]);
+  const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
+  const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
+  const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
+  const [ambitoToAdd, setAmbitoToAdd] = useState({
+    grupoCadena: null,
+    cadena: null,
+    mercado: null
+  });
 
-const [grupoSearchText, setGrupoSearchText] = useState('');
-const [cadenaSearchText, setCadenaSearchText] = useState('');
-const [mercadoSearchText, setMercadoSearchText] = useState('');
-const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
-const [filteredCadenas, setFilteredCadenas] = useState([]);
-const [filteredMercados, setFilteredMercados] = useState([]);
-const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
-const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
-const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
-const [ambitoToAdd, setAmbitoToAdd] = useState({
-  grupoCadena: null,
-  cadena: null,
-  mercado: null
-});
-
-const grupoCadenaDropdownRef = useRef(null);
-const cadenaDropdownRef = useRef(null);
-const mercadoDropdownRef = useRef(null);
-const articulosDropdownRef = useRef(null);
+  const grupoCadenaDropdownRef = useRef(null);
+  const cadenaDropdownRef = useRef(null);
+  const mercadoDropdownRef = useRef(null);
+  const articulosDropdownRef = useRef(null);
 
 useEffect(() => {
   function handleClickOutside(event) {
@@ -109,13 +110,11 @@ useEffect(() => {
 
 const handleArticuloCheckboxChange = (articuloId) => {
   setSelectedArticulosIds(prev => {
-    // Si ya está seleccionado, lo quitamos
     if (prev.includes(articuloId)) {
       const newSelected = prev.filter(id => id !== articuloId);
       setShowDeleteIcon(newSelected.length > 0);
       return newSelected;
-    } 
-    // Si no está seleccionado, lo añadimos
+    }
     else {
       setShowDeleteIcon(true);
       return [...prev, articuloId];
@@ -127,7 +126,6 @@ const handleDeleteSelectedArticulos = () => {
   setArticulos(prev => prev.filter(articulo => 
     !selectedArticulosIds.includes(articulo.idAjeno || articulo.id)
   ));
-  // Resetear selecciones
   setSelectedArticulosIds([]);
   setShowDeleteIcon(false);
 };
@@ -152,7 +150,6 @@ const getEstadoNormalizado = (estadoId, estadoDesc) => {
   return 'PRODUCCION';
 };
 
-// En useEffect, cuando cargamos los datos iniciales
 useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
@@ -197,7 +194,6 @@ useEffect(() => {
       
       const generatedAmbitosTable = [];
       
-      // Si hay datos de ámbitos, construimos la tabla combinando los datos
       if (ambitosResponse.data && 
           ambitosResponse.data.gruposCadena && 
           ambitosResponse.data.cadenas && 
@@ -205,10 +201,8 @@ useEffect(() => {
           
         const { gruposCadena, cadenas, mercados } = ambitosResponse.data;
         
-        // Para cada mercado, vamos a crear una combinación con cada cadena
         mercados.forEach(mercado => {
           cadenas.forEach(cadena => {
-            // Encontramos el grupo cadena relacionado con esta cadena
             const grupoCadena = gruposCadena.find(g => g.id === cadena.idGrupoCadena) || gruposCadena[0];
             
             if (grupoCadena) {
@@ -236,22 +230,18 @@ useEffect(() => {
       setAmbitosTable(generatedAmbitosTable);
       setSelectedAmbitos(generatedAmbitosTable.map(a => a.id));
 
-      // Si tenemos datos iniciales de ámbitos, establecemos los valores seleccionados
       if (ambitosResponse.data) {
         if (ambitosResponse.data.gruposCadena && ambitosResponse.data.gruposCadena.length > 0) {
-          setSelectedGrupoCadena(ambitosResponse.data.gruposCadena[0].id);
-          setAmbitoToAdd(prev => ({
-            ...prev,
-            grupoCadena: ambitosResponse.data.gruposCadena[0]
-          }));
-        }
-        
-        if (ambitosResponse.data.cadenas && ambitosResponse.data.cadenas.length > 0) {
-          setSelectedCadena(ambitosResponse.data.cadenas[0].id);
-          setAmbitoToAdd(prev => ({
-            ...prev,
-            cadena: ambitosResponse.data.cadenas[0]
-          }));
+          const gruposCadenaIds = ambitosResponse.data.gruposCadena.map(g => g.id);
+          setSelectedGruposCadena(gruposCadenaIds);
+          setSelectedGrupoCadena(gruposCadenaIds[0] || '');
+          
+          if (ambitosResponse.data.gruposCadena[0]) {
+            setAmbitoToAdd(prev => ({
+              ...prev,
+              grupoCadena: ambitosResponse.data.gruposCadena[0]
+            }));
+          }
         }
         
         if (ambitosResponse.data.mercados && ambitosResponse.data.mercados.length > 0) {
@@ -288,14 +278,19 @@ useEffect(() => {
       
       const cadenas = cadenasRes.data || [];
       setCadenasDisponibles(cadenas);
-      setFilteredCadenas(cadenas);
       
+      if (selectedGruposCadena && selectedGruposCadena.length > 0) {
+        const cadenasFiltradas = cadenas.filter(
+          cadena => selectedGruposCadena.includes(cadena.idGrupoCadena)
+        );
+        setFilteredCadenas(cadenasFiltradas);
+      } else {
+          setFilteredCadenas(cadenas);
+      }
       const mercados = mercadosRes.data || [];
       setMercadosDisponibles(mercados);
       setFilteredMercados(mercados);
       
-      // Añadimos la propiedad 'selected' a cada artículo para controlar su selección en el dropdown
-      // y marcamos los que ya están en la tabla
       const articulosConSelected = (articulosDisponiblesRes.data || []).map(articulo => ({
         ...articulo,
         selected: articulosAliasData.some(a => 
@@ -350,7 +345,6 @@ const handleArticuloSearchChange = (e) => {
         articulo.nombreAjeno?.toLowerCase().includes(searchValue)
     );
     
-    // Mantenemos el estado de selección y marcamos los que ya están en la tabla
     setFilteredArticulos(filtered.map(articulo => ({
       ...articulo,
       selected: articulo.selected || articulos.some(a => 
@@ -359,7 +353,6 @@ const handleArticuloSearchChange = (e) => {
       )
     })));
   } else {
-    // Si se limpia la búsqueda, reseteamos al estado original con los artículos de la tabla marcados
     setFilteredArticulos(articulosDisponibles.map(articulo => ({
       ...articulo,
       selected: articulo.selected || articulos.some(a => 
@@ -422,10 +415,8 @@ const handleMercadoSearchChange = (e) => {
 };
 
 const toggleArticulosDropdown = () => {
-  // Al abrir el dropdown, actualizamos las selecciones para reflejar los artículos ya añadidos
   if (!isArticulosDropdownOpen) {
     setArticuloSearchText('');
-    // Actualizamos la lista filtrada marcando los artículos que ya están en la tabla
     setFilteredArticulos(articulosDisponibles.map(articulo => ({
       ...articulo,
       selected: articulos.some(a => 
@@ -460,15 +451,12 @@ const toggleCadenaDropdown = () => {
   
   if (!isCadenaDropdownOpen) {
     setCadenaSearchText('');
-    
-    // NUEVA LÓGICA: Solo mostrar cadenas del grupo seleccionado
-    if (selectedGrupoCadena) {
+    if (selectedGruposCadena && selectedGruposCadena.length > 0) {
       const cadenasFiltradas = cadenasDisponibles.filter(
-        cadena => cadena.idGrupoCadena === selectedGrupoCadena
+        cadena => selectedGruposCadena.includes(cadena.idGrupoCadena)
       );
       setFilteredCadenas(cadenasFiltradas);
     } else {
-      // Si no hay grupo seleccionado, no mostramos cadenas
       setFilteredCadenas([]);
     }
   }
@@ -487,7 +475,6 @@ const toggleMercadoDropdown = () => {
 
 const clearArticuloSearch = () => {
   setArticuloSearchText('');
-  // Al limpiar la búsqueda mantenemos marcados los artículos que ya están en la tabla
   setFilteredArticulos(articulosDisponibles.map(articulo => ({
     ...articulo,
     selected: articulo.selected || articulos.some(a => 
@@ -513,71 +500,56 @@ const clearMercadoSearch = () => {
 };
 
 const handleSelectAllArticulos = () => {
-  // Comprobar si todos los artículos filtrados están seleccionados
   const allSelected = filteredArticulos.every(articulo => articulo.selected);
   
-  // Actualizar el estado para indicar si todos están seleccionados
   setCheckAllArticulos(!allSelected);
   
-  // Actualizar todos los artículos filtrados con el nuevo estado de selección
   setFilteredArticulos(prev => 
     prev.map(a => ({...a, selected: !allSelected}))
   );
 };
 
 const handleGrupoCadenaSelect = (grupo) => {
-  // Comprobamos si este grupo ya está en algún ámbito
-  const existingAmbitos = ambitosTable.filter(
-    ambito => ambito.grupoCadena.id === grupo.id && selectedAmbitos.includes(ambito.id)
-  );
+  const grupoIndex = selectedGruposCadena.findIndex(g => g === grupo.id);
+  let newSelectedGrupos;
   
-  // Si existe algún ámbito con este grupo, los quitamos todos y retornamos
-  if (existingAmbitos.length > 0) {
-    existingAmbitos.forEach(ambito => {
-      removeAmbitoIfExists(grupo.id, null, null);
-    });
-    return;
+  if (grupoIndex >= 0) {
+    newSelectedGrupos = selectedGruposCadena.filter(g => g !== grupo.id);
+  } else {
+    newSelectedGrupos = [...selectedGruposCadena, grupo.id];
   }
   
-  // Nuevo valor a establecer
-  const newAmbitoToAdd = {
-    ...ambitoToAdd,
-    grupoCadena: grupo
-  };
+  setSelectedGruposCadena(newSelectedGrupos);
+  setSelectedGrupoCadena(newSelectedGrupos.length > 0 ? newSelectedGrupos[0] : '');
   
-  setSelectedGrupoCadena(grupo.id);
-  setAmbitoToAdd(newAmbitoToAdd);
-  
-  // NUEVA LÓGICA: Filtrar las cadenas según el grupo seleccionado
-  const cadenasFiltradas = cadenasDisponibles.filter(
-    cadena => cadena.idGrupoCadena === grupo.id
-  );
-  setFilteredCadenas(cadenasFiltradas);
-  setCadenasDisponibles(cadenasFiltradas);
-  
-  // Limpiar la selección actual de cadena si no pertenece al nuevo grupo
-  const cadenaActualValida = cadenasFiltradas.some(c => c.id === selectedCadena);
-  if (!cadenaActualValida) {
-    setSelectedCadena('');
+  if (grupoIndex < 0) {
     setAmbitoToAdd(prev => ({
       ...prev,
-      cadena: null
+      grupoCadena: grupo
     }));
   }
   
-  // Verificamos si tenemos todos los campos con los nuevos valores
-  if (newAmbitoToAdd.cadena && newAmbitoToAdd.mercado) {
-    addAmbitoWithValues(newAmbitoToAdd);
+  updateCadenasBySelectedGrupos(newSelectedGrupos);
+};
+
+const updateCadenasBySelectedGrupos = (selectedGrupos) => {
+  if (selectedGrupos.length === 0) {
+    setFilteredCadenas([]);
+    return;
   }
+  
+  const cadenasFiltradas = cadenasDisponibles.filter(
+    cadena => selectedGrupos.includes(cadena.idGrupoCadena)
+  );
+  
+  setFilteredCadenas(cadenasFiltradas);
 };
 
 const handleCadenaSelect = (cadena) => {
-  // Comprobamos si esta cadena ya está en algún ámbito
   const existingAmbitos = ambitosTable.filter(
     ambito => ambito.cadena.id === cadena.id && selectedAmbitos.includes(ambito.id)
   );
   
-  // Si existe algún ámbito con esta cadena, los quitamos todos y retornamos
   if (existingAmbitos.length > 0) {
     existingAmbitos.forEach(ambito => {
       removeAmbitoIfExists(null, cadena.id, null);
@@ -585,7 +557,6 @@ const handleCadenaSelect = (cadena) => {
     return;
   }
   
-  // Nuevo valor a establecer
   const newAmbitoToAdd = {
     ...ambitoToAdd,
     cadena: cadena
@@ -594,19 +565,16 @@ const handleCadenaSelect = (cadena) => {
   setSelectedCadena(cadena.id);
   setAmbitoToAdd(newAmbitoToAdd);
   
-  // Verificamos si tenemos todos los campos con los nuevos valores
   if (newAmbitoToAdd.grupoCadena && newAmbitoToAdd.mercado) {
     addAmbitoWithValues(newAmbitoToAdd);
   }
 };
 
 const handleMercadoSelect = (mercado) => {
-  // Comprobamos si este mercado ya está en algún ámbito
   const existingAmbitos = ambitosTable.filter(
     ambito => ambito.mercado.id === mercado.id && selectedAmbitos.includes(ambito.id)
   );
   
-  // Si existe algún ámbito con este mercado, los quitamos todos y retornamos
   if (existingAmbitos.length > 0) {
     existingAmbitos.forEach(ambito => {
       removeAmbitoIfExists(null, null, mercado.id);
@@ -614,7 +582,6 @@ const handleMercadoSelect = (mercado) => {
     return;
   }
   
-  // Nuevo valor a establecer
   const newAmbitoToAdd = {
     ...ambitoToAdd,
     mercado: mercado
@@ -623,17 +590,14 @@ const handleMercadoSelect = (mercado) => {
   setSelectedMercado(mercado.id);
   setAmbitoToAdd(newAmbitoToAdd);
   
-  // Verificamos si tenemos todos los campos con los nuevos valores
   if (newAmbitoToAdd.grupoCadena && newAmbitoToAdd.cadena) {
     addAmbitoWithValues(newAmbitoToAdd);
   }
 };
 
 const handleArticuloSelect = (articulo) => {
-  // Verificar si el artículo ya está seleccionado en la lista temporal
   const isSelected = filteredArticulos.find(a => a.selected)?.idAjeno === articulo.idAjeno;
   
-  // Recorremos el array y actualizamos la propiedad selected
   setFilteredArticulos(prev => 
     prev.map(a => {
       if (a.idAjeno === articulo.idAjeno || a.id === articulo.idAjeno) {
@@ -653,10 +617,8 @@ const handleAmbitoSelect = (ambitoId) => {
 };
 
 const handleAddArticulo = () => {
-  // Obtenemos todos los artículos seleccionados en el dropdown
   const selectedArticulosToAdd = filteredArticulos.filter(a => a.selected);
   
-  // Formateamos los artículos seleccionados y los añadimos al estado
   const formattedArticulos = selectedArticulosToAdd.map(articulo => ({
     idAjeno: articulo.idAjeno,
     nombreAjeno: articulo.nombreAjeno,
@@ -671,13 +633,11 @@ const handleAddArticulo = () => {
     tipoEstadoRam: {
       descripcion: articulo.descripcionTipoEstadoRam
     },
-    // Valor por defecto para ESTADO ARTÍCULO EN EL ALIAS
     descripcionTipoEstadoAliasAjenoRam: 'ACTIVO',
-    fechaAlta: new Date().toISOString().split('T')[0], // Fecha actual como fecha de alta
+    fechaAlta: new Date().toISOString().split('T')[0],
     idSint: articulo.idSint || '-'
   }));
   
-  // Añadimos solo los artículos que no están ya en la lista principal
   const newArticulos = formattedArticulos.filter(newArticulo => 
     !articulos.some(existingArticulo => 
       existingArticulo.idAjeno === newArticulo.idAjeno || 
@@ -689,19 +649,15 @@ const handleAddArticulo = () => {
     setArticulos(prev => [...prev, ...newArticulos]);
   }
   
-  // Cerramos el dropdown y limpiamos las selecciones
   setIsArticulosDropdownOpen(false);
   setFilteredArticulos(prev => prev.map(a => ({ ...a, selected: false })));
   setArticuloSearchText('');
 };
 
-// Función auxiliar para añadir ámbito usando valores específicos
 const addAmbitoWithValues = (ambitoValues) => {
-  // Verificamos que tengamos seleccionados los tres elementos necesarios
   if (ambitoValues.grupoCadena && ambitoValues.cadena && ambitoValues.mercado) {
     const newAmbitoId = `${ambitoValues.grupoCadena.id}-${ambitoValues.cadena.id}-${ambitoValues.mercado.id}`;
     
-    // Verificamos si ya existe un ámbito con esta combinación
     const existingAmbito = ambitosTable.find(a => a.id === newAmbitoId);
     
     if (!existingAmbito) {
@@ -718,9 +674,7 @@ const addAmbitoWithValues = (ambitoValues) => {
   }
 };
 
-// Esta función busca y elimina un ámbito si existe
 const removeAmbitoIfExists = (grupoId, cadenaId, mercadoId) => {
-  // Buscamos todas las combinaciones que coinciden con los criterios
   const ambitosToRemove = ambitosTable.filter(ambito => 
     (grupoId ? ambito.grupoCadena.id === grupoId : true) &&
     (cadenaId ? ambito.cadena.id === cadenaId : true) &&
@@ -728,7 +682,6 @@ const removeAmbitoIfExists = (grupoId, cadenaId, mercadoId) => {
   );
   
   if (ambitosToRemove.length > 0) {
-    // Eliminamos todos los encontrados
     const idsToRemove = ambitosToRemove.map(a => a.id);
     setAmbitosTable(prev => prev.filter(a => !idsToRemove.includes(a.id)));
     setSelectedAmbitos(prev => prev.filter(id => !idsToRemove.includes(id)));
@@ -833,7 +786,6 @@ if (error) {
     </div>
   );
 }
-
 if (!alias) {
   return (
     <div className="edicion-alias-error">
@@ -958,18 +910,15 @@ return (
                         .filter(idioma => searchText === '' || idioma.descripcion.toLowerCase().includes(searchText.toLowerCase()))
                         .map(idioma => idioma.id);
                         
-                      // Si todos están seleccionados, desmarcamos todos, si no, seleccionamos todos
                       const isAllSelected = allIds.every(id => selectedIdiomas.includes(id));
                       setCheckAll(!isAllSelected);
                       
                       if (isAllSelected) {
                         setSelectedIdiomas(selectedIdiomas.filter(id => !allIds.includes(id)));
                       } else {
-                        // Añadimos solo los que no estén ya seleccionados
                         const newIds = allIds.filter(id => !selectedIdiomas.includes(id));
                         setSelectedIdiomas([...selectedIdiomas, ...newIds]);
                         
-                        // Inicializamos valores para nuevos idiomas
                         const newIdiomasValues = { ...idiomasAliasValues };
                         newIds.forEach(id => {
                           if (!newIdiomasValues[id]) {
@@ -1283,22 +1232,15 @@ return (
               >
                 <span>
                   {(() => {
-                    // Contar cuántos grupos de cadena únicos están seleccionados
-                    const gruposSeleccionados = new Set();
-                    ambitosTable.forEach(ambito => {
-                      if (selectedAmbitos.includes(ambito.id)) {
-                        gruposSeleccionados.add(ambito.grupoCadena.id);
-                      }
-                    });
-                    
-                    if (gruposSeleccionados.size === 0) {
+                    // Si hay grupos cadena seleccionados, mostramos el primero (o "X seleccionados" si hay varios)
+                    if (selectedGruposCadena.length === 0) {
                       return t('Seleccionar grupo cadena');
-                    } else if (gruposSeleccionados.size === 1) {
-                      const grupoId = [...gruposSeleccionados][0];
-                      const grupo = ambitosTable.find(a => a.grupoCadena.id === grupoId)?.grupoCadena;
-                      return `${grupo.id} - ${grupo.descripcion}`;
+                    } else if (selectedGruposCadena.length === 1) {
+                      const grupoId = selectedGruposCadena[0];
+                      const grupo = gruposCadenaDisponibles.find(g => g.id === grupoId);
+                      return grupo ? `${grupo.id} - ${grupo.descripcion}` : grupoId;
                     } else {
-                      return `${gruposSeleccionados.size} ${t('seleccionados')}`;
+                      return `${selectedGruposCadena.length} ${t('seleccionados')}`;
                     }
                   })()}
                 </span>
@@ -1325,31 +1267,27 @@ return (
                   </div>
                   
                   <div className="dropdown-items">
-                    {filteredGruposCadena.map((grupo) => {
-                      // Verificar si este grupo ya está en la tabla
-                      const isInTable = ambitosTable.some(ambito => 
-                        ambito.grupoCadena.id === grupo.id && 
-                        selectedAmbitos.includes(ambito.id)
-                      );
-                      
-                      return (
-                        <div 
-                          key={grupo.id} 
-                          className="dropdown-item"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleGrupoCadenaSelect(grupo);
-                          }}
-                        >
-                          <div className="custom-checkbox">
-                            {isInTable && <FaCheck className="checkbox-icon" />}
-                          </div>
-                          <span className="dropdown-item-text">
-                            {grupo.id} - {grupo.descripcion}
-                          </span>
+                  {filteredGruposCadena.map((grupo) => {
+                    const isSelected = selectedGruposCadena.includes(grupo.id);
+                    
+                    return (
+                      <div 
+                        key={grupo.id} 
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGrupoCadenaSelect(grupo);
+                        }}
+                      >
+                        <div className="custom-checkbox">
+                          {isSelected && <FaCheck className="checkbox-icon" />}
                         </div>
-                      );
-                    })}
+                        <span className="dropdown-item-text">
+                          {grupo.id} - {grupo.descripcion}
+                        </span>
+                      </div>
+                    );
+                  })}
                   </div>
                 </div>
               )}
@@ -1366,7 +1304,6 @@ return (
                     if (!selectedGrupoCadena) {
                       return t('Seleccione primero un grupo cadena');
                     }
-                    // Contar cuántas cadenas únicas están seleccionadas
                     const cadenasSeleccionadas = new Set();
                     ambitosTable.forEach(ambito => {
                       if (selectedAmbitos.includes(ambito.id)) {
@@ -1409,7 +1346,6 @@ return (
                   
                   <div className="dropdown-items">
                     {filteredCadenas.map((cadena) => {
-                      // Verificar si esta cadena ya está en la tabla
                       const isInTable = ambitosTable.some(ambito => 
                         ambito.cadena.id === cadena.id && 
                         selectedAmbitos.includes(ambito.id)
@@ -1446,7 +1382,6 @@ return (
               >
                 <span>
                   {(() => {
-                    // Contar cuántos mercados únicos están seleccionados
                     const mercadosSeleccionados = new Set();
                     ambitosTable.forEach(ambito => {
                       if (selectedAmbitos.includes(ambito.id)) {
@@ -1489,7 +1424,6 @@ return (
                   
                   <div className="dropdown-items">
                     {filteredMercados.map((mercado) => {
-                      // Verificar si este mercado ya está en la tabla
                       const isInTable = ambitosTable.some(ambito => 
                         ambito.mercado.id === mercado.id && 
                         selectedAmbitos.includes(ambito.id)
