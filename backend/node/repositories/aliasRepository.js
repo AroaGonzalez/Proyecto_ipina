@@ -282,7 +282,6 @@ exports.getEstacionalidades = async (idIdioma = 1) => {
 
 exports.getAliasesForFilter = async (idIdioma = 1) => {
   try {
-    console.log(`[DEBUG] Obteniendo alias para filtro con idIdioma=${idIdioma}`);
     
     const result = await sequelizeAjenos.query(`
       SELECT 

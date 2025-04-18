@@ -53,8 +53,9 @@ const buildWhereClause = (filter) => {
   let params = {};
   
   if (filter.idsTarea) {
+    const idsTarea = Array.isArray(filter.idsTarea) ? filter.idsTarea : [filter.idsTarea];
     whereClauses.push('tr.ID_TAREA_RAM IN (:idsTarea)');
-    params.idsTarea = filter.idsTarea;
+    params.idsTarea = idsTarea;
   }
   
   if (filter.idsAlias) {
@@ -83,8 +84,9 @@ const buildWhereClause = (filter) => {
   }
   
   if (filter.idsLocalizacion) {
+    const idsLocalizacion = Array.isArray(filter.idsLocalizacion) ? filter.idsLocalizacion : [filter.idsLocalizacion];
     whereClauses.push('tr.ID_TAREA_RAM IN (SELECT tr6.ID_TAREA_RAM FROM AJENOS.TAREA_RAM tr6 LEFT JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr6.ID_TAREA_RAM LEFT JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON taa.ID_TAREA_AMBITO=ta.ID_TAREA_AMBITO WHERE tr6.FECHA_BAJA IS NULL AND taa.ID_LOCALIZACION_COMPRA IN (:idsLocalizacion))');
-    params.idsLocalizacion = filter.idsLocalizacion;
+    params.idsLocalizacion = idsLocalizacion;
   }
   
   if (filter.idsGrupoLocalizacion) {
@@ -110,8 +112,6 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
     const cacheKey = `tareas_${JSON.stringify(filter)}_${pageable.page}_${pageable.size}`;
     // Comentar esta línea para habilitar caché en producción
     cache.clear(cacheKey);
-    
-    console.log('Ejecutando consulta de tareas...');
     
     // Consulta principal mejorada
     const sqlQuery = `
@@ -163,18 +163,15 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
       ...params 
     };
     
-    console.log('Ejecutando consulta count...');
     const countResult = await sequelizeAjenos.query(finalCountQuery, {
       replacements,
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
     const totalElements = parseInt(countResult[0]?.total || 0);
-    console.log(`Total de elementos: ${totalElements}`);
     
     let processedResult = [];
     if (totalElements > 0) {
-      console.log('Ejecutando consulta principal...');
       const result = await sequelizeAjenos.query(finalSqlQuery, {
         replacements,
         type: sequelizeAjenos.QueryTypes.SELECT
@@ -201,8 +198,6 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
       size: pageable.size,
       totalPages
     };
-    
-    console.log(`Procesados ${processedResult.length} registros`);
     
     // Guardar en caché
     cache.set(cacheKey, finalResult);
