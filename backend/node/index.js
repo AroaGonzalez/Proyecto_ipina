@@ -10,6 +10,7 @@ const tiendaRoutes = require('./routes/tiendaRoutes');
 const aliasRoutes = require('./routes/aliasRoutes');
 const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
 const edicionRoutes = require('./routes/edicionRoutes');
+const tareaRoutes = require('./routes/tareaRoutes');
 const app = express();
 const JWT_SECRET = 'your_jwt_secret'; 
 
@@ -174,6 +175,7 @@ app.use('/inventario', ajenoRamRoutes);
 app.use('/tiendas', tiendaRoutes);
 app.use('/', aliasRoutes);
 app.use('/edicion', edicionRoutes);
+app.use('/api/tareas', tareaRoutes);
 
 
 const authenticateToken = (req, res, next) => {

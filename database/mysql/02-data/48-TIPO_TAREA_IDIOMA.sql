@@ -1,0 +1,9 @@
+USE AJENOS;
+
+INSERT INTO AJENOS.TIPO_TAREA_IDIOMA (ID_TIPO_TAREA,ID_IDIOMA,DESCRIPCION) VALUES
+	 (1,1,'Distribution'),
+	 (1,3,'Distribución'),
+	 (2,1,'Count'),
+	 (2,3,'Recuento'),
+	 (3,1,'COUNT FROM STOCKS'),
+	 (3,3,'RECUENTO DESDE STOCKS');
