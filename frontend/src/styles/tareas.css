@@ -1,3 +1,102 @@
+.action-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edit-button.disabled, .delete-button.disabled {
+  color: #ccc;
+}
+
+.activate-button.disabled {
+  color: #aaa;
+}
+
+.pause-button.disabled {
+  color: #aaa;
+}
+
+.action-button.disabled:hover {
+  background-color: transparent;
+  color: inherit;
+}.selection-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 50px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  border-radius: 3px;
+}
+
+.selection-info {
+  font-size: 14px;
+  color: #333;
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+.edit-button, .delete-button {
+  color: #666;
+  font-size: 16px;
+  padding: 8px;
+}
+
+.edit-button:hover {
+  color: #0066cc;
+}
+
+.delete-button:hover {
+  color: #cc0000;
+}
+
+.activate-button, .pause-button {
+  text-transform: uppercase;
+  font-weight: 500;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: white;
+}
+
+.activate-button {
+  color: #167a39;
+}
+
+.activate-button:hover {
+  background-color: #f0f9f0;
+}
+
+.pause-button {
+  color: #666;
+}
+
+.pause-button:hover {
+  background-color: #f5f5f5;
+}
+
+.action-icon {
+  font-size: 14px;
+}
+
 .tareas-container {
   padding: 20px 30px;
   font-family: Arial, sans-serif;
@@ -291,43 +390,20 @@
 }
 
 .checkbox {
-  display: inline-block;
+  display: flex;
+  justify-content: center;
   position: relative;
 }
 
 .checkbox input {
-  opacity: 0;
-  position: absolute;
-}
-
-.checkbox label {
-  position: relative;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
-  padding-left: 25px;
-  display: inline-block;
-}
-
-.checkbox label:before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 18px;
-  height: 18px;
-  border: 1px solid #ccc;
-  background: #fff;
-}
-
-.checkbox input:checked + label:after {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 8px;
-  height: 14px;
-  border: solid #000;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  width: 16px;
+  height: 16px;
+  appearance: auto;
+  position: relative;
+  opacity: 1;
 }
 
 .id-column {

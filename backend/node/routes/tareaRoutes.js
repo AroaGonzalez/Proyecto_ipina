@@ -14,5 +14,6 @@ router.get('/mercados', aliasController.getMercados);
 router.get('/grupos-localizacion', tiendaController.getGruposLocalizacion);
 router.get('/ajenos', aliasController.getAjenos);
 router.get('/grupos-cadena', aliasController.getGruposCadena);
+router.put('/:id/estado', tareaController.updateEstadoTarea);
 
 module.exports = router;

@@ -284,6 +284,29 @@ exports.getAliasesByTaskId = async (idTarea) => {
   }
 };
 
+exports.updateEstadoTarea = async (idTarea, idTipoEstadoTarea) => {
+  try {
+    const query = `
+      UPDATE AJENOS.TAREA_RAM
+      SET ID_TIPO_ESTADO_TAREA_RAM = :idTipoEstadoTarea
+      WHERE ID_TAREA_RAM = :idTarea
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: { 
+        idTarea,
+        idTipoEstadoTarea
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    return true;
+  } catch (error) {
+    console.error(`Error al actualizar estado de tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
 exports.invalidateCache = (pattern = null) => {
   cache.clear(pattern);
 };

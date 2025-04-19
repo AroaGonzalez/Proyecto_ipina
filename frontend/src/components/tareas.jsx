@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaChevronDown, FaTimes, FaRedo, FaSearch, FaFilter, FaDownload } from 'react-icons/fa';
+import { FaChevronDown, FaTimes, FaRedo, FaSearch, FaFilter, FaDownload, FaEdit, FaTrash, FaPause, FaPlay } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/tareas.css';
@@ -360,6 +360,107 @@ const Tareas = () => {
     setShowFilters(!showFilters);
   };
   
+  const handleDeleteTareas = async () => {
+    try {
+      const updatedTareas = tareas.map(tarea => {
+        if (selectedTareas.includes(tarea.idTarea)) {
+          return {
+            ...tarea,
+            idTipoEstadoTarea: 3,
+            descripcionTipoEstadoTarea: 'ELIMINADA'
+          };
+        }
+        return tarea;
+      });
+      
+      // Enviar cambios a la API
+      await Promise.all(
+        selectedTareas.map(idTarea => 
+          axios.put(`${BASE_URL}/api/tareas/${idTarea}/estado`, {
+            idTipoEstadoTarea: 3,
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      setTareas(updatedTareas);
+      setSelectedTareas([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al eliminar tareas:', error);
+    }
+  };
+  
+  const handleActivateTareas = async () => {
+    try {
+      const updatedTareas = tareas.map(tarea => {
+        if (selectedTareas.includes(tarea.idTarea)) {
+          return {
+            ...tarea,
+            idTipoEstadoTarea: 1,
+            descripcionTipoEstadoTarea: 'ACTIVA'
+          };
+        }
+        return tarea;
+      });
+      
+      // Enviar cambios a la API
+      await Promise.all(
+        selectedTareas.map(idTarea => 
+          axios.put(`${BASE_URL}/api/tareas/${idTarea}/estado`, {
+            idTipoEstadoTarea: 1,
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      setTareas(updatedTareas);
+      setSelectedTareas([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al activar tareas:', error);
+    }
+  };
+  
+  const handlePauseTareas = async () => {
+    try {
+      const updatedTareas = tareas.map(tarea => {
+        if (selectedTareas.includes(tarea.idTarea)) {
+          return {
+            ...tarea,
+            idTipoEstadoTarea: 2,
+            descripcionTipoEstadoTarea: 'PAUSADA'
+          };
+        }
+        return tarea;
+      });
+      
+      // Enviar cambios a la API
+      await Promise.all(
+        selectedTareas.map(idTarea => 
+          axios.put(`${BASE_URL}/api/tareas/${idTarea}/estado`, {
+            idTipoEstadoTarea: 2,
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      setTareas(updatedTareas);
+      setSelectedTareas([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al pausar tareas:', error);
+    }
+  };
+  
+  const handleEditTarea = () => {
+    // Placeholder for edit functionality
+    // This will be implemented later
+  };
+  
   if (error) {
     return (
       <div className="tareas-error">
@@ -373,6 +474,7 @@ const Tareas = () => {
   
   return (
     <div className="tareas-container">
+    
       <div className="tareas-header">
         <h1 className="tareas-title">{t('TAREAS')}</h1>
         <div className="tareas-actions">
@@ -813,6 +915,56 @@ const Tareas = () => {
         </div>
       </div>
       
+      {selectedTareas.length > 0 && (
+        <div className="selection-toolbar">
+          <div className="selection-info">
+            {t('Seleccionados')} {selectedTareas.length} {t('resultados de')} {totalElements} {t('encontrados')}
+          </div>
+          <div className="selection-actions">
+            <button 
+              className={`action-button edit-button ${selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3) ? 'disabled' : ''}`} 
+              onClick={handleEditTarea}
+              disabled={selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3)}
+            >
+              <FaEdit />
+            </button>
+            <button 
+              className={`action-button delete-button ${selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3) ? 'disabled' : ''}`} 
+              onClick={handleDeleteTareas}
+              disabled={selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3)}
+            >
+              <FaTrash />
+            </button>
+            <button 
+              className={`action-button activate-button ${selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 1 || 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3) ? 'disabled' : ''}`} 
+              onClick={handleActivateTareas}
+              disabled={selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 1 || 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3)}
+            >
+              <FaPlay className="action-icon" /> {t('ACTIVAR')}
+            </button>
+            <button 
+              className={`action-button pause-button ${selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 2 || 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3) ? 'disabled' : ''}`} 
+              onClick={handlePauseTareas}
+              disabled={selectedTareas.some(id => 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 2 || 
+                tareas.find(tarea => tarea.idTarea === id)?.idTipoEstadoTarea === 3)}
+            >
+              <FaPause className="action-icon" /> {t('PAUSAR')}
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="tareas-table-container" ref={tableContainerRef}>
         <table className="tareas-table">
           <thead>
@@ -825,7 +977,6 @@ const Tareas = () => {
                     onChange={handleSelectAll}
                     id="select-all"
                   />
-                  <label htmlFor="select-all"></label>
                 </div>
               </th>
               <th className="id-column">{t('ID TAREA')}</th>
@@ -863,7 +1014,6 @@ const Tareas = () => {
                         onChange={() => handleSelectTarea(tarea.idTarea)}
                         id={`tarea-${tarea.idTarea}`}
                       />
-                      <label htmlFor={`tarea-${tarea.idTarea}`}></label>
                     </div>
                   </td>
                   <td>{tarea.idTarea}</td>

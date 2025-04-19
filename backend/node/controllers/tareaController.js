@@ -135,3 +135,35 @@ function parseIntArray(param) {
  
   return param.toString().split(',').map(item => parseInt(item.trim(), 10));
 }
+
+exports.updateEstadoTarea = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { idTipoEstadoTarea, idIdioma = 1 } = req.body;
+    
+    if (!id || !idTipoEstadoTarea) {
+      return res.status(400).json({ 
+        message: 'ID de tarea y ID de tipo estado tarea son requeridos' 
+      });
+    }
+    
+    await tareaRepository.updateEstadoTarea(parseInt(id), parseInt(idTipoEstadoTarea));
+    
+    tareaRepository.invalidateCache('tareas_');
+    
+    const tiposEstado = await tareaRepository.getTiposEstadoTarea(parseInt(idIdioma));
+    const estadoActualizado = tiposEstado.find(estado => estado.id === parseInt(idTipoEstadoTarea));
+    
+    res.json({
+      success: true,
+      message: 'Estado de tarea actualizado correctamente',
+      estado: estadoActualizado
+    });
+  } catch (error) {
+    console.error(`Error al actualizar estado de tarea ${req.params.id}:`, error);
+    res.status(500).json({ 
+      message: 'Error del servidor', 
+      error: error.message 
+    });
+  }
+};
