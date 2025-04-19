@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FaChevronDown, FaTimes, FaRedo, FaSearch, FaFilter, FaDownload } from 'react-icons/fa';
@@ -14,14 +14,18 @@ const Tareas = () => {
   const { languageId } = useContext(LanguageContext);
   
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [tareas, setTareas] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [paginaActual, setPaginaActual] = useState(0);
-  const [tamañoPagina, setTamañoPagina] = useState(50);
+  const [tamañoPagina] = useState(50);
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
+  const [hasMore, setHasMore] = useState(true);
   
-  // Datos para los filtros
+  const observer = useRef();
+  const tableContainerRef = useRef();
+  
   const [tiposTarea, setTiposTarea] = useState([]);
   const [tiposEstadoTarea, setTiposEstadoTarea] = useState([]);
   const [aliases, setAliases] = useState([]);
@@ -31,7 +35,6 @@ const Tareas = () => {
   const [ajenos, setAjenos] = useState([]);
   const [gruposLocalizacion, setGruposLocalizacion] = useState([]);
   
-  // Estados para los filtros
   const [idTarea, setIdTarea] = useState('');
   const [idTipoTarea, setIdTipoTarea] = useState('');
   const [idTipoEstadoTarea, setIdTipoEstadoTarea] = useState('');
@@ -43,7 +46,6 @@ const Tareas = () => {
   const [idGrupoLocalizacion, setIdGrupoLocalizacion] = useState('');
   const [idAjeno, setIdAjeno] = useState('');
   
-  // Estados para búsquedas en dropdowns
   const [aliasSearch, setAliasSearch] = useState('');
   const [mercadoSearch, setMercadoSearch] = useState('');
   const [cadenaSearch, setCadenaSearch] = useState('');
@@ -51,15 +53,13 @@ const Tareas = () => {
   const [grupoLocalizacionSearch, setGrupoLocalizacionSearch] = useState('');
   const [ajenoSearch, setAjenoSearch] = useState('');
   
-  // Estados para los dropdowns
   const [openDropdown, setOpenDropdown] = useState(null);
   const dropdownRef = useRef(null);
   
-  // Estados para las selecciones en tabla
   const [selectedTareas, setSelectedTareas] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  
-  // Obtener datos iniciales
+  const [showFilters, setShowFilters] = useState(true);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -94,7 +94,6 @@ const Tareas = () => {
         setAjenos(ajenosRes.data || []);
         setGruposLocalizacion(gruposLocalizacionRes.data || []);
         
-        // Cargar las tareas iniciales
         await fetchTareas();
       } catch (error) {
         console.error('Error al cargar datos iniciales:', error);
@@ -106,22 +105,44 @@ const Tareas = () => {
     
     fetchInitialData();
   }, [languageId]);
+
+  useEffect(() => {
+    if (!loading && !loadingMore && hasMore) {
+      const container = tableContainerRef.current;
+      if (!container) return;
+
+      const handleScroll = () => {
+        if (
+          container.scrollHeight - container.scrollTop <= container.clientHeight * 1.2 &&
+          hasMore && 
+          !loadingMore
+        ) {
+          loadMoreTareas();
+        }
+      };
+
+      container.addEventListener('scroll', handleScroll);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [loading, loadingMore, hasMore, tareas]);
   
-  // Función para cargar las tareas según los filtros
-  const fetchTareas = async () => {
+  const loadMoreTareas = async () => {
+    if (!hasMore || loadingMore) return;
+    
     try {
-      setLoading(true);
-      setError(null);
+      setLoadingMore(true);
+      
+      const nextPage = paginaActual + 1;
       
       const params = {
-        page: paginaActual,
+        page: nextPage,
         size: tamañoPagina,
         idIdioma: languageId,
       };
       
-      // Procesamiento mejorado de los IDs para permitir múltiples valores
       if (idTarea) {
-        // Dividir el string por espacios y filtrar valores vacíos
         const ids = idTarea.split(/\s+/).filter(id => id.trim() !== '');
         if (ids.length > 0) {
           params.idsTarea = ids;
@@ -135,7 +156,62 @@ const Tareas = () => {
       if (idCadena) params.idsCadena = idCadena;
       if (idGrupoCadena) params.idsGrupoCadena = idGrupoCadena;
       
-      // Procesamiento mejorado para idLocalizacion
+      if (idLocalizacion) {
+        const ids = idLocalizacion.split(/\s+/).filter(id => id.trim() !== '');
+        if (ids.length > 0) {
+          params.idsLocalizacion = ids;
+        }
+      }
+      
+      if (idGrupoLocalizacion) params.idsGrupoLocalizacion = idGrupoLocalizacion;
+      if (idAjeno) params.idsAjeno = idAjeno;
+      
+      const response = await axios.get(`${BASE_URL}/api/tareas/filter`, { params });
+      
+      const newTareas = response.data.content || [];
+      
+      if (newTareas.length === 0 || newTareas.length < tamañoPagina) {
+        setHasMore(false);
+      }
+      
+      setTareas(prevTareas => [...prevTareas, ...newTareas]);
+      setPaginaActual(nextPage);
+      
+    } catch (error) {
+      console.error('Error al cargar más tareas:', error);
+      setError('Error al cargar más tareas');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+  
+  const fetchTareas = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setPaginaActual(0);
+      setHasMore(true);
+      
+      const params = {
+        page: 0,
+        size: tamañoPagina,
+        idIdioma: languageId,
+      };
+      
+      if (idTarea) {
+        const ids = idTarea.split(/\s+/).filter(id => id.trim() !== '');
+        if (ids.length > 0) {
+          params.idsTarea = ids;
+        }
+      }
+      
+      if (idTipoTarea) params.idsTipoTarea = idTipoTarea;
+      if (idTipoEstadoTarea) params.idsTipoEstadoTarea = idTipoEstadoTarea;
+      if (idAlias) params.idsAlias = idAlias;
+      if (idMercado) params.idsMercado = idMercado;
+      if (idCadena) params.idsCadena = idCadena;
+      if (idGrupoCadena) params.idsGrupoCadena = idGrupoCadena;
+      
       if (idLocalizacion) {
         const ids = idLocalizacion.split(/\s+/).filter(id => id.trim() !== '');
         if (ids.length > 0) {
@@ -152,6 +228,14 @@ const Tareas = () => {
       setTotalElements(response.data.totalElements || 0);
       setUltimaActualizacion(new Date());
       
+      if (
+        response.data.content.length === 0 || 
+        response.data.content.length < tamañoPagina || 
+        response.data.content.length === response.data.totalElements
+      ) {
+        setHasMore(false);
+      }
+      
     } catch (error) {
       console.error('Error al cargar tareas:', error);
       setError('Error al cargar las tareas');
@@ -160,7 +244,6 @@ const Tareas = () => {
     }
   };
   
-  // Manejar el cierre de dropdowns al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -174,7 +257,6 @@ const Tareas = () => {
     };
   }, []);
   
-  // Manejar selección de todas las tareas
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
     if (!selectAll) {
@@ -184,7 +266,6 @@ const Tareas = () => {
     }
   };
   
-  // Manejar selección individual de tarea
   const handleSelectTarea = (idTarea) => {
     setSelectedTareas(prev => {
       if (prev.includes(idTarea)) {
@@ -195,18 +276,15 @@ const Tareas = () => {
     });
   };
   
-  // Manejar apertura de dropdown
   const handleDropdownToggle = (dropdown) => {
     setOpenDropdown(openDropdown === dropdown ? null : dropdown);
   };
   
-  // Manejar búsqueda
   const handleSearch = () => {
     setPaginaActual(0);
     fetchTareas();
   };
   
-  // Limpiar filtros
   const handleClearFilters = () => {
     setIdTarea('');
     setIdTipoTarea('');
@@ -222,23 +300,21 @@ const Tareas = () => {
     fetchTareas();
   };
   
-  // Formatear tiempo para última actualización
   const formatTime = (date) => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
   
-  // Renderizar etiqueta de estado con color
   const renderEstadoTarea = (estadoId, estadoDescripcion) => {
     let className = 'estado-tarea';
     
     switch (estadoId) {
-      case 1: // ACTIVA
+      case 1:
         className += ' activa';
         break;
-      case 2: // PAUSADA
+      case 2:
         className += ' pausada';
         break;
-      case 3: // ELIMINADA
+      case 3:
         className += ' eliminada';
         break;
       default:
@@ -248,15 +324,14 @@ const Tareas = () => {
     return <span className={className}>{estadoDescripcion}</span>;
   };
 
-  // Renderizar etiqueta de tipo tarea con color
   const renderTipoTarea = (tipoId, tipoDescripcion) => {
     let className = 'tipo-tarea';
     
     switch (tipoId) {
-      case 1: // DISTRIBUCIÓN
+      case 1:
         className += ' distribucion';
         break;
-      case 2: // RECUENTO
+      case 2:
         className += ' recuento';
         break;
       default:
@@ -266,7 +341,6 @@ const Tareas = () => {
     return <span className={className}>{tipoDescripcion}</span>;
   };
   
-  // Filtrar elementos por búsqueda
   const filterBySearch = (items, searchTerm, field) => {
     if (!searchTerm) return items;
     
@@ -278,22 +352,12 @@ const Tareas = () => {
     });
   };
   
-  // Crear nueva tarea
   const handleNuevaTarea = () => {
-    // Implementar navegación a la página de creación de tareas
     navigate('/crear-tarea');
   };
 
-  // Ocultar/Mostrar filtros
-  const [showFilters, setShowFilters] = useState(true);
-  
   const handleToggleFilters = () => {
     setShowFilters(!showFilters);
-  };
-  
-  // Formatear la descripción para mostrar ID - DESCRIPCIÓN
-  const formatDescription = (item) => {
-    return `${item.id} - ${item.descripcion || item.nombre}`;
   };
   
   if (error) {
@@ -326,7 +390,6 @@ const Tareas = () => {
         </div>
       </div>
       
-      {/* Filtros */}
       {showFilters && (
         <div className="tareas-filters">
           <div className="filter-row">
@@ -750,7 +813,7 @@ const Tareas = () => {
         </div>
       </div>
       
-      <div className="tareas-table-container">
+      <div className="tareas-table-container" ref={tableContainerRef}>
         <table className="tareas-table">
           <thead>
             <tr>
@@ -774,7 +837,7 @@ const Tareas = () => {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading && tareas.length === 0 ? (
               <tr>
                 <td colSpan="7" className="loading-cell">
                   {t('Cargando tareas...')}
@@ -787,7 +850,7 @@ const Tareas = () => {
                 </td>
               </tr>
             ) : (
-              tareas.map(tarea => (
+              tareas.map((tarea, index) => (
                 <tr 
                   key={tarea.idTarea}
                   className={selectedTareas.includes(tarea.idTarea) ? 'selected-row' : ''}
@@ -811,6 +874,13 @@ const Tareas = () => {
                   <td>{tarea.fechaAlta}</td>
                 </tr>
               ))
+            )}
+            {loadingMore && (
+              <tr>
+                <td colSpan="7" className="loading-cell">
+                  {t('Cargando más tareas...')}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
