@@ -113,6 +113,196 @@ const ParametrizacionAlias = () => {
     }
   };
 
+  const handleActivarArticulos = async () => {
+    try {
+      setLoadingAjenos(true);
+      
+      const selectedIds = selectedItemsAjenos.map(item => {
+        const [idAlias, idAjeno] = item.split('-');
+        return { idAlias, idAjeno };
+      });
+      
+      const response = await axios.put(`${BASE_URL}/activar-alias-ajeno`, {
+        items: selectedIds
+      });
+      
+      if (response.data.success) {
+        const updatedAliasAjenos = aliasAjenos.map(item => {
+          if (selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)) {
+            return {
+              ...item,
+              descripcionTipoEstadoAliasAjenoRam: 'ACTIVO'
+            };
+          }
+          return item;
+        });
+        
+        setAliasAjenos(updatedAliasAjenos);
+        setSelectedItemsAjenos([]);
+        setSelectAllAjenos(false);
+        
+        alert(t('Los artículos han sido activados correctamente'));
+      }
+    } catch (error) {
+      console.error('Error al activar artículos:', error);
+      setError(t('Error al activar artículos'));
+    } finally {
+      setLoadingAjenos(false);
+    }
+  };
+
+  const handlePausarArticulos = async () => {
+    try {
+      setLoadingAjenos(true);
+      
+      const selectedIds = selectedItemsAjenos.map(item => {
+        const [idAlias, idAjeno] = item.split('-');
+        return { idAlias, idAjeno };
+      });
+      
+      const response = await axios.put(`${BASE_URL}/pausar-alias-ajeno`, {
+        items: selectedIds
+      });
+      
+      if (response.data.success) {
+        const updatedAliasAjenos = aliasAjenos.map(item => {
+          if (selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)) {
+            return {
+              ...item,
+              descripcionTipoEstadoAliasAjenoRam: 'PAUSADO'
+            };
+          }
+          return item;
+        });
+        
+        setAliasAjenos(updatedAliasAjenos);
+        setSelectedItemsAjenos([]);
+        setSelectAllAjenos(false);
+        
+        alert(t('Los artículos han sido pausados correctamente'));
+      }
+    } catch (error) {
+      console.error('Error al pausar artículos:', error);
+      setError(t('Error al pausar artículos'));
+    } finally {
+      setLoadingAjenos(false);
+    }
+  };
+
+  const handleDeleteArticulos = async () => {
+    try {
+      if (selectedItemsAjenos.length === 0) return;
+      
+      // Confirmar antes de eliminar
+      if (!window.confirm(t('¿Está seguro de que desea eliminar los artículos seleccionados?'))) {
+        return;
+      }
+      
+      setLoadingAjenos(true);
+      
+      // Extraer los IDs de alias y ajeno de los elementos seleccionados
+      const selectedIds = selectedItemsAjenos.map(item => {
+        const [idAlias, idAjeno] = item.split('-');
+        return { 
+          idAlias: parseInt(idAlias), 
+          idAjeno: parseInt(idAjeno) 
+        };
+      });
+      
+      console.log("IDs a eliminar:", selectedIds);
+      
+      // Llamada a la API para eliminar los artículos
+      const response = await axios.put(`${BASE_URL}/delete-alias-ajeno`, {
+        items: selectedIds,
+        usuario: 'WEBAPP'
+      });
+      
+      console.log("Respuesta del servidor:", response.data);
+      
+      if (response.data.success) {
+        // Filtrar los elementos eliminados del estado local
+        const filteredAliasAjenos = aliasAjenos.filter(item => 
+          !selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)
+        );
+        
+        setAliasAjenos(filteredAliasAjenos);
+        setSelectedItemsAjenos([]);
+        setSelectAllAjenos(false);
+        
+        alert(t(`${response.data.successCount} artículos han sido eliminados correctamente`));
+        
+        // Recargar los datos para asegurarse de que todo esté actualizado
+        await fetchAliasAjenos();
+      }
+    } catch (error) {
+      console.error('Error al eliminar artículos:', error);
+      setError(t('Error al eliminar artículos'));
+      alert(t('Error al eliminar artículos. Por favor, inténtelo de nuevo.'));
+    } finally {
+      setLoadingAjenos(false);
+    }
+  };
+
+  const shouldDisableActivarButton = () => {
+    if (selectedItemsAjenos.length === 0) return true;
+    
+    const hasNonActive = selectedItemsAjenos.some(id => {
+      const [idAlias, idAjeno] = id.split('-');
+      const item = aliasAjenos.find(
+        item => item.idAlias == idAlias && item.idAjeno == idAjeno
+      );
+      return item && (
+        item.descripcionTipoEstadoAliasAjenoRam !== 'ACTIVO' && 
+        item.idTipoEstadoAliasAjenoRam !== 1
+      );
+    });
+    
+    const hasActive = selectedItemsAjenos.some(id => {
+      const [idAlias, idAjeno] = id.split('-');
+      const item = aliasAjenos.find(
+        item => item.idAlias == idAlias && item.idAjeno == idAjeno
+      );
+      return item && (
+        item.descripcionTipoEstadoAliasAjenoRam === 'ACTIVO' || 
+        item.idTipoEstadoAliasAjenoRam === 1
+      );
+    });
+    
+    if (hasActive && hasNonActive) return true;
+    if (hasActive && !hasNonActive) return true;
+    return false;
+  };
+  
+  const shouldDisablePausarButton = () => {
+    if (selectedItemsAjenos.length === 0) return true;
+    
+    const hasNonPaused = selectedItemsAjenos.some(id => {
+      const [idAlias, idAjeno] = id.split('-');
+      const item = aliasAjenos.find(
+        item => item.idAlias == idAlias && item.idAjeno == idAjeno
+      );
+      return item && (
+        item.descripcionTipoEstadoAliasAjenoRam !== 'PAUSADO' && 
+        item.idTipoEstadoAliasAjenoRam !== 2
+      );
+    });
+    
+    const hasPaused = selectedItemsAjenos.some(id => {
+      const [idAlias, idAjeno] = id.split('-');
+      const item = aliasAjenos.find(
+        item => item.idAlias == idAlias && item.idAjeno == idAjeno
+      );
+      return item && (
+        item.descripcionTipoEstadoAliasAjenoRam === 'PAUSADO' || 
+        item.idTipoEstadoAliasAjenoRam === 2
+      );
+    });
+    
+    if (hasPaused && hasNonPaused) return true;
+    if (hasPaused && !hasNonPaused) return true;
+    return false;
+  };
+
   const loadMoreAjenosData = async () => {
     if (!hasMoreAjenos || loadingMoreAjenos) return;
     
@@ -927,15 +1117,39 @@ const ParametrizacionAlias = () => {
             </span>
           </div>
           <div className="selection-actions">
-            <button className="action-button edit-button" onClick={handleEdit}>
-              <FaPencilAlt className="action-icon" />
-            </button>
-            <button className="action-button delete-button" onClick={handleDelete} title="Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo">
-              <FaTrash className="action-icon" />
-            </button>
-            <button className="action-button relation-button" onClick={handleEditRelations}>
-              <span>EDITAR RELACIONES</span>
-            </button>
+            {activeTab === 'ALIAS' ? (
+              <>
+                <button className="action-button edit-button" onClick={handleEdit}>
+                  <FaPencilAlt className="action-icon" />
+                </button>
+                <button className="action-button delete-button" onClick={handleDelete} title="Nota: solo se permite el borrado de un máximo de 5 alias al mismo tiempo">
+                  <FaTrash className="action-icon" />
+                </button>
+                <button className="action-button relation-button" onClick={handleEditRelations}>
+                  <span>EDITAR RELACIONES</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  className="action-button activate-button" 
+                  onClick={handleActivarArticulos}
+                  disabled={shouldDisableActivarButton()}
+                >
+                  <span className="action-icon">⚡</span> {t('ACTIVAR')}
+                </button>
+                <button 
+                  className="action-button pause-button" 
+                  onClick={handlePausarArticulos}
+                  disabled={shouldDisablePausarButton()}
+                >
+                  <span className="action-icon">⏸️</span> {t('PAUSAR')}
+                </button>
+                <button className="action-button delete-button" onClick={handleDeleteArticulos} title="Nota: solo se permite el borrado de un máximo de 5 artículos al mismo tiempo">
+                  <FaTrash className="action-icon" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1082,18 +1296,18 @@ const ParametrizacionAlias = () => {
                       <td>{item.idAjeno}</td>
                       <td>{item.nombreAjeno}</td>
                       <td>
-                        <span className="estado-tag activo">
-                          ACTIVO
+                        <span className="estado-tag ">
+                          {item.tipoEstadoCompras?.descripcion}
                         </span>
                       </td>
                       <td>
-                        <span className="estado-tag activo">
-                          ACTIVO
+                        <span className="estado-tag ">
+                          {item.tipoEstadoRam?.descripcion}
                         </span>
                       </td>
                       <td>
-                        <span className="estado-tag activo">
-                          ACTIVO
+                        <span className="estado-tag ">
+                        {item.descripcionTipoEstadoAliasAjenoRam}
                         </span>
                       </td>
                     </tr>

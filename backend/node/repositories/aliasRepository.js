@@ -427,7 +427,7 @@ exports.findAliasAjenosByFilter = async (filter = {}, pageable = { page: 0, size
       finalCountQuery += whereClause;
     }
     
-    finalSearchQuery += ` ORDER BY aa.ID_ALIAS, aa.ID_AJENO`;
+    finalSearchQuery += ` ORDER BY aa.ID_ALIAS DESC`;
     
     if (pageable && pageable.size) {
       finalSearchQuery += ` LIMIT :limit OFFSET :offset`;
@@ -920,6 +920,143 @@ exports.getMercados = async (idIdioma = 1) => {
   }
 };
 
-exports.invalidateCache = (pattern = null) => {
-  cache.clear(pattern);
+exports.updateEstadoAliasAjeno = async (idAlias, idAjeno, idTipoEstadoAliasAjenoRam) => {
+  try {
+    cache.clear('alias_ajenos_');
+    
+    console.log(`Actualizando estado de alias-ajeno: ${idAlias}-${idAjeno} a estado ${idTipoEstadoAliasAjenoRam}`);
+    
+    const query = `
+      UPDATE AJENOS.ALIAS_AJENO
+      SET ID_TIPO_ESTADO_AJENO_RAM = :idTipoEstadoAliasAjenoRam,
+      FECHA_MODIFICACION = CURRENT_TIMESTAMP
+      WHERE ID_ALIAS = :idAlias 
+        AND ID_AJENO = :idAjeno
+    `;
+    
+    const [affectedRows] = await sequelizeAjenos.query(query, {
+      replacements: { 
+        idAlias,
+        idAjeno,
+        idTipoEstadoAliasAjenoRam
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    console.log(`Actualización completada. Filas afectadas: ${affectedRows}`);
+    
+    return affectedRows > 0;
+  } catch (error) {
+    console.error(`Error al actualizar estado de alias-ajeno:`, error);
+    throw error;
+  }
+};
+
+exports.deleteAliasAjeno = async (idAlias, idAjeno, usuarioBaja, fechaBaja) => {
+  try {
+    cache.clear('alias_ajenos_');
+    
+    console.log(`Eliminando relación alias-artículo: ${idAlias}-${idAjeno}`);
+    
+    const checkQuery = `
+      SELECT COUNT(*) as count
+      FROM AJENOS.ALIAS_AJENO 
+      WHERE ID_ALIAS = :idAlias 
+        AND ID_AJENO = :idAjeno
+        AND FECHA_BAJA IS NULL
+    `;
+    
+    const checkResults = await sequelizeAjenos.query(checkQuery, {
+      replacements: { idAlias, idAjeno },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    const exists = checkResults && checkResults.length > 0 && checkResults[0].count > 0;
+    console.log(`Verificación de existencia de relación ${idAlias}-${idAjeno}: ${exists ? 'Existe' : 'No existe'}`);
+    
+    if (!exists) {
+      console.log(`No se encontró la relación ${idAlias}-${idAjeno} para eliminar o ya estaba eliminada`);
+      return false;
+    }
+    
+    const updateQuery = `
+      UPDATE AJENOS.ALIAS_AJENO 
+      SET USUARIO_BAJA = :usuarioBaja, 
+          FECHA_BAJA = :fechaBaja
+      WHERE ID_ALIAS = :idAlias 
+        AND ID_AJENO = :idAjeno
+        AND FECHA_BAJA IS NULL
+    `;
+    
+    try {
+      await sequelizeAjenos.query(updateQuery, {
+        replacements: { idAlias, idAjeno, usuarioBaja, fechaBaja },
+        type: sequelizeAjenos.QueryTypes.UPDATE
+      });
+      
+      console.log(`Actualización de ALIAS_AJENO completada.`);
+      
+      return true;
+    } catch (updateError) {
+      console.error(`Error durante la actualización de ALIAS_AJENO: ${updateError.message}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error general al eliminar relación alias-artículo:`, error);
+    return false;
+  }
+};
+
+exports.updateAliasAmbitoAplanado = async (idAlias, idAjeno, usuarioModificacion, fechaModificacion) => {
+  try {
+    const findQuery = `
+      SELECT aaa.ID_ALIAS_AMBITO_APLANADO 
+      FROM AJENOS.ALIAS_AMBITO aa 
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO 
+      WHERE aa.ID_ALIAS = :idAlias AND aaa.ID_AJENO_SECCION_GLOBAL = :idAjeno
+        AND aaa.FECHA_BAJA IS NULL
+    `;
+    
+    const results = await sequelizeAjenos.query(findQuery, {
+      replacements: { 
+        idAlias,
+        idAjeno
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    console.log(`Registros encontrados en ALIAS_AMBITO_APLANADO: ${results.length}`);
+    
+    if (!results || results.length === 0) {
+      console.log(`No se encontraron registros para actualizar en ALIAS_AMBITO_APLANADO para idAlias=${idAlias}, idAjeno=${idAjeno}`);
+      return 0;
+    }
+    
+    const ids = results.map(row => row.ID_ALIAS_AMBITO_APLANADO);
+    console.log(`IDs a actualizar en ALIAS_AMBITO_APLANADO: ${ids.join(', ')}`);
+    
+    const updateQuery = `
+      UPDATE AJENOS.ALIAS_AMBITO_APLANADO 
+      SET USUARIO_MODIFICACION = :usuarioModificacion,
+          FECHA_MODIFICACION = :fechaModificacion,
+          ID_AJENO_SECCION_GLOBAL = NULL
+      WHERE ID_ALIAS_AMBITO_APLANADO IN (:ids)
+    `;
+    
+    const [rowsAffected] = await sequelizeAjenos.query(updateQuery, {
+      replacements: { 
+        usuarioModificacion,
+        fechaModificacion,
+        ids
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    console.log(`Actualización de ALIAS_AMBITO_APLANADO completada.`);
+    
+    return rowsAffected;
+  } catch (error) {
+    console.error(`Error al actualizar ALIAS_AMBITO_APLANADO:`, error);
+    throw error;
+  }
 };

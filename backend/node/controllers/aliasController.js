@@ -390,3 +390,166 @@ exports.getMercados = async (req, res) => {
     res.status(500).json({ message: 'Error del servidor', error: error.message });
   }
 };
+
+// Añade estos métodos a backend/node/controllers/aliasController.js
+
+exports.activarAliasAjeno = async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Se requiere un array de elementos' 
+      });
+    }
+    
+    console.log(`Activando ${items.length} elementos`, items);
+    
+    let successCount = 0;
+    for (const item of items) {
+      try {
+        await aliasRepository.updateEstadoAliasAjeno(
+          item.idAlias, 
+          item.idAjeno, 
+          1  // ID para estado ACTIVO
+        );
+        successCount++;
+      } catch (itemError) {
+        console.error(`Error activando alias-ajeno (ID Alias: ${item.idAlias}, ID Ajeno: ${item.idAjeno}):`, itemError);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `${successCount} elementos activados correctamente`,
+      totalProcessed: items.length,
+      successCount
+    });
+    
+  } catch (error) {
+    console.error('Error al activar alias-ajeno:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error del servidor al activar elementos', 
+      error: error.message 
+    });
+  }
+};
+
+exports.pausarAliasAjeno = async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Se requiere un array de elementos' 
+      });
+    }
+    
+    console.log(`Pausando ${items.length} elementos`, items);
+    
+    let successCount = 0;
+    for (const item of items) {
+      try {
+        await aliasRepository.updateEstadoAliasAjeno(
+          item.idAlias, 
+          item.idAjeno, 
+          2  // ID para estado PAUSADO
+        );
+        successCount++;
+      } catch (itemError) {
+        console.error(`Error pausando alias-ajeno (ID Alias: ${item.idAlias}, ID Ajeno: ${item.idAjeno}):`, itemError);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `${successCount} elementos pausados correctamente`,
+      totalProcessed: items.length,
+      successCount
+    });
+    
+  } catch (error) {
+    console.error('Error al pausar alias-ajeno:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error del servidor al pausar elementos', 
+      error: error.message 
+    });
+  }
+};
+
+// Corrección para el método deleteAliasAjeno en aliasController.js
+exports.deleteAliasAjeno = async (req, res) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Se requiere un array de elementos' 
+      });
+    }
+    
+    console.log(`Eliminando ${items.length} relaciones alias-artículo`, items);
+    
+    const usuarioBaja = req.body.usuario || 'WEBAPP';
+    const fechaBaja = new Date();
+    
+    let successCount = 0;
+    let errors = [];
+    
+    for (const item of items) {
+      try {
+        const idAlias = parseInt(item.idAlias);
+        const idAjeno = parseInt(item.idAjeno);
+        
+        console.log(`Procesando eliminación para idAlias: ${idAlias}, idAjeno: ${idAjeno}`);
+        
+        const bajaResult = await aliasRepository.deleteAliasAjeno(
+          idAlias, 
+          idAjeno, 
+          usuarioBaja, 
+          fechaBaja
+        );
+        
+        console.log(`Resultado baja: ${bajaResult}`);
+        
+        if (bajaResult) {
+          successCount++;
+        } else {
+          errors.push({
+            idAlias,
+            idAjeno, 
+            error: 'No se pudo eliminar la relación. Es posible que ya haya sido eliminada o no exista.'
+          });
+        }
+      } catch (itemError) {
+        console.error(`Error eliminando relación alias-artículo (ID Alias: ${item.idAlias}, ID Ajeno: ${item.idAjeno}):`, itemError);
+        errors.push({
+          idAlias: item.idAlias,
+          idAjeno: item.idAjeno,
+          error: itemError.message
+        });
+      }
+    }
+    
+    res.json({
+      success: successCount > 0,
+      message: `${successCount} relaciones alias-artículo eliminadas correctamente`,
+      totalProcessed: items.length,
+      successCount,
+      errors: errors.length > 0 ? errors : undefined
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar relaciones alias-artículo:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error del servidor al eliminar relaciones alias-artículo', 
+      error: error.message 
+    });
+  }
+};

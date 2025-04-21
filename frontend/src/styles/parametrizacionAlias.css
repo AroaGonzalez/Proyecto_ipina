@@ -7,6 +7,45 @@
   position: relative;
 }
 
+.activate-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #fff;
+  border: 1px solid #4eb98e;
+  color: #4eb98e;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.activate-button:hover:not(:disabled) {
+  background-color: #eefaf5;
+}
+
+.pause-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #fff;
+  border: 1px solid #9e9e9e; 
+  color: #9e9e9e;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.pause-button:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.activate-button:disabled, .pause-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -456,6 +495,16 @@
 
 .estado-tag {
   background-color: #4682B4;
+  color: white;
+}
+
+.estado-tag.ACTIVO {
+  background-color: #4eb98e; /* Verde para estado activo */
+  color: white;
+}
+
+.estado-tag.PAUSADO {
+  background-color: #9e9e9e; /* Gris para estado pausado */
   color: white;
 }
 
