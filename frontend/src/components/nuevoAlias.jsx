@@ -9,173 +9,274 @@ import '../styles/nuevoAlias.css';
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const CreacionAlias = () => {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { languageId } = useContext(LanguageContext);
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Datos básicos del alias
-  const [tiposAlias, setTiposAlias] = useState([]);
-  const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
-  const [estacionalidades, setEstacionalidades] = useState([]);
-  const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
-  
-  // Idiomas
-  const [idiomas, setIdiomas] = useState([]);
-  const [selectedIdiomas, setSelectedIdiomas] = useState([]);
-  const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [searchText, setSearchText] = useState('');
-  const [checkAll, setCheckAll] = useState(false);
-  
-  // Artículos
-  const [articulos, setArticulos] = useState([]);
-  const [articulosDisponibles, setArticulosDisponibles] = useState([]);
-  const [filteredArticulos, setFilteredArticulos] = useState([]);
-  const [articuloSearchText, setArticuloSearchText] = useState('');
-  const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
-  const [checkAllArticulos, setCheckAllArticulos] = useState(false);
+    const navigate = useNavigate();
+    const { t } = useTranslation();
+    const { languageId } = useContext(LanguageContext);
+    
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
+    // Datos básicos del alias
+    const [tiposAlias, setTiposAlias] = useState([]);
+    const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
+    const [estacionalidades, setEstacionalidades] = useState([]);
+    const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
+    
+    // Idiomas
+    const [idiomas, setIdiomas] = useState([]);
+    const [selectedIdiomas, setSelectedIdiomas] = useState([]);
+    const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
+    const [openDropdown, setOpenDropdown] = useState(null);
+    const [searchText, setSearchText] = useState('');
+    const [checkAll, setCheckAll] = useState(false);
+    
+    // Artículos
+    const [articulos, setArticulos] = useState([]);
+    const [articulosDisponibles, setArticulosDisponibles] = useState([]);
+    const [filteredArticulos, setFilteredArticulos] = useState([]);
+    const [articuloSearchText, setArticuloSearchText] = useState('');
+    const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
+    const [checkAllArticulos, setCheckAllArticulos] = useState(false);
 
-  // Ámbitos
-  const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
-  const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
-  const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
-  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
-  const [selectedCadena, setSelectedCadena] = useState('');
-  const [selectedMercado, setSelectedMercado] = useState('');
-  const [ambitosTable, setAmbitosTable] = useState([]);
-  const [selectedAmbitos, setSelectedAmbitos] = useState([]);
-  
-  const [grupoSearchText, setGrupoSearchText] = useState('');
-  const [cadenaSearchText, setCadenaSearchText] = useState('');
-  const [mercadoSearchText, setMercadoSearchText] = useState('');
-  const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
-  const [filteredCadenas, setFilteredCadenas] = useState([]);
-  const [filteredMercados, setFilteredMercados] = useState([]);
-  const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
-  const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
-  const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
+    // Ámbitos
+    const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
+    const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
+    const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
+    const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
+    const [selectedCadena, setSelectedCadena] = useState('');
+    const [selectedMercado, setSelectedMercado] = useState('');
+    const [ambitosTable, setAmbitosTable] = useState([]);
+    const [selectedAmbitos, setSelectedAmbitos] = useState([]);
+    
+    const [grupoSearchText, setGrupoSearchText] = useState('');
+    const [cadenaSearchText, setCadenaSearchText] = useState('');
+    const [mercadoSearchText, setMercadoSearchText] = useState('');
+    const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
+    const [filteredCadenas, setFilteredCadenas] = useState([]);
+    const [filteredMercados, setFilteredMercados] = useState([]);
+    const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
+    const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
+    const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
 
     const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
     const [selectedCadenas, setSelectedCadenas] = useState([]);
     const [selectedMercados, setSelectedMercados] = useState([]);
-  const dropdownRef = useRef(null);
-  const articulosDropdownRef = useRef(null);
-  const grupoCadenaDropdownRef = useRef(null);
-  const cadenaDropdownRef = useRef(null);
-  const mercadoDropdownRef = useRef(null);
+    const dropdownRef = useRef(null);
+    const articulosDropdownRef = useRef(null);
+    const grupoCadenaDropdownRef = useRef(null);
+    const cadenaDropdownRef = useRef(null);
+    const mercadoDropdownRef = useRef(null);
 
     const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
     const [showDeleteIcon, setShowDeleteIcon] = useState(false);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdown(null);
-      }
-      if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
-        setIsArticulosDropdownOpen(false);
-      }
-      if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
-        setIsGrupoCadenaDropdownOpen(false);
-      }
-      if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
-        setIsCadenaDropdownOpen(false);
-      }
-      if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
-        setIsMercadoDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
+    const [tiposConexion, setTiposConexion] = useState([]);
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setLoading(true);
-      try {
-        const [
-          tiposAliasRes,
-          estacionalidadesRes,
-          idiomasRes,
-          articulosRes,
-          gruposCadenaRes,
-          cadenasRes,
-          mercadosRes
-        ] = await Promise.all([
-          axios.get(`${BASE_URL}/tipos-alias?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/tipos-estacionalidad?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/idiomas?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/all?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/grupos-cadena?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/cadenas?idIdioma=${languageId}`),
-          axios.get(`${BASE_URL}/edicion/mercados?idIdioma=${languageId}`)
-        ]);
-
-        setTiposAlias(tiposAliasRes.data || []);
-        setEstacionalidades(estacionalidadesRes.data || []);
-        setIdiomas(idiomasRes.data || []);
-        
-        // Asumimos que por defecto se seleccionan los 2 idiomas principales
-        if (idiomasRes.data && idiomasRes.data.length >= 2) {
-          const principalesIds = idiomasRes.data.slice(0, 2).map(i => i.id);
-          setSelectedIdiomas(principalesIds);
-          
-          const idiomasValues = {};
-          principalesIds.forEach(id => {
-            idiomasValues[id] = { nombre: '', descripcion: '' };
-          });
-          setIdiomasAliasValues(idiomasValues);
+    useEffect(() => {
+        function handleClickOutside(event) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setOpenDropdown(null);
         }
-        
-        setArticulosDisponibles(articulosRes.data || []);
-        setFilteredArticulos(articulosRes.data || []);
-        
-        const gruposCadena = gruposCadenaRes.data || [];
-        setGruposCadenaDisponibles(gruposCadena);
-        setFilteredGruposCadena(gruposCadena);
-        
-        const cadenas = cadenasRes.data || [];
-        setCadenasDisponibles(cadenas);
-        setFilteredCadenas(cadenas);
-        
-        const mercados = mercadosRes.data || [];
-        setMercadosDisponibles(mercados);
-        setFilteredMercados(mercados);
+        if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
+            setIsArticulosDropdownOpen(false);
+        }
+        if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
+            setIsGrupoCadenaDropdownOpen(false);
+        }
+        if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
+            setIsCadenaDropdownOpen(false);
+        }
+        if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
+            setIsMercadoDropdownOpen(false);
+        }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
-      } catch (error) {
-        console.error('Error fetching initial data:', error);
-        setError('No se pudieron cargar los datos iniciales');
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            setLoading(true);
+            try {
+                const [
+                    tiposAliasRes,
+                    estacionalidadesRes,
+                    idiomasRes,
+                    articulosRes,
+                    gruposCadenaRes,
+                    cadenasRes,
+                    mercadosRes,
+                    tiposConexionRes
+                ] = await Promise.all([
+                    axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/idiomas?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/ajenos?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
+                    axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`)
+                ]);
+
+                setTiposAlias(tiposAliasRes.data || []);
+                setEstacionalidades(estacionalidadesRes.data || []);
+                setIdiomas(idiomasRes.data || []);
+                
+                if (idiomasRes.data) {
+                    const principalesIds = [1, 3];
+                    setSelectedIdiomas(principalesIds);
+                    
+                    const idiomasValues = {};
+                    principalesIds.forEach(id => {
+                      idiomasValues[id] = { nombre: '', descripcion: '' };
+                    });
+                    setIdiomasAliasValues(idiomasValues);
+                }
+                
+                setArticulosDisponibles(articulosRes.data || []);
+                setFilteredArticulos(articulosRes.data || []);
+                setTiposConexion(tiposConexionRes.data || []);
+                const gruposCadena = gruposCadenaRes.data || [];
+                setGruposCadenaDisponibles(gruposCadena);
+                setFilteredGruposCadena(gruposCadena);
+                
+                const cadenas = cadenasRes.data || [];
+                setCadenasDisponibles(cadenas);
+                setFilteredCadenas(cadenas);
+                
+                const mercados = mercadosRes.data || [];
+                setMercadosDisponibles(mercados);
+                setFilteredMercados(mercados);
+
+            } catch (error) {
+                console.error('Error fetching initial data:', error);
+                setError('No se pudieron cargar los datos iniciales');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [languageId]);
+
+    const handleDropdownToggle = (dropdownName) => {
+        setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
+        setSearchText('');
     };
 
-    fetchInitialData();
-  }, [languageId]);
+    const handleArticuloCheckboxChange = (articuloId) => {
+        setSelectedArticulosIds(prev => {
+        if (prev.includes(articuloId)) {
+            const newSelected = prev.filter(id => id !== articuloId);
+            setShowDeleteIcon(newSelected.length > 0);
+            return newSelected;
+        }
+        else {
+            setShowDeleteIcon(true);
+            return [...prev, articuloId];
+        }
+        });
+    };
 
-  const handleDropdownToggle = (dropdownName) => {
-    setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-    setSearchText('');
-  };
+    const normalizeText = (text) => {
+        if (!text) return '';
+    
+        let normalizedText = text;
+    
+        normalizedText = normalizedText
+        .replace(/ESPA.?.'A/g, 'ESPAÑA')
+        .replace(/ESPA.?.A/g, 'ESPAÑA')
+        .replace(/ESPA.A/g, 'ESPAÑA')
+        .replace('ESPAÃ\'A', 'ESPAÑA')
+        .replace('ESPAÃA', 'ESPAÑA')
+        .replace('ESPAÃ±A', 'ESPAÑA')
+        .replace('ESPAÑA', 'ESPAÑA');
+    
+        const replacements = {
+          'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+          'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+          'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+          'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+          'Âº': 'º', 'Âª': 'ª',
+          'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+          'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+          'â‚¬': '€',
+          'â€"': '–', 'â€"': '—',
+          'â€œ': '"', 'â€': '"',
+          'â€¢': '•',
+          'â€¦': '…',
+          'Â¡': '¡', 'Â¿': '¿'
+        };
+    
+        Object.entries(replacements).forEach(([badChar, goodChar]) => {
+          normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+        });
+    
+        return normalizedText;
+    };
 
-  const handleArticuloCheckboxChange = (articuloId) => {
-    setSelectedArticulosIds(prev => {
-      if (prev.includes(articuloId)) {
-        const newSelected = prev.filter(id => id !== articuloId);
-        setShowDeleteIcon(newSelected.length > 0);
-        return newSelected;
-      }
-      else {
-        setShowDeleteIcon(true);
-        return [...prev, articuloId];
-      }
-    });
-  };
+    useEffect(() => {
+        if (selectedGrupoCadena && selectedCadenas.length > 0 && selectedMercados.length > 0) {
+          generateAmbitosTable();
+        }
+      }, [selectedGrupoCadena, selectedCadenas, selectedMercados]);
+      
+    const generateAmbitosTable = () => {
+        const newAmbitos = [];
+        let ambitoId = 1; // Reset ID counter
+      
+        selectedGruposCadena.forEach(grupoId => {
+          const grupoCadena = gruposCadenaDisponibles.find(g => g.id === grupoId);
+          
+          const cadenasFiltradas = selectedCadenas.filter(cadenaId => 
+            cadenasDisponibles.find(c => c.id === cadenaId && c.idGrupoCadena === grupoId)
+          );
+          
+          cadenasFiltradas.forEach(cadenaId => {
+            const cadena = cadenasDisponibles.find(c => c.id === cadenaId);
+            
+            selectedMercados.forEach(mercadoId => {
+              const mercado = mercadosDisponibles.find(m => m.id === mercadoId);
+              
+              if (grupoCadena && cadena && mercado) {
+                newAmbitos.push({
+                  id: ambitoId++,
+                  grupoCadena: {
+                    id: grupoId,
+                    descripcion: grupoCadena.descripcion
+                  },
+                  cadena: {
+                    id: cadenaId,
+                    descripcion: cadena.descripcion
+                  },
+                  mercado: {
+                    id: mercadoId,
+                    descripcion: mercado.descripcion
+                  }
+                });
+              }
+            });
+          });
+        });
+      
+        setAmbitosTable(newAmbitos); // Reemplaza la tabla completa
+    };
+
+    const handleSelectAllCadenas = () => {
+        if (filteredCadenas.every(c => selectedCadenas.includes(c.id))) {
+        // Deseleccionar todas
+        setSelectedCadenas(selectedCadenas.filter(id => 
+            !filteredCadenas.some(c => c.id === id)
+        ));
+        } else {
+        // Seleccionar todas
+        const newIds = filteredCadenas.map(c => c.id).filter(id => !selectedCadenas.includes(id));
+        setSelectedCadenas([...selectedCadenas, ...newIds]);
+        }
+    };
 
   const handleDeleteSelectedArticulos = () => {
     setArticulos(prev => prev.filter(articulo => 
@@ -223,7 +324,17 @@ const CreacionAlias = () => {
     
     if (!isCadenaDropdownOpen) {
       setCadenaSearchText('');
-      setFilteredCadenas(cadenasDisponibles);
+      
+      // Solo mostrar cadenas para los grupos seleccionados
+      if (selectedGruposCadena.length > 0) {
+        const cadenasFiltradas = cadenasDisponibles.filter(
+          cadena => selectedGruposCadena.includes(cadena.idGrupoCadena)
+        );
+        setFilteredCadenas(cadenasFiltradas);
+      } else {
+        // Si no hay grupos seleccionados, no mostrar cadenas
+        setFilteredCadenas([]);
+      }
     }
   };
 
@@ -316,6 +427,7 @@ const CreacionAlias = () => {
       descripcionEstadoCompras: articulo.descripcionEstadoCompras,
       descripcionTipoEstadoRam: articulo.descripcionTipoEstadoRam,
       descripcionTipoEstadoAliasAjenoRam: 'ACTIVO',
+      idTipoEstadoRam: articulo.idTipoEstadoRam,
       fechaAlta: new Date().toISOString().split('T')[0],
       idSint: articulo.idSint || '-'
     }));
@@ -440,16 +552,46 @@ const CreacionAlias = () => {
     setSearchText('');
   };
 
-  const handleGrupoCadenaSelect = (grupo) => {
-    setSelectedGruposCadena(prev => {
-      if (prev.includes(grupo.id)) {
-        return prev.filter(id => id !== grupo.id);
-      } else {
-        return [...prev, grupo.id];
-      }
-    });
-    setSelectedGrupoCadena(grupo.id);
-  };
+    const handleGrupoCadenaSelect = (grupo) => {
+        // Actualizar grupo cadena seleccionado
+        const newSelectedGrupos = selectedGruposCadena.includes(grupo.id)
+        ? selectedGruposCadena.filter(id => id !== grupo.id)
+        : [...selectedGruposCadena, grupo.id];
+        
+        setSelectedGruposCadena(newSelectedGrupos);
+        
+        // Filtrar y mostrar las cadenas pertenecientes a los grupos seleccionados
+        const cadenasFiltradas = cadenasDisponibles.filter(
+        cadena => newSelectedGrupos.includes(cadena.idGrupoCadena)
+        );
+        
+        setFilteredCadenas(cadenasFiltradas);
+        
+        // Automáticamente seleccionar todas las cadenas del grupo seleccionado
+        if (newSelectedGrupos.length > 0) {
+        // Para cada grupo nuevo (que acaba de ser seleccionado), seleccionar todas sus cadenas
+        if (!selectedGruposCadena.includes(grupo.id) && newSelectedGrupos.includes(grupo.id)) {
+            const cadenaIds = cadenasFiltradas
+            .filter(cadena => cadena.idGrupoCadena === grupo.id)
+            .map(cadena => cadena.id);
+            
+            setSelectedCadenas(prev => [...prev, ...cadenaIds.filter(id => !prev.includes(id))]);
+        }
+        // Si estamos desseleccionando un grupo, eliminar sus cadenas
+        else if (selectedGruposCadena.includes(grupo.id) && !newSelectedGrupos.includes(grupo.id)) {
+            const cadenasDelGrupo = cadenasDisponibles
+            .filter(cadena => cadena.idGrupoCadena === grupo.id)
+            .map(cadena => cadena.id);
+            
+            setSelectedCadenas(prev => prev.filter(id => !cadenasDelGrupo.includes(id)));
+        }
+        } else {
+        // Si no hay grupos seleccionados, deseleccionar todas las cadenas
+        setSelectedCadenas([]);
+        }
+        
+        setSelectedGrupoCadena(grupo.id);
+    };
 
   const handleCadenaSelect = (cadena) => {
     setSelectedCadenas(prev => {
@@ -464,13 +606,13 @@ const CreacionAlias = () => {
 
   const handleMercadoSelect = (mercado) => {
     setSelectedMercados(prev => {
-      if (prev.includes(mercado.id)) {
-        return prev.filter(id => id !== mercado.id);
-      } else {
-        return [...prev, mercado.id];
-      }
+      const newSelection = prev.includes(mercado.id)
+        ? prev.filter(id => id !== mercado.id)
+        : [...prev, mercado.id];
+      
+      setSelectedMercado(mercado.id);
+      return newSelection;
     });
-    setSelectedMercado(mercado.id);
   };
 
   const handleCancel = () => {
@@ -478,50 +620,79 @@ const CreacionAlias = () => {
   };
 
   const handleCrear = async () => {
-    try {
-      setLoading(true);
-      
-      const nuevoAlias = {
-        idTipoAlias: parseInt(selectedTipoAlias),
-        idTipoEstacionalidad: parseInt(selectedEstacionalidad),
-        idTipoEstadoAlias: 1, // Por defecto BORRADOR
-        idTipoConexionOrigenDatoAlias: 1,
-        idTipoOrigenDatoAlias: 1,
-        informacionOrigenDato: null,
-        
-        idiomas: selectedIdiomas.map(idIdioma => ({
-          idIdioma: parseInt(idIdioma),
-          nombre: idiomasAliasValues[idIdioma]?.nombre || '',
-          descripcion: idiomasAliasValues[idIdioma]?.descripcion || ''
-        })),
-        
-        aliasAjeno: articulos.map(articulo => ({
-          idAjeno: parseInt(articulo.idAjeno || articulo.id),
-          idTipoEstadoAjenoRam: 1, // ACTIVO
-          idSint: articulo.idSint && articulo.idSint !== '-' ? parseInt(articulo.idSint) : null
-        })),
-        
-        aliasAmbito: {
-          idsGrupoCadena: [...new Set(ambitosTable.map(ambito => ambito.grupoCadena.id))],
-          idsCadena: [...new Set(ambitosTable.map(ambito => ambito.cadena.id))],
-          idsMercado: [...new Set(ambitosTable.map(ambito => ambito.mercado.id))]
+        if (!selectedTipoAlias || !selectedEstacionalidad) {
+            alert(t('Debe seleccionar el tipo de alias y la estacionalidad'));
+            return;
         }
-      };
-      
-      // Aquí iría la llamada al endpoint para crear el alias
-      const response = await axios.post(`${BASE_URL}/alias`, nuevoAlias);
-      
-      alert(t('Alias creado correctamente'));
-      navigate(-1);
-      
-    } catch (error) {
-      console.error('Error creating alias:', error);
-      setError('Error al crear el alias');
-      alert(t('Error al crear el alias'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    
+        const faltanDatosIdioma = selectedIdiomas.some(idiomaId => 
+            !idiomasAliasValues[idiomaId]?.nombre || !idiomasAliasValues[idiomaId]?.descripcion
+        );
+        
+        if (faltanDatosIdioma) {
+            alert(t('Debe introducir nombre y descripción para todos los idiomas'));
+            return;
+        }
+    
+        if (articulos.length === 0) {
+            alert(t('Debe seleccionar al menos un artículo'));
+            return;
+        }
+        if (ambitosTable.length === 0) {
+            alert(t('Debe definir al menos un ámbito'));
+            return;
+        }
+    
+        try {
+            setLoading(true);
+            
+            // Determinar el tipo de conexión origen
+            let idTipoConexionOrigenDatoAlias = 1; // Por defecto PRINCIPAL
+            if (selectedTipoAlias === '2' && selectedTipoConexion === '2') {
+              idTipoConexionOrigenDatoAlias = 2; // ACOPLE
+            }
+            
+            const nuevoAlias = {
+              idTipoAlias: parseInt(selectedTipoAlias),
+              idTipoEstacionalidad: parseInt(selectedEstacionalidad),
+              idTipoEstadoAlias: 2,
+              idTipoConexionOrigenDatoAlias: idTipoConexionOrigenDatoAlias,
+              idTipoOrigenDatoAlias: 1,
+              informacionOrigenDato: null,
+              
+              idiomas: selectedIdiomas.map(idIdioma => ({
+                idIdioma: parseInt(idIdioma),
+                nombre: idiomasAliasValues[idIdioma]?.nombre || '',
+                descripcion: idiomasAliasValues[idIdioma]?.descripcion || ''
+              })),
+              
+              aliasAjeno: articulos.map(articulo => ({
+                idAjeno: parseInt(articulo.idAjeno || articulo.id),
+                idTipoEstadoAjenoRam: idTipoEstadoRam,
+                idSint: articulo.idSint && articulo.idSint !== '-' ? parseInt(articulo.idSint) : null
+              })),
+              
+              aliasAmbito: {
+                idsGrupoCadena: [...new Set(ambitosTable.map(ambito => ambito.grupoCadena.id))],
+                idsCadena: [...new Set(ambitosTable.map(ambito => ambito.cadena.id))],
+                idsMercado: [...new Set(ambitosTable.map(ambito => ambito.mercado.id))]
+              }
+            };
+            
+            const response = await axios.post(`${BASE_URL}/creacion/creacion-Alias`, nuevoAlias);
+            console.log('Alias creado con ID:', response.data.id);
+            
+            alert(t('Alias creado correctamente'));
+            navigate(-1);
+        
+        } catch (error) {
+            console.error('Error creating alias:', error);
+            setError('Error al crear el alias');
+            alert(t('Error al crear el alias'));
+        } finally {
+            setLoading(false);
+        }
+    };
 
   if (loading) {
     return (
@@ -560,17 +731,44 @@ const CreacionAlias = () => {
                 <label>{t('Tipo de Alias')}</label>
                 <select 
                   value={selectedTipoAlias}
-                  onChange={(e) => setSelectedTipoAlias(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTipoAlias(e.target.value);
+                    if (e.target.value !== '2') {
+                      setSelectedTipoConexion('');
+                    }
+                  }}
                   className="form-select"
                 >
-                  <option value="">{t('Seleccionar...')}</option>
-                  {tiposAlias.map(tipo => (
-                    <option key={tipo.id} value={tipo.id}>
-                      {tipo.descripcion}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                    <option value="">{t('Seleccionar...')}</option>
+                        {tiposAlias.map(tipo => (
+                            <option 
+                                key={tipo.id} 
+                                value={tipo.id}
+                                disabled={tipo.id === 3} // Deshabilita el tipo 3
+                            >
+                                {tipo.descripcion}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {selectedTipoAlias === '2' && (
+                    <div className="form-group">
+                    <label>{t('Tipo de conexión a origen')}</label>
+                    <select 
+                        value={selectedTipoConexion}
+                        onChange={(e) => setSelectedTipoConexion(e.target.value)}
+                        className="form-select"
+                    >
+                        <option value="">{t('Seleccionar...')}</option>
+                        {tiposConexion.map(tipo => (
+                        <option key={tipo.id} value={tipo.id}>
+                            {tipo.descripcion}
+                        </option>
+                        ))}
+                    </select>
+                    </div>
+                )}
               
               <div className="form-group">
                 <label>{t('Estacionalidad')}</label>
@@ -635,7 +833,7 @@ const CreacionAlias = () => {
                               {selectedIdiomas.includes(idioma.id) && <FaCheck className="checkbox-icon" />}
                             </div>
                             <label>
-                              {idioma.descripcion}
+                              {normalizeText(idioma.descripcion)}
                             </label>
                           </div>
                         ))
@@ -808,7 +1006,7 @@ const CreacionAlias = () => {
                                 ID: {articulo.idAjeno || articulo.id}
                                 </div>
                                 <div className="articulos-item-nombre">
-                                {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                                {normalizeText(articulo.nombreAjeno || articulo.descripcion || articulo.nombre)}
                                 </div>
                             </div>
                             </div>
@@ -909,7 +1107,7 @@ const CreacionAlias = () => {
                         </td>
                         <td className="estado-column">
                             <span className={`estado-tag ${articulo.descripcionTipoEstadoRam?.toLowerCase().includes("activo") ? "activo" : ""}`}>
-                                {articulo.descripcionTipoEstadoRam}
+                                {normalizeText(articulo.descripcionTipoEstadoRam)}
                             </span>
                         </td>
                         <td className="estado-column">
@@ -936,8 +1134,7 @@ const CreacionAlias = () => {
           <div className="paso-content">
             <div className="ambito-header">
               <div className="ambito-tipo">
-                <p className="ambito-tipo-label">{t('Tipo ámbito')}</p>
-                <p className="ambito-tipo-value">{t('Grupo cadena y mercado')}</p>
+                <p className="ambito-tipo-label">{t('Tipo ámbito: Grupo cadena y mercado')}</p>
               </div>
             </div>
 
@@ -948,15 +1145,17 @@ const CreacionAlias = () => {
                   className="dropdown-field" 
                   onClick={toggleGrupoCadenaDropdown}
                 >
-                  <span>
-                    {selectedGrupoCadena ? 
-                      (() => {
-                        const grupo = gruposCadenaDisponibles.find(g => g.id === selectedGrupoCadena);
-                        return grupo ? `${grupo.id} - ${grupo.descripcion}` : selectedGrupoCadena;
-                      })() : 
-                      t('Seleccionar grupo cadena')
-                    }
-                  </span>
+                   <span>
+                        {selectedGruposCadena.length > 1 
+                            ? `${selectedGruposCadena.length} seleccionados`
+                            : selectedGrupoCadena 
+                            ? (() => {
+                                const grupo = gruposCadenaDisponibles.find(g => g.id === selectedGrupoCadena);
+                                return grupo ? `${grupo.id} - ${normalizeText(grupo.descripcion)}` : selectedGrupoCadena;
+                                })() 
+                            : t('Seleccionar grupo cadena')
+                        }
+                    </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
                 
@@ -993,7 +1192,7 @@ const CreacionAlias = () => {
                                 {selectedGruposCadena.includes(grupo.id) && <FaCheck className="checkbox-icon" />}
                             </div>
                             <span className="dropdown-item-text">
-                                {grupo.id} - {grupo.descripcion}
+                                {grupo.id} - {normalizeText(grupo.descripcion)}
                             </span>
                             </div>
                         ))}
@@ -1012,24 +1211,25 @@ const CreacionAlias = () => {
                         </div>
                     </div>
                 )}
-              </div>
-              
-              <div className="ambito-field cadena-field" ref={cadenaDropdownRef}>
+            </div>              
+            <div className="ambito-field cadena-field" ref={cadenaDropdownRef}>
                 <label className="ambito-label">{t('Id o Cadena*')}</label>
                 <div 
-                  className="dropdown-field" 
-                  onClick={toggleCadenaDropdown}
-                >
-                  <span>
-                    {selectedCadena ? 
-                      (() => {
-                        const cadena = cadenasDisponibles.find(c => c.id === selectedCadena);
-                        return cadena ? `${cadena.id} - ${cadena.descripcion}` : selectedCadena;
-                      })() : 
-                      t('Seleccionar cadena')
-                    }
-                  </span>
-                  <FaChevronDown className="dropdown-arrow" />
+                    className={`dropdown-field ${selectedGruposCadena.length === 0 ? 'disabled' : ''}`} 
+                    onClick={selectedGruposCadena.length > 0 ? toggleCadenaDropdown : null}
+                    >
+                    <span>
+                        {selectedCadenas.length > 0 
+                        ? `${selectedCadenas.length} seleccionados`
+                        : selectedCadena 
+                            ? (() => {
+                                const cadena = cadenasDisponibles.find(c => c.id === selectedCadena);
+                                return cadena ? `${cadena.id} - ${normalizeText(cadena.descripcion)}` : selectedCadena;
+                            })() 
+                            : t('Seleccionar cadena')
+                        }
+                    </span>
+                    <FaChevronDown className="dropdown-arrow" />
                 </div>
                 
                 {isCadenaDropdownOpen && (
@@ -1043,49 +1243,45 @@ const CreacionAlias = () => {
                             onChange={handleCadenaSearchChange}
                             onClick={(e) => e.stopPropagation()}
                         />
-                        {cadenaSearchText && (
-                            <FaTimes 
-                            className="clear-search-icon" 
-                            onClick={clearCadenaSearch} 
-                            />
-                        )}
                         </div>
                         
                         <div className="dropdown-items">
                         {filteredCadenas.map((cadena) => (
                             <div 
                             key={cadena.id} 
-                            className="dropdown-item"
+                            className={`dropdown-item ${selectedCadenas.includes(cadena.id) ? 'selected' : ''}`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleCadenaSelect(cadena);
                             }}
                             >
-                            <div className="custom-checkbox">
-                                {selectedCadenas?.includes(cadena.id) && <FaCheck className="checkbox-icon" />}
-                            </div>
+                            <input 
+                                type="checkbox" 
+                                checked={selectedCadenas.includes(cadena.id)} 
+                                onChange={() => {}} 
+                                onClick={(e) => e.stopPropagation()} 
+                            />
                             <span className="dropdown-item-text">
-                                {cadena.id} - {cadena.descripcion}
+                                {cadena.id} - {normalizeText(cadena.descripcion)}
                             </span>
                             </div>
                         ))}
                         </div>
                         
                         <div className="select-all-fixed">
-                        <div className="dropdown-item select-all">
-                            <div className="custom-checkbox">
-                            {filteredCadenas.length > 0 && 
-                                filteredCadenas.every(c => selectedCadenas?.includes(c.id)) && 
-                                <FaCheck className="checkbox-icon" />
-                            }
-                            </div>
-                            <span>{t('Seleccionar todo')}</span>
+                        <div className="dropdown-item select-all" onClick={() => handleSelectAllCadenas()}>
+                            <input 
+                            type="checkbox" 
+                            checked={filteredCadenas.length > 0 && filteredCadenas.every(c => selectedCadenas.includes(c.id))} 
+                            onChange={() => {}}
+                            onClick={(e) => e.stopPropagation()} 
+                            />
+                            <span>Seleccionar todo</span>
                         </div>
                         </div>
                     </div>
                 )}
-              </div>
-              
+              </div>              
               <div className="ambito-field mercado-field" ref={mercadoDropdownRef}>
                 <label className="ambito-label">{t('Id o Mercado*')}</label>
                 <div 
@@ -1096,7 +1292,7 @@ const CreacionAlias = () => {
                     {selectedMercado ? 
                       (() => {
                         const mercado = mercadosDisponibles.find(m => m.id === selectedMercado);
-                        return mercado ? `${mercado.id} - ${mercado.descripcion}` : selectedMercado;
+                        return mercado ? `${mercado.id} - ${normalizeText(mercado.descripcion)}` : selectedMercado;
                       })() : 
                       t('Seleccionar mercado')
                     }
@@ -1137,7 +1333,7 @@ const CreacionAlias = () => {
                                 {selectedMercados?.includes(mercado.id) && <FaCheck className="checkbox-icon" />}
                             </div>
                             <span className="dropdown-item-text">
-                                {mercado.id} - {mercado.descripcion}
+                                {mercado.id} - {normalizeText(mercado.descripcion)}
                             </span>
                             </div>
                         ))}
@@ -1158,7 +1354,7 @@ const CreacionAlias = () => {
                     )}
               </div>
             </div>
-            
+                            
             <div className="ambitos-table-container">
               {ambitosTable.length > 0 ? (
                 <table className="ambitos-table">
@@ -1172,10 +1368,10 @@ const CreacionAlias = () => {
                   <tbody>
                     {ambitosTable.map(ambito => (
                       <tr key={ambito.id}>
-                        <td>{ambito.grupoCadena.id} - {ambito.grupoCadena.descripcion}</td>
-                        <td>{ambito.cadena.id} - {ambito.cadena.descripcion}</td>
+                        <td>{ambito.grupoCadena.id} - {normalizeText(ambito.grupoCadena.descripcion)}</td>
+                        <td>{ambito.cadena.id} - {normalizeText(ambito.cadena.descripcion)}</td>
                         <td className="mercado-column">
-                          <span>{ambito.mercado.id} - {ambito.mercado.descripcion}</span>
+                          <span>{ambito.mercado.id} - {normalizeText(ambito.mercado.descripcion)}</span>
                         </td>
                       </tr>
                     ))}

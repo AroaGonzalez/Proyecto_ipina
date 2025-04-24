@@ -379,7 +379,6 @@ const EdicionAlias = () => {
             setAliasesPrincipales(aliasesResponse.data || []);
             setFilteredAliasesPrincipales(aliasesResponse.data || []);
             
-            // Si ya tiene acoples, los seleccionamos
             if (aliasData.acoples && aliasData.acoples.length > 0) {
               const selectedAliases = aliasesResponse.data.filter(a => 
                 aliasData.acoples.some(acople => acople.idAlias === a.idAlias)

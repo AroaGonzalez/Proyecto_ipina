@@ -797,7 +797,7 @@ exports.getIdiomas = async () => {
     const query = `
       SELECT i.ID_IDIOMA as id, i.DESCRIPCION as descripcion
       FROM MAESTROS.IDIOMA i
-      ORDER BY i.DESCRIPCION
+      ORDER BY i.ID_IDIOMA ASC
     `;
 
     const result = await sequelizeMaestros.query(query, {
@@ -820,7 +820,7 @@ exports.getGruposCadena = async () => {
       SELECT gc.ID_GRUPO_CADENA as id, gc.DESCRIPCION as descripcion
       FROM MAESTROS.GRUPO_CADENA gc
       WHERE gc.ID_TIPO_GRUPO_CADENA = 6
-      ORDER BY gc.ID_GRUPO_CADENA
+      ORDER BY gc.ID_GRUPO_CADENA ASC
     `;
 
     const result = await sequelizeMaestros.query(query, {
@@ -845,7 +845,7 @@ exports.getCadenas = async () => {
       LEFT JOIN MAESTROS.GRUPO_CADENA_CADENA gcc ON gcc.ID_CADENA = c.ID_CADENA
       LEFT JOIN MAESTROS.GRUPO_CADENA gc ON gc.ID_GRUPO_CADENA = gcc.ID_GRUPO_CADENA
       WHERE gc.ID_TIPO_GRUPO_CADENA = 6
-      ORDER BY c.NOMBRE
+      ORDER BY c.ID_CADENA ASC
     `;
 
     const result = await sequelizeMaestros.query(query, {
@@ -863,13 +863,36 @@ exports.getCadenas = async () => {
   }
 };
 
+exports.getTipoConexionOrigenDato = async (idIdioma = 1) => {
+  try {
+    const query = `
+      SELECT tco.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as id, tco.DESCRIPCION as descripcion
+      FROM AJENOS.TIPO_CONEXION_ORIGEN_DATO_ALIAS_IDIOMA tco WHERE tco.ID_IDIOMA = :idIdioma
+      ORDER BY tco.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS ASC
+    `;
+
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idIdioma },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+
+    return result.map(item => ({
+      id: item.id,
+      descripcion: fixEncoding(item.descripcion)
+    }));
+  } catch (error) {
+    console.error('Error al obtener cadenas:', error);
+    return [];
+  }
+};
+
 exports.getMercados = async (idIdioma = 1) => {
   try {
     const query = `
       SELECT p.ID_PAIS as id, p.DESCRIPCION as descripcion, p.PAIS_ISO as codigoIsoMercado
       FROM MAESTROS.PAIS p
       INNER JOIN MAESTROS.PAIS_IDIOMA pi ON pi.ID_PAIS = p.ID_PAIS AND pi.ID_IDIOMA = :idIdioma
-      ORDER BY pi.DESCRIPCION
+      ORDER BY p.ID_PAIS ASC
     `;
 
     const result = await sequelizeMaestros.query(query, {
@@ -947,7 +970,7 @@ exports.deleteAliasAjeno = async (idAlias, idAjeno, usuarioBaja, fechaBaja) => {
     const updateQuery = `
       UPDATE AJENOS.ALIAS_AJENO 
       SET USUARIO_BAJA = :usuarioBaja, 
-          FECHA_BAJA = :fechaBaja
+        FECHA_BAJA = :fechaBaja
       WHERE ID_ALIAS = :idAlias 
         AND ID_AJENO = :idAjeno
         AND FECHA_BAJA IS NULL
@@ -2889,214 +2912,5 @@ exports.findAliasInfoById = async (idIdioma) => {
   } catch (error) {
     console.error('Error en findAliasInfoById:', error);
     return [];
-  }
-};
-
-exports.createAlias = async (aliasData) => {
-  const t = await sequelizeAjenos.transaction();
-  
-  try {
-    const aliasInsertQuery = `
-      INSERT INTO AJENOS.ALIAS (
-        ID_TIPO_ALIAS, 
-        ID_TIPO_ESTACIONALIDAD, 
-        ID_TIPO_ESTADO_ALIAS, 
-        ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS,
-        ID_TIPO_ORIGEN_DATO_ALIAS,
-        FECHA_ALTA, 
-        USUARIO_ALTA, 
-        FECHA_MODIFICACION
-      ) VALUES (
-        :idTipoAlias, 
-        :idTipoEstacionalidad, 
-        :idTipoEstadoAlias, 
-        :idTipoConexionOrigenDatoAlias,
-        :idTipoOrigenDatoAlias,
-        CURRENT_TIMESTAMP, 
-        'WEBAPP', 
-        CURRENT_TIMESTAMP
-      ) RETURNING ID_ALIAS
-    `;
-    
-    const [aliasResult] = await sequelizeAjenos.query(aliasInsertQuery, {
-      replacements: {
-        idTipoAlias: aliasData.idTipoAlias,
-        idTipoEstacionalidad: aliasData.idTipoEstacionalidad,
-        idTipoEstadoAlias: aliasData.idTipoEstadoAlias,
-        idTipoConexionOrigenDatoAlias: aliasData.idTipoConexionOrigenDatoAlias,
-        idTipoOrigenDatoAlias: aliasData.idTipoOrigenDatoAlias
-      },
-      type: sequelizeAjenos.QueryTypes.INSERT,
-      transaction: t
-    });
-    
-    const idAlias = aliasResult[0].ID_ALIAS;
-    console.log(`Alias creado con ID: ${idAlias}`);
-    
-    for (const idioma of aliasData.idiomas) {
-      const insertIdiomaQuery = `
-        INSERT INTO AJENOS.ALIAS_IDIOMA (
-          ID_ALIAS, 
-          ID_IDIOMA, 
-          NOMBRE, 
-          DESCRIPCION
-        ) VALUES (
-          :idAlias, 
-          :idIdioma, 
-          :nombre, 
-          :descripcion
-        )
-      `;
-      
-      await sequelizeAjenos.query(insertIdiomaQuery, {
-        replacements: {
-          idAlias,
-          idIdioma: idioma.idIdioma,
-          nombre: idioma.nombre,
-          descripcion: idioma.descripcion
-        },
-        type: sequelizeAjenos.QueryTypes.INSERT,
-        transaction: t
-      });
-    }
-    
-    for (const ajeno of aliasData.aliasAjeno) {
-      const insertAjenoQuery = `
-        INSERT INTO AJENOS.ALIAS_AJENO (
-          ID_ALIAS, 
-          ID_AJENO, 
-          ID_TIPO_ESTADO_AJENO_RAM,
-          ID_SINT,
-          FECHA_ALTA, 
-          USUARIO_ALTA
-        ) VALUES (
-          :idAlias, 
-          :idAjeno, 
-          :idTipoEstadoAjenoRam,
-          :idSint,
-          CURRENT_TIMESTAMP, 
-          'WEBAPP'
-        )
-      `;
-      
-      await sequelizeAjenos.query(insertAjenoQuery, {
-        replacements: {
-          idAlias,
-          idAjeno: ajeno.idAjeno,
-          idTipoEstadoAjenoRam: ajeno.idTipoEstadoAjenoRam || 1,
-          idSint: ajeno.idSint || null
-        },
-        type: sequelizeAjenos.QueryTypes.INSERT,
-        transaction: t
-      });
-    }
-    const insertAmbitoQuery = `
-      INSERT INTO AJENOS.ALIAS_AMBITO (
-        ID_ALIAS, 
-        FECHA_ALTA, 
-        USUARIO_ALTA
-      ) VALUES (
-        :idAlias, 
-        CURRENT_TIMESTAMP, 
-        'WEBAPP'
-      ) RETURNING ID_ALIAS_AMBITO
-    `;
-    
-    const [ambitoResult] = await sequelizeAjenos.query(insertAmbitoQuery, {
-      replacements: { idAlias },
-      type: sequelizeAjenos.QueryTypes.INSERT,
-      transaction: t
-    });
-    
-    const idAliasAmbito = ambitoResult[0].ID_ALIAS_AMBITO;
-    
-    for (const idGrupoCadena of aliasData.aliasAmbito.idsGrupoCadena) {
-      for (const idCadena of aliasData.aliasAmbito.idsCadena) {
-        const checkCadenaGrupoQuery = `
-          SELECT 1 FROM MAESTROS.GRUPO_CADENA_CADENA 
-          WHERE ID_GRUPO_CADENA = :idGrupoCadena AND ID_CADENA = :idCadena
-        `;
-        
-        const cadenaGrupoResult = await sequelizeMaestros.query(checkCadenaGrupoQuery, {
-          replacements: { idGrupoCadena, idCadena },
-          type: sequelizeMaestros.QueryTypes.SELECT,
-          transaction: t
-        });
-        
-        if (cadenaGrupoResult.length === 0) {
-          continue;
-        }
-        
-        for (const idMercado of aliasData.aliasAmbito.idsMercado) {
-          const findLocalizacionQuery = `
-            SELECT ID_LOCALIZACION 
-            FROM AJENOS.LOCALIZACION_COMPRA 
-            WHERE ID_CADENA = :idCadena AND ID_PAIS = :idMercado
-          `;
-          
-          const localizacionResult = await sequelizeAjenos.query(findLocalizacionQuery, {
-            replacements: { idCadena, idMercado },
-            type: sequelizeAjenos.QueryTypes.SELECT,
-            transaction: t
-          });
-          
-          let idLocalizacion;
-          
-          if (localizacionResult.length > 0) {
-            idLocalizacion = localizacionResult[0].ID_LOCALIZACION;
-          } else {
-            const insertLocalizacionQuery = `
-              INSERT INTO AJENOS.LOCALIZACION_COMPRA (
-                ID_CADENA, 
-                ID_PAIS, 
-                FECHA_ALTA, 
-                USUARIO_ALTA
-              ) VALUES (
-                :idCadena, 
-                :idMercado, 
-                CURRENT_TIMESTAMP, 
-                'WEBAPP'
-              ) RETURNING ID_LOCALIZACION
-            `;
-            
-            const [newLocalizacionResult] = await sequelizeAjenos.query(insertLocalizacionQuery, {
-              replacements: { idCadena, idMercado },
-              type: sequelizeAjenos.QueryTypes.INSERT,
-              transaction: t
-            });
-            
-            idLocalizacion = newLocalizacionResult[0].ID_LOCALIZACION;
-          }
-          
-          const insertAmbitoAplanadoQuery = `
-            INSERT INTO AJENOS.ALIAS_AMBITO_APLANADO (
-              ID_ALIAS_AMBITO,
-              ID_LOCALIZACION_COMPRA,
-              FECHA_ALTA,
-              USUARIO_ALTA
-            ) VALUES (
-              :idAliasAmbito,
-              :idLocalizacion,
-              CURRENT_TIMESTAMP,
-              'WEBAPP'
-            )
-          `;
-          
-          await sequelizeAjenos.query(insertAmbitoAplanadoQuery, {
-            replacements: { idAliasAmbito, idLocalizacion },
-            type: sequelizeAjenos.QueryTypes.INSERT,
-            transaction: t
-          });
-        }
-      }
-    }
-    
-    await t.commit();
-    
-    return { success: true, idAlias };
-  } catch (error) {
-    console.error('Error en createAlias:', error);
-    await t.rollback();
-    throw error;
   }
 };
