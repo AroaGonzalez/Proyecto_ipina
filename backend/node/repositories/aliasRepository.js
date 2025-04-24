@@ -85,8 +85,6 @@ exports.findAliasByFilter = async (filter = {}, pageable = { page: 0, size: 50 }
     const cacheKey = `alias_${JSON.stringify(filter)}_${pageable.page}_${pageable.size}`;
     cache.clear(cacheKey);
     
-    console.log('Ejecutando consulta de alias...');
-    
     const searchQuery = `
       SELECT DISTINCT a.ID_ALIAS, 
         ai.NOMBRE, 
@@ -155,18 +153,15 @@ exports.findAliasByFilter = async (filter = {}, pageable = { page: 0, size: 50 }
       ...params 
     };
     
-    console.log('Ejecutando consulta count...');
     const countResult = await sequelizeAjenos.query(finalCountQuery, {
       replacements,
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
     const totalElements = parseInt(countResult[0]?.total || 0);
-    console.log(`Total de elementos: ${totalElements}`);
     
     let processedResult = [];
     if (totalElements > 0) {
-      console.log('Ejecutando consulta principal...');
       const result = await sequelizeAjenos.query(finalSearchQuery, {
         replacements,
         type: sequelizeAjenos.QueryTypes.SELECT
@@ -198,8 +193,6 @@ exports.findAliasByFilter = async (filter = {}, pageable = { page: 0, size: 50 }
       size: pageable.size,
       totalPages
     };
-    
-    console.log(`Procesados ${processedResult.length} registros`);
     
     if (processedResult.length > 0) {
       console.log('Muestra:', processedResult[0]);
@@ -296,8 +289,6 @@ exports.getAliasesForFilter = async (idIdioma = 1) => {
       logging: console.log
     });
     
-    console.log(`[DEBUG] Consulta completada. Resultados obtenidos: ${result.length}`);
-    
     return result.map(item => ({
       id: item.id,
       descripcion: fixEncoding(item.nombre)
@@ -339,8 +330,6 @@ exports.findAliasAjenosByFilter = async (filter = {}, pageable = { page: 0, size
   try {    
     const cacheKey = `alias_ajenos_${JSON.stringify(filter)}_${pageable.page}_${pageable.size}`;
     cache.clear(cacheKey);
-    
-    console.log('Ejecutando consulta de alias ajenos...');
     
     const searchQuery = `
       SELECT aa.ID_ALIAS, 
@@ -440,14 +429,12 @@ exports.findAliasAjenosByFilter = async (filter = {}, pageable = { page: 0, size
       ...params 
     };
     
-    console.log('Ejecutando consulta count para alias ajenos...');
     const countResult = await sequelizeAjenos.query(finalCountQuery, {
       replacements,
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
     const totalElements = parseInt(countResult[0]?.total || 0);
-    console.log(`Total de elementos de alias ajenos: ${totalElements}`);
     
     let processedResult = [];
     if (totalElements > 0) {
@@ -492,12 +479,6 @@ exports.findAliasAjenosByFilter = async (filter = {}, pageable = { page: 0, size
       size: pageable.size,
       totalPages
     };
-    
-    console.log(`Procesados ${processedResult.length} registros de alias ajenos`);
-    
-    if (processedResult.length > 0) {
-      console.log('Muestra de alias ajenos:', processedResult[0]);
-    }
     
     return finalResult;
   } catch (error) {
@@ -679,7 +660,6 @@ exports.findAliasAjenoInfoByIdAlias = async (idAlias, idIdioma = 1) => {
 
 exports.findAcoplesInfoByIdAlias = async (idAlias, idIdioma = 1) => {
   try {
-    console.log(`Ejecutando consulta de acoples para ID: ${idAlias}, idIdioma: ${idIdioma}`);
     const query = `
       SELECT aa.ID_ALIAS, aa.ID_ALIAS_ACOPLE, aa.RATIO_ACOPLE, aa.FECHA_BAJA, ai.NOMBRE as NOMBRE_ALIAS_PRINCIPAL
       FROM AJENOS.ALIAS_ACOPLE aa
@@ -691,8 +671,6 @@ exports.findAcoplesInfoByIdAlias = async (idAlias, idIdioma = 1) => {
       replacements: { idAlias, idIdioma },
       type: sequelizeAjenos.QueryTypes.SELECT
     });
-
-    console.log(`Acoples encontrados: ${result.length}`);
     return result.map(item => ({
       idAlias: item.ID_ALIAS,
       idAliasAcople: item.ID_ALIAS_ACOPLE,
@@ -706,10 +684,8 @@ exports.findAcoplesInfoByIdAlias = async (idAlias, idIdioma = 1) => {
   }
 };
 
-// En aliasRepository.js
 exports.findGruposCadenaByIdAlias = async (idAlias) => {
   try {
-    console.log(`Consultando grupos cadena para el alias ID: ${idAlias}`);
     const query = `
       SELECT DISTINCT g.ID_GRUPO_CADENA as ID, g.DESCRIPCION
       FROM MAESTROS.GRUPO_CADENA g
@@ -726,7 +702,6 @@ exports.findGruposCadenaByIdAlias = async (idAlias) => {
       logging: console.log
     });
 
-    console.log(`Grupos cadena encontrados: ${result.length}`);
     return result.map(item => ({
       id: item.ID,
       descripcion: fixEncoding(item.DESCRIPCION)
@@ -739,7 +714,6 @@ exports.findGruposCadenaByIdAlias = async (idAlias) => {
 
 exports.findCadenasByIdAlias = async (idAlias) => {
   try {
-    console.log(`Consultando cadenas para el alias ID: ${idAlias}`);
     const query = `
       SELECT DISTINCT c.ID_CADENA as ID, c.NOMBRE as DESCRIPCION, gc.ID_GRUPO_CADENA
       FROM MAESTROS.CADENA c
@@ -756,7 +730,6 @@ exports.findCadenasByIdAlias = async (idAlias) => {
       logging: console.log
     });
 
-    console.log(`Cadenas encontradas: ${result.length}`);
     return result.map(item => ({
       id: item.ID,
       descripcion: fixEncoding(item.DESCRIPCION),
@@ -770,7 +743,6 @@ exports.findCadenasByIdAlias = async (idAlias) => {
 
 exports.findMercadosByIdAlias = async (idAlias, idIdioma = 1) => {
   try {
-    console.log(`Consultando mercados para el alias ID: ${idAlias}, idIdioma: ${idIdioma}`);
     const query = `
       SELECT DISTINCT p.ID_PAIS as ID, p.DESCRIPCION, p.PAIS_ISO as CODIGO_ISO_PAIS
       FROM MAESTROS.PAIS p
@@ -786,7 +758,6 @@ exports.findMercadosByIdAlias = async (idAlias, idIdioma = 1) => {
       logging: console.log
     });
 
-    console.log(`Mercados encontrados: ${result.length}`);
     return result.map(item => ({
       id: item.ID,
       descripcion: fixEncoding(item.DESCRIPCION),
@@ -799,9 +770,7 @@ exports.findMercadosByIdAlias = async (idAlias, idIdioma = 1) => {
 };
 
 exports.findAmbitosByIdAlias = async (idAlias, idIdioma = 1) => {
-  try {
-    console.log(`Consultando ámbitos para el alias ID: ${idAlias}, idIdioma: ${idIdioma}`);
-    
+  try {    
     const [gruposCadena, cadenas, mercados] = await Promise.all([
       exports.findGruposCadenaByIdAlias(idAlias),
       exports.findCadenasByIdAlias(idAlias),
@@ -921,7 +890,6 @@ exports.getMercados = async (idIdioma = 1) => {
 
 exports.updateEstadoAliasAjeno = async (idAlias, idAjeno, idTipoEstadoAliasAjenoRam) => {
   try {
-    cache.clear('alias_ajenos_');
     
     console.log(`Actualizando estado de alias-ajeno: ${idAlias}-${idAjeno} a estado ${idTipoEstadoAliasAjenoRam}`);
     
@@ -953,8 +921,6 @@ exports.updateEstadoAliasAjeno = async (idAlias, idAjeno, idTipoEstadoAliasAjeno
 
 exports.deleteAliasAjeno = async (idAlias, idAjeno, usuarioBaja, fechaBaja) => {
   try {
-    cache.clear('alias_ajenos_');
-    
     console.log(`Eliminando relación alias-artículo: ${idAlias}-${idAjeno}`);
     
     const checkQuery = `
@@ -1037,8 +1003,8 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAjeno, usuarioModificacion
     const updateQuery = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO 
       SET USUARIO_MODIFICACION = :usuarioModificacion,
-          FECHA_MODIFICACION = :fechaModificacion,
-          ID_AJENO_SECCION_GLOBAL = NULL
+        FECHA_MODIFICACION = :fechaModificacion,
+        ID_AJENO_SECCION_GLOBAL = NULL
       WHERE ID_ALIAS_AMBITO_APLANADO IN (:ids)
     `;
     
@@ -1060,21 +1026,13 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAjeno, usuarioModificacion
   }
 };
 
-/**
- * Actualiza el tipo de estado de un alias
- * @param {number} idAlias - ID del alias
- * @param {number} idTipoEstadoAlias - ID del tipo de estado
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<boolean>} - Resultado de la operación
- */
 exports.updateTipoEstadoAlias = async (idAlias, idTipoEstadoAlias, usuarioModificacion, fechaModificacion) => {
   try {
     const query = `
       UPDATE AJENOS.ALIAS 
       SET ID_TIPO_ESTADO_ALIAS = :idTipoEstadoAlias, 
-          USUARIO_MODIFICACION = :usuarioModificacion, 
-          FECHA_MODIFICACION = :fechaModificacion
+        USUARIO_MODIFICACION = :usuarioModificacion, 
+        FECHA_MODIFICACION = :fechaModificacion
       WHERE ID_ALIAS = :idAlias
     `;
     
@@ -1097,17 +1055,8 @@ exports.updateTipoEstadoAlias = async (idAlias, idTipoEstadoAlias, usuarioModifi
   }
 };
 
-/**
- * Actualiza los idiomas del alias
- * @param {number} idAlias - ID del alias
- * @param {Array} idiomas - Lista de idiomas
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<boolean>} - Resultado de la operación
- */
 exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaModificacion) => {
   try {
-    // 1. Obtenemos los idiomas existentes para este alias
     const existingIdiomasQuery = `
       SELECT ID_IDIOMA as idIdioma, NOMBRE as nombre, DESCRIPCION as descripcion 
       FROM AJENOS.ALIAS_IDIOMA 
@@ -1121,17 +1070,13 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
     
     console.log(`Idiomas existentes para alias ${idAlias}:`, existingIdiomas);
     
-    // 2. Identificamos los idiomas nuevos, eliminados y actualizados
     const existingIdiomasMap = new Map(existingIdiomas.map(idioma => [idioma.idIdioma, idioma]));
     const incomingIdiomasMap = new Map(idiomas.map(idioma => [idioma.idIdioma, idioma]));
     
-    // Idiomas nuevos: los que están en la petición pero no en la BD
     const newIdiomas = idiomas.filter(idioma => !existingIdiomasMap.has(idioma.idIdioma));
     
-    // Idiomas eliminados: los que están en la BD pero no en la petición
     const removedIdiomas = existingIdiomas.filter(idioma => !incomingIdiomasMap.has(idioma.idIdioma));
     
-    // Idiomas actualizados: los que están en ambos pero han cambiado nombre o descripción
     const updatedIdiomas = idiomas.filter(idioma => {
       const existing = existingIdiomasMap.get(idioma.idIdioma);
       return existing && (
@@ -1142,10 +1087,8 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
     
     console.log(`Nuevos idiomas: ${newIdiomas.length}, Eliminados: ${removedIdiomas.length}, Actualizados: ${updatedIdiomas.length}`);
     
-    // 3. Aplicamos los cambios
     const operations = [];
     
-    // Insertar nuevos idiomas
     if (newIdiomas.length > 0) {
       const insertQuery = `
         INSERT INTO AJENOS.ALIAS_IDIOMA (ID_ALIAS, ID_IDIOMA, NOMBRE, DESCRIPCION)
@@ -1166,7 +1109,6 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
       }
     }
     
-    // Eliminar idiomas removidos
     if (removedIdiomas.length > 0) {
       const deleteQuery = `
         DELETE FROM AJENOS.ALIAS_IDIOMA 
@@ -1185,12 +1127,11 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
       }
     }
     
-    // Actualizar idiomas existentes
     if (updatedIdiomas.length > 0) {
       const updateQuery = `
         UPDATE AJENOS.ALIAS_IDIOMA 
         SET NOMBRE = :nombre, 
-            DESCRIPCION = :descripcion 
+          DESCRIPCION = :descripcion 
         WHERE ID_ALIAS = :idAlias AND ID_IDIOMA = :idIdioma
       `;
       
@@ -1208,7 +1149,6 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
       }
     }
     
-    // Ejecutamos todas las operaciones
     await Promise.all(operations);
     
     return newIdiomas.length > 0 || removedIdiomas.length > 0 || updatedIdiomas.length > 0;
@@ -1218,22 +1158,11 @@ exports.updateAliasIdioma = async (idAlias, idiomas, usuarioModificacion, fechaM
   }
 };
 
-/**
- * Actualiza los artículos asociados al alias
- * @param {number} idAlias - ID del alias
- * @param {Array} aliasAjeno - Lista de artículos
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<boolean>} - Resultado de la operación
- */
 exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fechaModificacion) => {
   try {
-    console.log(`========== INICIO updateAliasAjeno para idAlias=${idAlias} ==========`);
-    console.log(`Artículos recibidos en el request:`, JSON.stringify(aliasAjeno, null, 2));
     
     let aliasUntrained = false;
     
-    // 1. Obtenemos los artículos existentes para este alias
     const existingAliasAjenoQuery = `
       SELECT ID_ALIAS as idAlias, 
         ID_AJENO as idAjeno, 
@@ -1251,12 +1180,6 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
-    console.log(`Artículos existentes encontrados para alias ${idAlias}:`, JSON.stringify(existingAliasAjeno, null, 2));
-    console.log(`Total artículos existentes: ${existingAliasAjeno.length}`);
-    
-    // 2. Identificamos los artículos nuevos, eliminados y actualizados
-    
-    // Nuevos artículos: los que están en la petición pero no en la BD
     const newAliasAjeno = aliasAjeno.filter(ajeno => 
       !existingAliasAjeno.some(existing => 
         existing.idAjeno === ajeno.idAjeno &&
@@ -1264,19 +1187,13 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       )
     );
     
-    console.log(`Artículos nuevos identificados:`, JSON.stringify(newAliasAjeno, null, 2));
-    
-    // Artículos eliminados: los que están en la BD pero no en la petición
     const removedAliasAjeno = existingAliasAjeno.filter(existing => 
       !aliasAjeno.some(ajeno => 
         ajeno.idAjeno === existing.idAjeno && 
         idAlias === existing.idAlias
-      ) && existing.fechaBaja === null // Solo consideramos los que no tienen fecha de baja
+      ) && existing.fechaBaja === null
     );
     
-    console.log(`Artículos a eliminar identificados:`, JSON.stringify(removedAliasAjeno, null, 2));
-
-    // Artículos a restaurar: los que tienen fecha de baja pero están en la petición actual
     const restoreAliasAjeno = aliasAjeno.filter(ajeno => 
       existingAliasAjeno.some(existing => 
         existing.idAjeno === ajeno.idAjeno && 
@@ -1285,14 +1202,11 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       )
     );
     
-    console.log(`Artículos a restaurar identificados:`, JSON.stringify(restoreAliasAjeno, null, 2));
-    
-    // Artículos actualizados: los que están en ambos pero cambiaron estado o idSint
     const existingUpdatedAliasAjeno = aliasAjeno.filter(ajeno => {
       const existing = existingAliasAjeno.find(e => 
         e.idAjeno === ajeno.idAjeno && 
         e.idAlias === idAlias &&
-        e.fechaBaja === null // Solo consideramos los activos
+        e.fechaBaja === null
       );
 
       if (!existing) return false;
@@ -1302,21 +1216,11 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
         (existing.idSint && existing.idSint !== ajeno.idSint) ||
         (!existing.idSint && ajeno.idSint);
         
-      console.log(`Evaluando actualización para artículo ${ajeno.idAjeno}:
-        - Estado RAM actual: ${existing.idTipoEstadoAjenoRam}, nuevo: ${ajeno.idTipoEstadoAjenoRam}
-        - SINT actual: ${existing.idSint}, nuevo: ${ajeno.idSint}
-        - ¿Necesita actualización?: ${needsUpdate}`);
-        
       return needsUpdate;
     });
     
-    console.log(`Artículos a actualizar identificados:`, JSON.stringify(existingUpdatedAliasAjeno, null, 2));
-    console.log(`Resumen - Nuevos: ${newAliasAjeno.length}, Eliminados: ${removedAliasAjeno.length}, Restaurar: ${restoreAliasAjeno.length}, Actualizados: ${existingUpdatedAliasAjeno.length}`);
-    
-    // 3. Aplicamos los cambios
     const operations = [];
     
-    // Insertar nuevos artículos
     if (newAliasAjeno.length > 0) {
       const insertQuery = `
         INSERT INTO AJENOS.ALIAS_AJENO 
@@ -1324,11 +1228,7 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
         VALUES (:idAlias, :idAjeno, :idTipoEstadoAjenoRam, :idSint, :usuarioAlta, :fechaAlta)
       `;
       
-      console.log(`Preparando inserción de ${newAliasAjeno.length} nuevos artículos con query:`, insertQuery);
-      
       for (const ajeno of newAliasAjeno) {
-        console.log(`Insertando artículo: ${ajeno.idAjeno} con estado ${ajeno.idTipoEstadoAjenoRam} y SINT ${ajeno.idSint || 'NULL'}`);
-        
         const operation = sequelizeAjenos.query(insertQuery, {
           replacements: { 
             idAlias, 
@@ -1346,20 +1246,15 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       aliasUntrained = true;
     }
     
-    // Eliminar artículos removidos (marcarlos como dados de baja)
     if (removedAliasAjeno.length > 0) {
       const deleteQuery = `
         UPDATE AJENOS.ALIAS_AJENO 
         SET FECHA_BAJA = :fechaBaja, 
-            USUARIO_BAJA = :usuarioBaja
+          USUARIO_BAJA = :usuarioBaja
         WHERE ID_ALIAS = :idAlias AND ID_AJENO = :idAjeno AND FECHA_BAJA IS NULL
       `;
       
-      console.log(`Preparando eliminación (baja lógica) de ${removedAliasAjeno.length} artículos con query:`, deleteQuery);
-      
       for (const ajeno of removedAliasAjeno) {
-        console.log(`Marcando como baja el artículo: ${ajeno.idAjeno}`);
-        
         const operation = sequelizeAjenos.query(deleteQuery, {
           replacements: { 
             idAlias, 
@@ -1375,24 +1270,19 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       aliasUntrained = true;
     }
 
-    // Restaurar artículos dados de baja que ahora se deben reactivar
     if (restoreAliasAjeno.length > 0) {
       const restoreQuery = `
         UPDATE AJENOS.ALIAS_AJENO 
         SET ID_TIPO_ESTADO_AJENO_RAM = :idTipoEstadoAjenoRam, 
-            ID_SINT = :idSint, 
-            FECHA_MODIFICACION = :fechaModificacion, 
-            USUARIO_MODIFICACION = :usuarioModificacion,
-            FECHA_BAJA = NULL, 
-            USUARIO_BAJA = NULL
+          ID_SINT = :idSint, 
+          FECHA_MODIFICACION = :fechaModificacion, 
+          USUARIO_MODIFICACION = :usuarioModificacion,
+          FECHA_BAJA = NULL, 
+          USUARIO_BAJA = NULL
         WHERE ID_ALIAS = :idAlias AND ID_AJENO = :idAjeno AND FECHA_BAJA IS NOT NULL
       `;
       
-      console.log(`Preparando restauración de ${restoreAliasAjeno.length} artículos con query:`, restoreQuery);
-      
       for (const ajeno of restoreAliasAjeno) {
-        console.log(`Restaurando artículo: ${ajeno.idAjeno} con estado ${ajeno.idTipoEstadoAjenoRam} y SINT ${ajeno.idSint || 'NULL'}`);
-        
         const operation = sequelizeAjenos.query(restoreQuery, {
           replacements: { 
             idAlias, 
@@ -1410,22 +1300,17 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       aliasUntrained = true;
     }
     
-    // Actualizar artículos existentes
     if (existingUpdatedAliasAjeno.length > 0) {
       const updateQuery = `
         UPDATE AJENOS.ALIAS_AJENO 
         SET ID_TIPO_ESTADO_AJENO_RAM = :idTipoEstadoAjenoRam, 
-            ID_SINT = :idSint, 
-            FECHA_MODIFICACION = :fechaModificacion, 
-            USUARIO_MODIFICACION = :usuarioModificacion
+          ID_SINT = :idSint, 
+          FECHA_MODIFICACION = :fechaModificacion, 
+          USUARIO_MODIFICACION = :usuarioModificacion
         WHERE ID_ALIAS = :idAlias AND ID_AJENO = :idAjeno AND FECHA_BAJA IS NULL
       `;
       
-      console.log(`Preparando actualización de ${existingUpdatedAliasAjeno.length} artículos con query:`, updateQuery);
-      
       for (const ajeno of existingUpdatedAliasAjeno) {
-        console.log(`Actualizando artículo: ${ajeno.idAjeno} a estado ${ajeno.idTipoEstadoAjenoRam} y SINT ${ajeno.idSint || 'NULL'}`);
-        
         const operation = sequelizeAjenos.query(updateQuery, {
           replacements: { 
             idAlias, 
@@ -1443,13 +1328,7 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
       aliasUntrained = true;
     }
     
-    console.log(`Ejecutando ${operations.length} operaciones en la base de datos...`);
-    
-    // Ejecutamos todas las operaciones
     await Promise.all(operations);
-    
-    console.log(`Operaciones completadas. Alias entrenado: ${aliasUntrained}`);
-    console.log(`========== FIN updateAliasAjeno para idAlias=${idAlias} ==========`);
     
     return aliasUntrained;
   } catch (error) {
@@ -1458,11 +1337,6 @@ exports.updateAliasAjeno = async (idAlias, aliasAjeno, usuarioModificacion, fech
   }
 };
 
-/**
- * Encuentra los acoples asociados a un alias acople específico
- * @param {number} idAliasAcople - ID del alias acople
- * @returns {Promise<Array>} - Lista de acoples
- */
 exports.findAcoplesByIdAliasAcople = async (idAliasAcople) => {
   try {
     const query = `
@@ -1488,22 +1362,12 @@ exports.findAcoplesByIdAliasAcople = async (idAliasAcople) => {
   }
 };
 
-/**
- * Actualiza los acoples de un alias
- * @param {number} idAliasAcople - ID del alias acople
- * @param {Array} acoples - Lista de acoples
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<boolean>} - Indica si se realizaron cambios que requieren marcar el alias como no entrenado
- */
 exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, fechaModificacion) => {
   try {
     let aliasUntrained = false;
     
-    // 1. Obtenemos los acoples existentes
     const aliasAcopleByIdAcople = await exports.findAcoplesByIdAliasAcople(idAliasAcople);
     
-    // 2. Identificamos acoples añadidos, eliminados y actualizados
     const aliasAcopleAdded = acoples.filter(acople => 
       !aliasAcopleByIdAcople.some(existing => 
         existing.idAlias === acople.idAlias && existing.fechaBaja === null
@@ -1525,12 +1389,8 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
     
     console.log(`Para alias acople ${idAliasAcople} - añadidos: ${aliasAcopleAdded.length}, eliminados: ${aliasAcopleRemoved.length}, actualizados: ${aliasAcopleUpdated.length}`);
     
-    // 3. Procesamos los cambios
-    
-    // Añadir nuevos acoples o restaurar los que tenían fecha de baja
     if (aliasAcopleAdded.length > 0) {
       for (const aliasAcople of aliasAcopleAdded) {
-        // Verificar si existe con fecha de baja
         const checkExistingQuery = `
           SELECT 1 FROM AJENOS.ALIAS_ACOPLE 
           WHERE ID_ALIAS = :idAlias 
@@ -1546,7 +1406,6 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
         });
         
         if (existingResult.length > 0) {
-          // Actualizar registro existente (restaurar)
           const updateQuery = `
             UPDATE AJENOS.ALIAS_ACOPLE 
             SET FECHA_BAJA = NULL, 
@@ -1567,7 +1426,6 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
             type: sequelizeAjenos.QueryTypes.UPDATE
           });
         } else {
-          // Insertar nuevo acople
           const insertQuery = `
             INSERT INTO AJENOS.ALIAS_ACOPLE (
               ID_ALIAS, 
@@ -1600,14 +1458,13 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
       aliasUntrained = true;
     }
     
-    // Eliminar acoples (marcar como dados de baja)
     if (aliasAcopleRemoved.length > 0) {
       const idsAlias = aliasAcopleRemoved.map(acople => acople.idAlias);
       
       const deleteQuery = `
         UPDATE AJENOS.ALIAS_ACOPLE 
         SET USUARIO_BAJA = :usuarioBaja, 
-            FECHA_BAJA = :fechaBaja
+          FECHA_BAJA = :fechaBaja
         WHERE ID_ALIAS_ACOPLE = :idAliasAcople 
           AND ID_ALIAS IN (:idsAlias)
       `;
@@ -1625,16 +1482,15 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
       aliasUntrained = true;
     }
     
-    // Actualizar acoples existentes
     if (aliasAcopleUpdated.length > 0) {
       for (const acople of aliasAcopleUpdated) {
         const updateQuery = `
           UPDATE AJENOS.ALIAS_ACOPLE 
           SET RATIO_ACOPLE = :ratioAcople, 
-              USUARIO_BAJA = NULL, 
-              FECHA_BAJA = NULL, 
-              USUARIO_MODIFICACION = :usuarioModificacion,
-              FECHA_MODIFICACION = :fechaModificacion 
+            USUARIO_BAJA = NULL, 
+            FECHA_BAJA = NULL, 
+            USUARIO_MODIFICACION = :usuarioModificacion,
+            FECHA_MODIFICACION = :fechaModificacion 
           WHERE ID_ALIAS_ACOPLE = :idAliasAcople 
             AND ID_ALIAS = :idAlias
         `;
@@ -1661,11 +1517,6 @@ exports.updateAliasAcople = async (idAliasAcople, acoples, usuarioModificacion, 
   }
 };
 
-/**
- * Encuentra alias acople tarea por alias acople
- * @param {number} idAliasAcople - ID del alias acople
- * @returns {Promise<Array>} - Lista de alias acople tarea
- */
 exports.findAliasAcopleTareaByIdAliasAcople = async (idAliasAcople) => {
   try {
     const query = `
@@ -1696,20 +1547,10 @@ exports.findAliasAcopleTareaByIdAliasAcople = async (idAliasAcople) => {
   }
 };
 
-/**
- * Actualiza alias acople tarea
- * @param {number} idAliasAcople - ID del alias acople
- * @param {Array} acoples - Lista de acoples
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<void>}
- */
 exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificacion, fechaModificacion) => {
   try {
-    // Obtener los registros de alias_acople_tarea para el alias acople
     const aliasAcopleTareaByIdAcople = await exports.findAliasAcopleTareaByIdAliasAcople(idAliasAcople);
     
-    // Agrupar por idTarea
     const aliasAcopleTareaByTarea = {};
     for (const aliasAcopleTarea of aliasAcopleTareaByIdAcople) {
       if (!aliasAcopleTareaByTarea[aliasAcopleTarea.idTarea]) {
@@ -1718,29 +1559,23 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
       aliasAcopleTareaByTarea[aliasAcopleTarea.idTarea].push(aliasAcopleTarea);
     }
     
-    // Lista para almacenar todos los cambios
     const aliasAcopleTareaUpdated = [];
     
     for (const [idTarea, aliasAcopleTareas] of Object.entries(aliasAcopleTareaByTarea)) {
-      // Acoples añadidos: los que están en la lista de acoples pero no en aliasAcopleTareas
       const acoplesAdded = acoples.filter(acople => 
         !aliasAcopleTareas.some(existing => existing.idAlias === acople.idAlias)
       );
       
-      // Acoples eliminados: los que están en aliasAcopleTareas pero no en la lista de acoples y no tienen fecha de baja
       const aliasAcopleTareasRemoved = aliasAcopleTareas.filter(existing => 
         !acoples.some(acople => acople.idAlias === existing.idAlias && existing.fechaBaja === null)
       );
       
-      // Acoples a restaurar: los que están en ambas listas pero tienen fecha de baja
       const acoplesRestored = aliasAcopleTareas.filter(existing => 
         acoples.some(acople => acople.idAlias === existing.idAlias && existing.fechaBaja !== null)
       );
       
-      // Procesar cada tipo de cambio
       if (acoplesAdded.length > 0) {
         for (const acople of acoplesAdded) {
-          // Crear objeto para inserción
           aliasAcopleTareaUpdated.push({
             idAlias: acople.idAlias,
             idAliasAcople,
@@ -1756,7 +1591,6 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
       
       if (aliasAcopleTareasRemoved.length > 0) {
         for (const aliasAcopleDeleted of aliasAcopleTareasRemoved) {
-          // Marcar para eliminación (fecha de baja)
           aliasAcopleDeleted.fechaBaja = fechaModificacion;
           aliasAcopleDeleted.usuarioBaja = usuarioModificacion;
           aliasAcopleTareaUpdated.push(aliasAcopleDeleted);
@@ -1765,7 +1599,6 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
       
       if (acoplesRestored.length > 0) {
         for (const restored of acoplesRestored) {
-          // Restaurar eliminando fecha de baja
           restored.fechaBaja = null;
           restored.usuarioBaja = null;
           restored.fechaModificacion = fechaModificacion;
@@ -1775,11 +1608,9 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
       }
     }
     
-    // Realizar las actualizaciones e inserciones
     if (aliasAcopleTareaUpdated.length > 0) {
       for (const item of aliasAcopleTareaUpdated) {
         if (!item.id) {
-          // Inserción de un nuevo registro
           const insertQuery = `
             INSERT INTO AJENOS.ALIAS_ACOPLE_TAREA (
               ID_ALIAS, 
@@ -1810,11 +1641,10 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
             type: sequelizeAjenos.QueryTypes.INSERT
           });
         } else if (item.fechaBaja !== null) {
-          // Marcar como eliminado
           const deleteQuery = `
             UPDATE AJENOS.ALIAS_ACOPLE_TAREA 
             SET FECHA_BAJA = :fechaBaja, 
-                USUARIO_BAJA = :usuarioBaja
+              USUARIO_BAJA = :usuarioBaja
             WHERE ID_ALIAS = :idAlias 
               AND ID_ALIAS_ACOPLE = :idAliasAcople 
               AND ID_TAREA_RAM = :idTarea
@@ -1831,13 +1661,12 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
             type: sequelizeAjenos.QueryTypes.UPDATE
           });
         } else {
-          // Actualizar o restaurar
           const updateQuery = `
             UPDATE AJENOS.ALIAS_ACOPLE_TAREA 
             SET FECHA_BAJA = NULL, 
-                USUARIO_BAJA = NULL, 
-                FECHA_MODIFICACION = :fechaModificacion, 
-                USUARIO_MODIFICACION = :usuarioModificacion
+              USUARIO_BAJA = NULL, 
+              FECHA_MODIFICACION = :fechaModificacion, 
+              USUARIO_MODIFICACION = :usuarioModificacion
             WHERE ID_ALIAS = :idAlias 
               AND ID_ALIAS_ACOPLE = :idAliasAcople 
               AND ID_TAREA_RAM = :idTarea
@@ -1862,11 +1691,6 @@ exports.updateAliasAcopleTarea = async (idAliasAcople, acoples, usuarioModificac
   }
 };
 
-/**
- * Encuentra IDs de tarea por IDs de alias principal
- * @param {Array<number>} idsMainAlias - Lista de IDs de alias principales
- * @returns {Promise<Array<number>>} - Lista de IDs de tarea
- */
 exports.findIdsTareaByIdsMainAlias = async (idsMainAlias) => {
   try {
     const query = `
@@ -1887,11 +1711,6 @@ exports.findIdsTareaByIdsMainAlias = async (idsMainAlias) => {
   }
 };
 
-/**
- * Encuentra alias tarea por ID de tarea
- * @param {number} idTarea - ID de tarea
- * @returns {Promise<Array>} - Lista de alias tarea
- */
 exports.findAliasTareaByIdTarea = async (idTarea) => {
   try {
     const query = `
@@ -1912,14 +1731,6 @@ exports.findAliasTareaByIdTarea = async (idTarea) => {
   }
 };
 
-/**
- * Actualiza alias tarea
- * @param {number} idAliasAcople - ID del alias acople
- * @param {Array} acoples - Lista de acoples
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @param {Date} fechaModificacion - Fecha de modificación
- * @returns {Promise<void>}
- */
 exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, fechaModificacion) => {
   try {
     if (!acoples || acoples.length === 0) {
@@ -1927,7 +1738,6 @@ exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, f
       return;
     }
     
-    // Obtener IDs de tareas relacionadas con los alias principales
     const idsMainAlias = acoples.map(acople => acople.idAlias);
     const idsTarea = await exports.findIdsTareaByIdsMainAlias(idsMainAlias);
     
@@ -1936,29 +1746,23 @@ exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, f
       return;
     }
     
-    // Para cada tarea, procesamos los cambios
     for (const idTarea of idsTarea) {
       const aliasTareaByIdTarea = await exports.findAliasTareaByIdTarea(idTarea);
       
-      // Acoples a añadir
       const acoplesAdded = acoples.filter(acople => 
         !aliasTareaByIdTarea.some(existing => existing.ID_ALIAS === acople.idAlias)
       );
       
-      // Acoples a eliminar
       const aliasTareaRemoved = aliasTareaByIdTarea.filter(existing => 
         !acoples.some(acople => acople.idAlias === existing.ID_ALIAS)
       );
       
-      // Acoples a restaurar
       const acoplesRestored = aliasTareaByIdTarea.filter(existing => 
         acoples.some(acople => acople.idAlias === existing.ID_ALIAS && existing.FECHA_BAJA !== null)
       );
       
-      // Procesamos las inserciones
       if (acoplesAdded.length > 0) {
         for (const acople of acoplesAdded) {
-          // Determinamos el ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS basado en el tipo de alias
           const idTipoConexionOrigenDatoAlias = acople.idTipoAlias === 2 ? 1 : null; // 2 = TIPO_II, 1 = PRINCIPAL
           
           const insertQuery = `
@@ -1993,13 +1797,12 @@ exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, f
         }
       }
       
-      // Procesamos las eliminaciones
       if (aliasTareaRemoved.length > 0) {
         for (const removed of aliasTareaRemoved) {
           const deleteQuery = `
             UPDATE AJENOS.ALIAS_TAREA
             SET FECHA_BAJA = :fechaBaja, 
-                USUARIO_BAJA = :usuarioBaja
+              USUARIO_BAJA = :usuarioBaja
             WHERE ID_ALIAS = :idAlias 
               AND ID_TAREA_RAM = :idTarea
           `;
@@ -2016,15 +1819,14 @@ exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, f
         }
       }
       
-      // Procesamos las restauraciones
       if (acoplesRestored.length > 0) {
         for (const restored of acoplesRestored) {
           const restoreQuery = `
             UPDATE AJENOS.ALIAS_TAREA
             SET FECHA_BAJA = NULL, 
-                USUARIO_BAJA = NULL, 
-                FECHA_MODIFICACION = :fechaModificacion, 
-                USUARIO_MODIFICACION = :usuarioModificacion
+              USUARIO_BAJA = NULL, 
+              FECHA_MODIFICACION = :fechaModificacion, 
+              USUARIO_MODIFICACION = :usuarioModificacion
             WHERE ID_ALIAS = :idAlias 
               AND ID_TAREA_RAM = :idTarea
           `;
@@ -2047,13 +1849,6 @@ exports.updateAliasTarea = async (idAliasAcople, acoples, usuarioModificacion, f
   }
 };
 
-// Agregar estos métodos al aliasRepository.js
-
-/**
- * Obtiene el ID de ámbito de alias para un alias específico
- * @param {number} idAlias - ID del alias
- * @returns {Promise<number|null>} - ID del ámbito o null si no existe
- */
 exports.getIdAliasAmbito = async (idAlias) => {
   try {
     const query = `
@@ -2074,16 +1869,9 @@ exports.getIdAliasAmbito = async (idAlias) => {
   }
 };
 
-/**
- * Encuentra localizaciones de compra por cadena y mercado
- * @param {Array<number>} idsCadena - IDs de cadena
- * @param {Array<number>} idsMercado - IDs de mercado
- * @returns {Promise<Array>} - Lista de localizaciones
- */
 exports.findLocalizacionCompraByCadenaMercado = async (idsCadena, idsMercado) => {
   try {
-    // IDs de estado de tienda válidos (ABIERTA, ENREFORMA, PROVISIONAL)
-    const idsEstadoTienda = [1, 3, 4]; // Valores constantes según el código Java
+    const idsEstadoTienda = [1, 3, 4];
     
     const query = `
       SELECT 
@@ -2121,16 +1909,8 @@ exports.findLocalizacionCompraByCadenaMercado = async (idsCadena, idsMercado) =>
   }
 };
 
-/**
- * Crea un nuevo ámbito de alias
- * @param {number} idAlias - ID del alias
- * @param {Date} fechaAlta - Fecha de alta
- * @param {string} usuarioAlta - Usuario que crea el registro
- * @returns {Promise<number>} - ID del nuevo ámbito creado
- */
 exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
   try {
-    // ID_TIPO_REGLA_AMBITO = 1 (CADENA_Y_MERCADO)
     const idTipoReglaAmbito = 1;
     
     const query = `
@@ -2157,7 +1937,6 @@ exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
       type: sequelizeAjenos.QueryTypes.INSERT
     });
     
-    // Obtener el ID generado
     const newIdQuery = `
       SELECT ID_ALIAS_AMBITO as idAliasAmbito
       FROM AJENOS.ALIAS_AMBITO
@@ -2182,14 +1961,6 @@ exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
   }
 };
 
-/**
- * Crea registros de ámbito aplanado para un ámbito de alias
- * @param {number} idAliasAmbito - ID del ámbito de alias
- * @param {Date} fechaAlta - Fecha de alta
- * @param {string} usuarioAlta - Usuario que crea el registro
- * @param {Array} localizaciones - Lista de localizaciones
- * @returns {Promise<void>}
- */
 exports.createAliasAmbitoAplanado = async (idAliasAmbito, fechaAlta, usuarioAlta, localizaciones) => {
   try {
     if (!localizaciones || localizaciones.length === 0) {
@@ -2197,7 +1968,6 @@ exports.createAliasAmbitoAplanado = async (idAliasAmbito, fechaAlta, usuarioAlta
       return;
     }
     
-    // Obtener el máximo ID actual
     const maxIdQuery = `
       SELECT MAX(ID_ALIAS_AMBITO_APLANADO) as maxId
       FROM AJENOS.ALIAS_AMBITO_APLANADO
@@ -2207,12 +1977,11 @@ exports.createAliasAmbitoAplanado = async (idAliasAmbito, fechaAlta, usuarioAlta
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
-    let nextId = 1; // Valor por defecto si no hay registros
+    let nextId = 1;
     if (maxIdResult && maxIdResult.length > 0 && maxIdResult[0].maxId) {
       nextId = maxIdResult[0].maxId + 1;
     }
     
-    // Preparar los valores para inserción
     const insertValues = localizaciones.map((localizacion, index) => {
       const currentId = nextId + index;
       return `(
@@ -2247,15 +2016,6 @@ exports.createAliasAmbitoAplanado = async (idAliasAmbito, fechaAlta, usuarioAlta
   }
 };
 
-/**
- * Crea stock de localización para un alias
- * @param {number} idAlias - ID del alias
- * @param {Array<number>} idsLocalizacion - IDs de localización
- * @param {number|null} stockMaximo - Stock máximo
- * @param {Date} fechaAlta - Fecha de alta
- * @param {string} usuarioAlta - Usuario que crea el registro
- * @returns {Promise<void>}
- */
 exports.createStockLocalizacion = async (idAlias, idsLocalizacion, stockMaximo, fechaAlta, usuarioAlta) => {
   try {
     if (!idsLocalizacion || idsLocalizacion.length === 0) {
@@ -2263,7 +2023,6 @@ exports.createStockLocalizacion = async (idAlias, idsLocalizacion, stockMaximo, 
       return;
     }
     
-    // Preparar los valores para inserción
     const insertValues = idsLocalizacion.map(idLocalizacion => `(
       ${idAlias}, 
       ${idLocalizacion}, 
@@ -2291,11 +2050,6 @@ exports.createStockLocalizacion = async (idAlias, idsLocalizacion, stockMaximo, 
   }
 };
 
-/**
- * Encuentra registros de ámbito aplanado por ID de ámbito
- * @param {number} idAliasAmbito - ID del ámbito de alias
- * @returns {Promise<Array>} - Lista de registros
- */
 exports.findAliasAmbitoAplanadoByIdAliasAmbito = async (idAliasAmbito) => {
   try {
     const query = `
@@ -2319,12 +2073,6 @@ exports.findAliasAmbitoAplanadoByIdAliasAmbito = async (idAliasAmbito) => {
   }
 };
 
-/**
- * Encuentra registros de stock localización
- * @param {number} idAlias - ID del alias
- * @param {Array<number>} idsLocalizacion - IDs de localización
- * @returns {Promise<Array>} - Lista de registros
- */
 exports.findStockLocalizacion = async (idAlias, idsLocalizacion) => {
   try {
     if (!idsLocalizacion || idsLocalizacion.length === 0) {
@@ -2353,11 +2101,6 @@ exports.findStockLocalizacion = async (idAlias, idsLocalizacion) => {
   }
 };
 
-/**
- * Obtiene el tipo de alias para un alias específico
- * @param {number} idAlias - ID del alias
- * @returns {Promise<number>} - ID del tipo de alias
- */
 exports.findTypeAliasIdByIdAlias = async (idAlias) => {
   try {
     const query = `
@@ -2378,13 +2121,6 @@ exports.findTypeAliasIdByIdAlias = async (idAlias) => {
   }
 };
 
-/**
- * Restaura registros de ámbito aplanado
- * @param {Array<number>} idsAliasAmbitoAplanado - IDs de registro a restaurar
- * @param {string} usuario - Usuario que realiza la modificación
- * @param {Date} fecha - Fecha de modificación
- * @returns {Promise<void>}
- */
 exports.restoreAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, usuario, fecha) => {
   try {
     if (!idsAliasAmbitoAplanado || idsAliasAmbitoAplanado.length === 0) {
@@ -2394,9 +2130,9 @@ exports.restoreAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, usuario, fec
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO
       SET FECHA_BAJA = NULL, 
-          USUARIO_BAJA = NULL, 
-          USUARIO_MODIFICACION = :usuario, 
-          FECHA_MODIFICACION = :fecha
+        USUARIO_BAJA = NULL, 
+        USUARIO_MODIFICACION = :usuario, 
+        FECHA_MODIFICACION = :fecha
       WHERE ID_ALIAS_AMBITO_APLANADO IN (:idsAliasAmbitoAplanado)
     `;
     
@@ -2414,14 +2150,6 @@ exports.restoreAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, usuario, fec
   }
 };
 
-/**
- * Restaura registros de stock localización
- * @param {number} idAlias - ID del alias
- * @param {Array<number>} idsLocalizacion - IDs de localización
- * @param {Date} fechaModificacion - Fecha de modificación
- * @param {string} usuarioModificacion - Usuario que realiza la modificación
- * @returns {Promise<void>}
- */
 exports.restoreStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fechaModificacion, usuarioModificacion) => {
   try {
     if (!idsLocalizacion || idsLocalizacion.length === 0) {
@@ -2431,9 +2159,9 @@ exports.restoreStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fec
     const query = `
       UPDATE AJENOS.STOCK_LOCALIZACION_RAM 
       SET USUARIO_BAJA = NULL, 
-          FECHA_BAJA = NULL, 
-          FECHA_MODIFICACION = :fechaModificacion, 
-          USUARIO_MODIFICACION = :usuarioModificacion
+        FECHA_BAJA = NULL, 
+        FECHA_MODIFICACION = :fechaModificacion, 
+        USUARIO_MODIFICACION = :usuarioModificacion
       WHERE ID_ALIAS = :idAlias 
         AND ID_LOCALIZACION_COMPRA IN (:idsLocalizacion)
     `;
@@ -2453,13 +2181,6 @@ exports.restoreStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fec
   }
 };
 
-/**
- * Elimina (marca como baja) registros de ámbito aplanado
- * @param {Array<number>} idsAliasAmbitoAplanado - IDs de registro a eliminar
- * @param {Date} fechaBaja - Fecha de baja
- * @param {string} usuarioBaja - Usuario que realiza la baja
- * @returns {Promise<void>}
- */
 exports.deleteAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, fechaBaja, usuarioBaja) => {
   try {
     if (!idsAliasAmbitoAplanado || idsAliasAmbitoAplanado.length === 0) {
@@ -2469,7 +2190,7 @@ exports.deleteAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, fechaBaja, us
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO 
       SET USUARIO_BAJA = :usuarioBaja, 
-          FECHA_BAJA = :fechaBaja
+        FECHA_BAJA = :fechaBaja
       WHERE ID_ALIAS_AMBITO_APLANADO IN (:idsAliasAmbitoAplanado)
     `;
     
@@ -2487,14 +2208,6 @@ exports.deleteAliasAmbitoAplanado = async (idsAliasAmbitoAplanado, fechaBaja, us
   }
 };
 
-/**
- * Elimina (marca como baja) registros de stock localización
- * @param {number} idAlias - ID del alias
- * @param {Array<number>} idsLocalizacion - IDs de localización
- * @param {Date} fechaBaja - Fecha de baja
- * @param {string} usuarioBaja - Usuario que realiza la baja
- * @returns {Promise<void>}
- */
 exports.deleteStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fechaBaja, usuarioBaja) => {
   try {
     if (!idsLocalizacion || idsLocalizacion.length === 0) {
@@ -2504,7 +2217,7 @@ exports.deleteStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fech
     const query = `
       UPDATE AJENOS.STOCK_LOCALIZACION_RAM 
       SET USUARIO_BAJA = :usuarioBaja, 
-          FECHA_BAJA = :fechaBaja
+        FECHA_BAJA = :fechaBaja
       WHERE ID_ALIAS = :idAlias 
         AND ID_LOCALIZACION_COMPRA IN (:idsLocalizacion)
     `;
@@ -2524,23 +2237,12 @@ exports.deleteStockLocalizacionByIdAlias = async (idAlias, idsLocalizacion, fech
   }
 };
 
-/**
- * Actualiza ámbito aplanado de un alias
- * @param {number} idAlias - ID del alias
- * @param {number} idAliasAmbito - ID del ámbito de alias
- * @param {Array} localizacionesCalculadas - Lista de localizaciones calculadas
- * @param {string} usuario - Usuario que realiza la modificación
- * @param {Date} fecha - Fecha de modificación
- * @returns {Promise<boolean>} - Indica si se realizaron cambios que requieren marcar el alias como no entrenado
- */
 exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacionesCalculadas, usuario, fecha) => {
   try {
     let aliasUntrained = false;
     
-    // 1. Obtener registros existentes de ámbito aplanado
     const existingAliasAmbitoAplanado = await exports.findAliasAmbitoAplanadoByIdAliasAmbito(idAliasAmbito);
     
-    // 2. Identificar registros a añadir, eliminar y restaurar
     const newAliasAmbitoAplanado = localizacionesCalculadas.filter(localizacion => 
       !existingAliasAmbitoAplanado.some(existing => 
         existing.idLocalizacionCompra === localizacion.idLocalizacionCompra && 
@@ -2561,17 +2263,14 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacione
       )
     );
     
-    // 3. Obtener registros de stock localización para las nuevas localizaciones
     const idsLocalizacionCompra = newAliasAmbitoAplanado.map(localizacion => 
       localizacion.idLocalizacionCompra
     );
     
     const stockLocalizaciones = await exports.findStockLocalizacion(idAlias, idsLocalizacionCompra);
     
-    // 4. Obtener el tipo de alias
     const idTipoAlias = await exports.findTypeAliasIdByIdAlias(idAlias);
     
-    // 5. Filtrar localizaciones que no tienen fecha de baja
     const localizacionesSinFechaBaja = newAliasAmbitoAplanado.filter(localizacion => {
       const stock = stockLocalizaciones.find(s => 
         s.ID_LOCALIZACION_COMPRA === localizacion.idLocalizacionCompra
@@ -2579,12 +2278,10 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacione
       return !stock || stock.FECHA_BAJA === null;
     });
     
-    // 6. Crear nuevos registros de ámbito aplanado
     if (localizacionesSinFechaBaja.length > 0) {
       await exports.createAliasAmbitoAplanado(idAliasAmbito, fecha, usuario, localizacionesSinFechaBaja);
       
-      // 7. Crear registros de stock localización para las nuevas localizaciones
-      const stockMaximo = idTipoAlias === 4 ? null : 100; // 4 = TIPO_IV
+      const stockMaximo = idTipoAlias === 4 ? null : 100;
       await exports.createStockLocalizacion(
         idAlias,
         localizacionesSinFechaBaja.map(localizacion => localizacion.idLocalizacionCompra),
@@ -2596,7 +2293,6 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacione
       aliasUntrained = true;
     }
     
-    // 8. Restaurar registros existentes
     if (existingRestoredAliasAmbitoAplanado.length > 0) {
       await exports.restoreAliasAmbitoAplanado(
         existingRestoredAliasAmbitoAplanado.map(item => item.idAliasAmbitoAplanado),
@@ -2614,7 +2310,6 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacione
       aliasUntrained = true;
     }
     
-    // 9. Eliminar registros (marcar como baja)
     if (removedAliasAmbitoAplanado.length > 0) {
       await exports.deleteAliasAmbitoAplanado(
         removedAliasAmbitoAplanado.map(item => item.idAliasAmbitoAplanado),
@@ -2639,13 +2334,6 @@ exports.updateAliasAmbitoAplanado = async (idAlias, idAliasAmbito, localizacione
   }
 };
 
-// New methods to add to aliasRepository.js
-
-/**
- * Busca acoples por ID de alias principal
- * @param {number} idAlias - ID del alias principal
- * @returns {Promise<Array>} - Lista de acoples
- */
 exports.findAcoplesByMainAlias = async (idAlias) => {
   try {
     const query = `
@@ -2670,11 +2358,6 @@ exports.findAcoplesByMainAlias = async (idAlias) => {
   }
 };
 
-/**
- * Encuentra tareas básicas por ID de alias
- * @param {number} idAlias - ID del alias
- * @returns {Promise<Array>} - Lista de tareas básicas
- */
 exports.findBaseTareaTipoByIdAlias = async (idAlias) => {
   try {
     const query = `
@@ -2702,12 +2385,6 @@ exports.findBaseTareaTipoByIdAlias = async (idAlias) => {
   }
 };
 
-/**
- * Encuentra IDs de tarea ámbito aplanado por ID de tarea e ID de alias
- * @param {number} idTarea - ID de la tarea
- * @param {number} idAlias - ID del alias
- * @returns {Promise<Array<number>>} - Lista de IDs de tarea ámbito aplanado
- */
 exports.findIdTareaAmbitoAplanadoByIdTareaIdAlias = async (idTarea, idAlias) => {
   try {
     const query = `
@@ -2734,12 +2411,6 @@ exports.findIdTareaAmbitoAplanadoByIdTareaIdAlias = async (idTarea, idAlias) => 
   }
 };
 
-/**
- * Encuentra IDs de tarea ámbito aplanado por ID de tarea e ID de alias acople
- * @param {number} idTarea - ID de la tarea
- * @param {number} idAliasAcople - ID del alias acople
- * @returns {Promise<Array<number>>} - Lista de IDs de tarea ámbito aplanado
- */
 exports.findIdTareaAmbitoAplanadoByIdTareaIdAliasAcople = async (idTarea, idAliasAcople) => {
   try {
     const query = `
@@ -2766,13 +2437,6 @@ exports.findIdTareaAmbitoAplanadoByIdTareaIdAliasAcople = async (idTarea, idAlia
   }
 };
 
-/**
- * Elimina (marca como baja) registros de tarea ámbito aplanado
- * @param {Array<number>} idsTareaAmbitoAplanado - IDs de tarea ámbito aplanado
- * @param {string} usuario - Usuario que realiza la baja
- * @param {Date} fechaBaja - Fecha de baja
- * @returns {Promise<void>}
- */
 exports.deleteByIdTareaAmbitoAplanadoIn = async (idsTareaAmbitoAplanado, usuario, fechaBaja) => {
   try {
     if (!idsTareaAmbitoAplanado || idsTareaAmbitoAplanado.length === 0) {
@@ -2782,7 +2446,7 @@ exports.deleteByIdTareaAmbitoAplanadoIn = async (idsTareaAmbitoAplanado, usuario
     const query = `
       UPDATE AJENOS.TAREA_AMBITO_APLANADO 
       SET FECHA_BAJA = :fechaBaja, 
-          USUARIO_BAJA = :usuario
+        USUARIO_BAJA = :usuario
       WHERE ID_TAREA_AMBITO_APLANADO IN (:idsTareaAmbitoAplanado)
     `;
     
@@ -2800,15 +2464,6 @@ exports.deleteByIdTareaAmbitoAplanadoIn = async (idsTareaAmbitoAplanado, usuario
   }
 };
 
-/**
- * Calcula los registros básicos de tarea ámbito aplanado por ID de alias
- * @param {Array<number>} idsAlias - IDs de alias
- * @param {Array<number>} idsPais - IDs de país (mercado)
- * @param {Array<number>} idsGrupoCadena - IDs de grupo cadena
- * @param {Array<number>} idsCadena - IDs de cadena
- * @param {number} idTipoEstadoLocalizacionTarea - ID del tipo de estado de localización tarea
- * @returns {Promise<Array>} - Lista de registros calculados
- */
 exports.calculateBasicTareaAmbitoAplanadoByIdAlias = async (idsAlias, idsPais, idsGrupoCadena, idsCadena, idTipoEstadoLocalizacionTarea) => {
   try {
     const query = `
@@ -2857,16 +2512,6 @@ exports.calculateBasicTareaAmbitoAplanadoByIdAlias = async (idsAlias, idsPais, i
   }
 };
 
-/**
- * Calcula los registros básicos de tarea ámbito aplanado por ID de alias acople
- * @param {Array<number>} idsAlias - IDs de alias
- * @param {number} idAliasAcople - ID del alias acople
- * @param {Array<number>} idsPais - IDs de país (mercado)
- * @param {Array<number>} idsGrupoCadena - IDs de grupo cadena
- * @param {Array<number>} idsCadena - IDs de cadena
- * @param {number} idTipoEstadoLocalizacionTarea - ID del tipo de estado de localización tarea
- * @returns {Promise<Array>} - Lista de registros calculados
- */
 exports.calculateBasicTareaAmbitoAplanadoByIdAliasAcople = async (idsAlias, idAliasAcople, idsPais, idsGrupoCadena, idsCadena, idTipoEstadoLocalizacionTarea) => {
   try {
     const query = `
@@ -2928,15 +2573,6 @@ exports.calculateBasicTareaAmbitoAplanadoByIdAliasAcople = async (idsAlias, idAl
   }
 };
 
-/**
- * Calcula los registros básicos de tarea ámbito aplanado por ID de alias con acople
- * @param {Array<number>} idsAlias - IDs de alias
- * @param {Array<number>} idsPais - IDs de país (mercado)
- * @param {Array<number>} idsGrupoCadena - IDs de grupo cadena
- * @param {Array<number>} idsCadena - IDs de cadena
- * @param {number} idTipoEstadoLocalizacionTarea - ID del tipo de estado de localización tarea
- * @returns {Promise<Array>} - Lista de registros calculados
- */
 exports.calculateBasicTareaAmbitoAplanadoByIdAliasConAcople = async (idsAlias, idsPais, idsGrupoCadena, idsCadena, idTipoEstadoLocalizacionTarea) => {
   try {
     const query = `
@@ -2995,21 +2631,12 @@ exports.calculateBasicTareaAmbitoAplanadoByIdAliasConAcople = async (idsAlias, i
   }
 };
 
-/**
- * Crea registros de tarea ámbito aplanado
- * @param {number} idTareaAmbito - ID de la tarea ámbito
- * @param {Date} fechaAlta - Fecha de alta
- * @param {string} usuarioAlta - Usuario que crea el registro
- * @param {Array} tareaAmbitoAplanados - Lista de tarea ámbito aplanado
- * @returns {Promise<void>}
- */
 exports.createTareaAmbitoAplanado = async (idTareaAmbito, fechaAlta, usuarioAlta, tareaAmbitoAplanados) => {
   try {
     if (!tareaAmbitoAplanados || tareaAmbitoAplanados.length === 0) {
       return;
     }
     
-    // Preparar los valores para inserción
     const insertValues = tareaAmbitoAplanados.map(item => `(
       ${idTareaAmbito}, 
       ${item.idLocalizacionCompra}, 
@@ -3047,11 +2674,6 @@ exports.createTareaAmbitoAplanado = async (idTareaAmbito, fechaAlta, usuarioAlta
   }
 };
 
-/**
- * Marca los alias como no entrenados
- * @param {Array<number>} idsAlias - IDs de alias
- * @returns {Promise<void>}
- */
 exports.updateAliasUntrained = async (idsAlias) => {
   try {
     if (!idsAlias || idsAlias.length === 0) {
@@ -3074,23 +2696,12 @@ exports.updateAliasUntrained = async (idsAlias) => {
   }
 };
 
-/**
- * Propaga cambios en tarea ámbito aplanado por actualizaciones en alias acople
- * @param {number} idAliasAcople - ID del alias acople
- * @param {Array<number>} idsMainAlias - IDs de alias principal
- * @param {Object} aliasAmbito - Información del ámbito
- * @param {string} usuario - Usuario que realiza la modificación
- * @param {Date} fecha - Fecha de modificación
- * @returns {Promise<void>}
- */
 exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople, idsMainAlias, aliasAmbito, usuario, fecha) => {
   try {
-    // Constantes
-    const TIPO_TAREA_COUNT = 2; // ID para tipo de tarea COUNT
-    const TIPO_TAREA_DISTRIBUTION = 1; // ID para tipo de tarea DISTRIBUTION
-    const TIPO_ESTADO_LOCALIZACION_TAREA_ACTIVA = 1; // ID para tipo estado localización tarea ACTIVA
+    const TIPO_TAREA_COUNT = 2;
+    const TIPO_TAREA_DISTRIBUTION = 1;
+    const TIPO_ESTADO_LOCALIZACION_TAREA_ACTIVA = 1;
     
-    // 1. Obtener las tareas relacionadas con el alias acople
     const tareas = await exports.findBaseTareaTipoByIdAlias(idAliasAcople);
     
     if (!tareas || tareas.length === 0) {
@@ -3098,12 +2709,10 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
       return;
     }
     
-    // 2. Procesar cada tarea
     for (const tarea of tareas) {
       const calculatedTareaAmbitoAplanados = [];
       
       if (parseInt(tarea.idTipoTarea) === TIPO_TAREA_COUNT) {
-        // Si es recuento, eliminamos los registros con idAliasAcople como principal
         const idsTareaAmbitoAplanadoToRemove = await exports.findIdTareaAmbitoAplanadoByIdTareaIdAlias(
           tarea.idTarea, 
           idAliasAcople
@@ -3117,7 +2726,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
           );
         }
         
-        // Calculamos los nuevos registros
         const calculatedRecords = await exports.calculateBasicTareaAmbitoAplanadoByIdAlias(
           [idAliasAcople], 
           aliasAmbito.idsMercado, 
@@ -3130,7 +2738,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
       }
       
       if (parseInt(tarea.idTipoTarea) === TIPO_TAREA_DISTRIBUTION) {
-        // Si es distribución, eliminamos los registros que tengan idAliasAcople como acoplado
         const idsTareaAmbitoAplanadoToRemove = await exports.findIdTareaAmbitoAplanadoByIdTareaIdAliasAcople(
           tarea.idTarea, 
           idAliasAcople
@@ -3144,7 +2751,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
           );
         }
         
-        // Calculamos los registros con idAliasAcople actuando como acople de los principales
         const calculatedRecords = await exports.calculateBasicTareaAmbitoAplanadoByIdAliasAcople(
           idsMainAlias, 
           idAliasAcople, 
@@ -3157,7 +2763,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
         calculatedTareaAmbitoAplanados.push(...calculatedRecords);
       }
       
-      // Crear los nuevos registros
       if (calculatedTareaAmbitoAplanados.length > 0) {
         await exports.createTareaAmbitoAplanado(
           tarea.idTareaAmbito, 
@@ -3173,23 +2778,12 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAliasAcople = async (idAliasAcople,
   }
 };
 
-/**
- * Propaga cambios en tarea ámbito aplanado por actualizaciones en alias
- * @param {number} idAlias - ID del alias
- * @param {Array<number>} idsAliasAcople - IDs de alias acople
- * @param {Object} aliasAmbito - Información del ámbito
- * @param {string} usuario - Usuario que realiza la modificación
- * @param {Date} fecha - Fecha de modificación
- * @returns {Promise<void>}
- */
 exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAcople, aliasAmbito, usuario, fecha) => {
   try {
-    // Constantes
-    const TIPO_TAREA_COUNT = 2; // ID para tipo de tarea COUNT
-    const TIPO_TAREA_DISTRIBUTION = 1; // ID para tipo de tarea DISTRIBUTION
-    const TIPO_ESTADO_LOCALIZACION_TAREA_ACTIVA = 1; // ID para tipo estado localización tarea ACTIVA
+    const TIPO_TAREA_COUNT = 2;
+    const TIPO_TAREA_DISTRIBUTION = 1;
+    const TIPO_ESTADO_LOCALIZACION_TAREA_ACTIVA = 1;
     
-    // 1. Obtener las tareas relacionadas con el alias
     const tareas = await exports.findBaseTareaTipoByIdAlias(idAlias);
     
     if (!tareas || tareas.length === 0) {
@@ -3197,12 +2791,10 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAco
       return;
     }
     
-    // 2. Procesar cada tarea
     for (const tarea of tareas) {
       const calculatedTareaAmbitoAplanados = [];
       
       if (parseInt(tarea.idTipoTarea) === TIPO_TAREA_COUNT) {
-        // Si es recuento, procesamos el alias principal y los acoples
         const aliasTotales = [...idsAliasAcople, idAlias];
         
         const calculatedRecords = await exports.calculateBasicTareaAmbitoAplanadoByIdAlias(
@@ -3217,9 +2809,7 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAco
       }
       
       if (parseInt(tarea.idTipoTarea) === TIPO_TAREA_DISTRIBUTION) {
-        // Si es distribución, calculamos dos tipos de registros en paralelo
         
-        // 1. Registros con el alias principal solo
         const aliasMainRecords = await exports.calculateBasicTareaAmbitoAplanadoByIdAlias(
           [idAlias], 
           aliasAmbito.idsMercado, 
@@ -3228,7 +2818,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAco
           TIPO_ESTADO_LOCALIZACION_TAREA_ACTIVA
         );
         
-        // 2. Registros del alias con acoples
         const aliasConAcopleRecords = await exports.calculateBasicTareaAmbitoAplanadoByIdAliasConAcople(
           [idAlias], 
           aliasAmbito.idsMercado, 
@@ -3242,7 +2831,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAco
       }
       
       if (calculatedTareaAmbitoAplanados.length > 0) {
-        // Eliminar registros existentes
         const idsTareaAmbitoAplanadoToRemove = await exports.findIdTareaAmbitoAplanadoByIdTareaIdAlias(
           tarea.idTarea, 
           idAlias
@@ -3256,7 +2844,6 @@ exports.propagateTareaAmbitoAplanadoByUpdatedAlias = async (idAlias, idsAliasAco
           );
         }
         
-        // Crear los nuevos registros
         await exports.createTareaAmbitoAplanado(
           tarea.idTareaAmbito, 
           fecha, 
@@ -3275,15 +2862,15 @@ exports.findAliasInfoById = async (idIdioma) => {
   try {
     const query = `
       SELECT a.ID_ALIAS as idAlias, 
-             ai.NOMBRE as nombre, 
-             a.ID_TIPO_ALIAS as idTipoAlias,
-             a.ID_TIPO_ESTADO_ALIAS as idTipoEstadoAlias, 
-             teai.DESCRIPCION as descripcion
+        ai.NOMBRE as nombre, 
+        a.ID_TIPO_ALIAS as idTipoAlias,
+        a.ID_TIPO_ESTADO_ALIAS as idTipoEstadoAlias, 
+        teai.DESCRIPCION as descripcion
       FROM AJENOS.ALIAS a
       INNER JOIN AJENOS.ALIAS_IDIOMA ai ON a.ID_ALIAS = ai.ID_ALIAS AND ai.ID_IDIOMA = :idIdioma
       INNER JOIN AJENOS.TIPO_ESTADO_ALIAS_IDIOMA teai ON teai.ID_TIPO_ESTADO_ALIAS = a.ID_TIPO_ESTADO_ALIAS AND teai.ID_IDIOMA = :idIdioma
       WHERE (a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS = 1 OR a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS IS NULL)
-            AND a.FECHA_BAJA IS NULL
+        AND a.FECHA_BAJA IS NULL
       ORDER BY a.ID_ALIAS
     `;
     
@@ -3309,7 +2896,6 @@ exports.createAlias = async (aliasData) => {
   const t = await sequelizeAjenos.transaction();
   
   try {
-    // 1. Insertar el alias principal
     const aliasInsertQuery = `
       INSERT INTO AJENOS.ALIAS (
         ID_TIPO_ALIAS, 
@@ -3347,7 +2933,6 @@ exports.createAlias = async (aliasData) => {
     const idAlias = aliasResult[0].ID_ALIAS;
     console.log(`Alias creado con ID: ${idAlias}`);
     
-    // 2. Insertar idiomas del alias
     for (const idioma of aliasData.idiomas) {
       const insertIdiomaQuery = `
         INSERT INTO AJENOS.ALIAS_IDIOMA (
@@ -3375,7 +2960,6 @@ exports.createAlias = async (aliasData) => {
       });
     }
     
-    // 3. Insertar relaciones alias-ajeno (artículos)
     for (const ajeno of aliasData.aliasAjeno) {
       const insertAjenoQuery = `
         INSERT INTO AJENOS.ALIAS_AJENO (
@@ -3406,9 +2990,6 @@ exports.createAlias = async (aliasData) => {
         transaction: t
       });
     }
-    
-    // 4. Insertar ámbitos del alias
-    // Primero creamos el registro de ambito
     const insertAmbitoQuery = `
       INSERT INTO AJENOS.ALIAS_AMBITO (
         ID_ALIAS, 
@@ -3429,10 +3010,8 @@ exports.createAlias = async (aliasData) => {
     
     const idAliasAmbito = ambitoResult[0].ID_ALIAS_AMBITO;
     
-    // Crear combinaciones de grupos, cadenas y mercados
     for (const idGrupoCadena of aliasData.aliasAmbito.idsGrupoCadena) {
       for (const idCadena of aliasData.aliasAmbito.idsCadena) {
-        // Verificar que la cadena pertenece al grupo
         const checkCadenaGrupoQuery = `
           SELECT 1 FROM MAESTROS.GRUPO_CADENA_CADENA 
           WHERE ID_GRUPO_CADENA = :idGrupoCadena AND ID_CADENA = :idCadena
@@ -3445,11 +3024,10 @@ exports.createAlias = async (aliasData) => {
         });
         
         if (cadenaGrupoResult.length === 0) {
-          continue; // Esta cadena no pertenece a este grupo, saltamos
+          continue;
         }
         
         for (const idMercado of aliasData.aliasAmbito.idsMercado) {
-          // Buscar o crear la localización de compra
           const findLocalizacionQuery = `
             SELECT ID_LOCALIZACION 
             FROM AJENOS.LOCALIZACION_COMPRA 
@@ -3467,7 +3045,6 @@ exports.createAlias = async (aliasData) => {
           if (localizacionResult.length > 0) {
             idLocalizacion = localizacionResult[0].ID_LOCALIZACION;
           } else {
-            // Crear localización si no existe
             const insertLocalizacionQuery = `
               INSERT INTO AJENOS.LOCALIZACION_COMPRA (
                 ID_CADENA, 
@@ -3491,7 +3068,6 @@ exports.createAlias = async (aliasData) => {
             idLocalizacion = newLocalizacionResult[0].ID_LOCALIZACION;
           }
           
-          // Insertar en ALIAS_AMBITO_APLANADO
           const insertAmbitoAplanadoQuery = `
             INSERT INTO AJENOS.ALIAS_AMBITO_APLANADO (
               ID_ALIAS_AMBITO,
@@ -3515,13 +3091,11 @@ exports.createAlias = async (aliasData) => {
       }
     }
     
-    // Commit de la transacción
     await t.commit();
     
     return { success: true, idAlias };
   } catch (error) {
     console.error('Error en createAlias:', error);
-    // Rollback de la transacción en caso de error
     await t.rollback();
     throw error;
   }

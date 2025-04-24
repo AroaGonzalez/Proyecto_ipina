@@ -142,18 +142,15 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
     let finalSqlQuery = sqlQuery;
     let finalCountQuery = countQuery;
     
-    // Agregar cláusulas where basadas en los filtros
     const { whereClauses, params } = buildWhereClause(filter);
     if (whereClauses.length > 0) {
       finalSqlQuery += ` AND ${whereClauses.join(' AND ')}`;
       finalCountQuery += ` AND ${whereClauses.join(' AND ')}`;
     }
     
-    // Agrupar resultados y ordenar
     finalSqlQuery += ` GROUP BY tr.ID_TAREA_RAM, tr.NOMBRE, tt.ID_TIPO_TAREA, tti.DESCRIPCION, tetr.ID_TIPO_ESTADO_TAREA_RAM, tetri.DESCRIPCION, tr.FECHA_ALTA`;
     finalSqlQuery += ` ORDER BY tr.FECHA_ALTA DESC`;
     
-    // Agregar paginación (compatible con MySQL)
     if (pageable && pageable.size) {
       finalSqlQuery += ` LIMIT ${pageable.size} OFFSET ${pageable.page * pageable.size}`;
     }
@@ -199,7 +196,6 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
       totalPages
     };
     
-    // Guardar en caché
     cache.set(cacheKey, finalResult);
     
     return finalResult;

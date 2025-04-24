@@ -1948,14 +1948,12 @@ const EdicionAlias = () => {
                       />
                     )}
                   </div>
-                  
                   <div className="dropdown-items">
                     {filteredMercados.map((mercado) => {
                       const isInTable = ambitosTable.some(ambito => 
                         ambito.mercado.id === mercado.id && 
                         selectedAmbitos.includes(ambito.id)
                       );
-                      
                       return (
                         <div 
                           key={mercado.id} 
@@ -1974,7 +1972,6 @@ const EdicionAlias = () => {
                         </div>
                       );
                     })}
-                    
                     <div className="dropdown-item select-all" onClick={(e) => {
                       e.stopPropagation();
                       const mercadosIds = filteredMercados.map(m => m.id);
@@ -1985,14 +1982,12 @@ const EdicionAlias = () => {
                           selectedAmbitos.includes(ambito.id)
                         )
                       );
-                      
                       if (allSelected) {
                         filteredMercados.forEach(mercado => {
                           removeAmbitoIfExists(null, null, mercado.id);
                         });
                       } else {
                         const gruposCadenaCombinations = new Map();
-                        
                         ambitosTable.forEach(ambito => {
                           if (selectedAmbitos.includes(ambito.id)) {
                             const key = `${ambito.grupoCadena.id}-${ambito.cadena.id}`;
@@ -2004,7 +1999,6 @@ const EdicionAlias = () => {
                             }
                           }
                         });
-                        
                         filteredMercados.forEach(mercado => {
                           if (gruposCadenaCombinations.size === 0 && ambitoToAdd.grupoCadena && ambitoToAdd.cadena) {
                             const newAmbitoToAdd = {
@@ -2041,7 +2035,6 @@ const EdicionAlias = () => {
               )}
               </div>
             </div>
-            
             <div className="ambitos-table-container">
               <table className="ambitos-table">
                 <thead>

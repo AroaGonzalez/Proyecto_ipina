@@ -23,7 +23,6 @@ exports.getTareas = async (req, res) => {
       idIdioma: parseInt(idIdioma)
     };
    
-    // Convertir todos los parámetros de la petición a arrays de números
     if (idsTarea) {
       filter.idsTarea = parseIntArray(idsTarea);
     }
@@ -131,7 +130,6 @@ function parseIntArray(param) {
   if (Array.isArray(param)) {
     return param.map(Number);
   }
- 
   return param.toString().split(',').map(item => parseInt(item.trim(), 10));
 }
 

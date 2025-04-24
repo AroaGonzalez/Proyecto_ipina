@@ -36,7 +36,6 @@ const cache = {
   }
 };
 
-// Función para corregir problemas de codificación
 const correctEncoding = (text) => {
   if (!text) return text;
   
@@ -94,10 +93,8 @@ const buildWhereClause = (filter) => {
     whereClauses.push('lc.ID_LOCALIZACION_COMPRA IN (:idsLocalizacion)');
     
     if (filter.idLocalizacion) {
-      // Si viene como idLocalizacion, convertirlo en array
       params.idsLocalizacion = [filter.idLocalizacion];
     } else {
-      // Si ya viene como idsLocalizacion, asegurarse que sea array
       params.idsLocalizacion = Array.isArray(filter.idsLocalizacion) ? 
         filter.idsLocalizacion : [filter.idsLocalizacion];
     }
@@ -149,7 +146,7 @@ exports.findTiendasByFilter = async (filter = {}, pageable = { page: 0, size: 50
       JOIN MAESTROS.PAIS mp ON lc.ID_PAIS = mp.ID_PAIS
       LEFT JOIN MAESTROS.PAIS_IDIOMA mpi ON mpi.ID_PAIS = mp.ID_PAIS AND mpi.ID_IDIOMA = :idIdioma
       LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA telri ON 
-          telri.ID_TIPO_ESTADO_LOCALIZACION_RAM = lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM AND telri.ID_IDIOMA = :idIdioma
+        telri.ID_TIPO_ESTADO_LOCALIZACION_RAM = lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM AND telri.ID_IDIOMA = :idIdioma
       JOIN MAESTROS.CADENA c ON c.ID_CADENA = lc.ID_CADENA
       JOIN MAESTROS.GRUPO_CADENA_CADENA gcc ON gcc.ID_CADENA = c.ID_CADENA
       JOIN MAESTROS.GRUPO_CADENA gc ON gc.ID_GRUPO_CADENA = gcc.ID_GRUPO_CADENA
@@ -207,7 +204,6 @@ exports.findTiendasByFilter = async (filter = {}, pageable = { page: 0, size: 50
       });
 
       processedResult = result.map(item => {
-        // Aplicar corrección de codificación a todos los campos relevantes
         return {
           ...item,
           estadoTiendaMtu: correctEncoding(item.estadoTiendaMtu) || 'Sin estado',
@@ -315,7 +311,6 @@ exports.getGruposCadena = async (idIdioma = 1) => {
       type: sequelizeMaestros.QueryTypes.SELECT
     });
 
-    // Corregir codificación
     const correctedResult = result.map(item => ({
       ...item,
       descripcion: correctEncoding(item.descripcion)
@@ -348,8 +343,8 @@ exports.getCadenas = async (idGrupoCadena = null, idIdioma = 1) => {
     
     if (idGrupoCadena) {
       query += ` JOIN MAESTROS.GRUPO_CADENA_CADENA gcc ON gcc.ID_CADENA = c.ID_CADENA 
-                WHERE gcc.ID_GRUPO_CADENA = :idGrupoCadena
-                AND lc.FECHA_BAJA IS NULL`;
+        WHERE gcc.ID_GRUPO_CADENA = :idGrupoCadena
+        AND lc.FECHA_BAJA IS NULL`;
       replacements.idGrupoCadena = idGrupoCadena;
     } else {
       query += ` WHERE lc.FECHA_BAJA IS NULL`;
@@ -362,7 +357,6 @@ exports.getCadenas = async (idGrupoCadena = null, idIdioma = 1) => {
       type: sequelizeMaestros.QueryTypes.SELECT
     });
 
-    // Corregir codificación
     const correctedResult = result.map(item => ({
       ...item,
       descripcion: correctEncoding(item.descripcion)
@@ -411,10 +405,8 @@ exports.getGruposLocalizacion = async (idIdioma = 1) => {
   }
 };
 
-// En backend/node/repositories/tiendaRepository.js
 exports.cambiarEstadoLocalizaciones = async (ids, estado) => {
   try {
-    // Obtener el ID del estado según el valor recibido
     const estadoQuery = `
       SELECT ID_TIPO_ESTADO_LOCALIZACION_RAM 
       FROM AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA 
@@ -435,7 +427,7 @@ exports.cambiarEstadoLocalizaciones = async (ids, estado) => {
     const updateQuery = `
       UPDATE AJENOS.LOCALIZACION_COMPRA_RAM
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = :idEstado,
-          FECHA_MODIFICACION = NOW()
+        FECHA_MODIFICACION = NOW()
       WHERE ID_LOCALIZACION_COMPRA_RAM IN (:ids)
     `;
     
@@ -447,7 +439,6 @@ exports.cambiarEstadoLocalizaciones = async (ids, estado) => {
       type: sequelizeAjenos.QueryTypes.UPDATE
     });
     
-    // Invalidar caché relacionada
     cache.clear('tiendas_');
     
     return { success: true, idsActualizados: ids.length };

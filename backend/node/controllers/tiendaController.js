@@ -1,7 +1,6 @@
 // backend/node/controllers/tiendaController.js
 const tiendaRepository = require('../repositories/tiendaRepository');
 
-// Inicializar caché a nivel de controlador
 const queryCache = {
   data: {},
   timeout: 60 * 60 * 1000, // 1 hora
@@ -23,22 +22,17 @@ const queryCache = {
   }
 };
 
-// Añadir middleware para monitoreo de rendimiento
 const measurePerformance = (req, res, next) => {
   req.startTime = Date.now();
   
-  // Capturar el res.json original
   const originalJson = res.json;
   
-  // Sobreescribir el método res.json
   res.json = function(data) {
     const duration = Date.now() - req.startTime;
     console.log(`[RENDIMIENTO] ${req.method} ${req.originalUrl} completado en ${duration}ms`);
     
-    // Añadir cabecera de tiempo para depuración del cliente
     res.set('X-Response-Time', `${duration}ms`);
     
-    // Llamar al método json original
     return originalJson.call(this, data);
   };
   

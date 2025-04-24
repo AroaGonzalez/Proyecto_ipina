@@ -391,8 +391,6 @@ exports.getMercados = async (req, res) => {
   }
 };
 
-// Añade estos métodos a backend/node/controllers/aliasController.js
-
 exports.activarAliasAjeno = async (req, res) => {
   try {
     const { items } = req.body;
@@ -481,7 +479,6 @@ exports.pausarAliasAjeno = async (req, res) => {
   }
 };
 
-// Corrección para el método deleteAliasAjeno en aliasController.js
 exports.deleteAliasAjeno = async (req, res) => {
   try {
     const { items } = req.body;
@@ -561,12 +558,9 @@ exports.updateAlias = async (req, res) => {
     
     console.log(`Editando alias ID: ${id}`, aliasData);
     
-    // En una aplicación real, obtendríamos el usuario autenticado
-    // const usuarioModificacion = req.user.username;
     const usuarioModificacion = aliasData.usuario || 'WEBAPP'; // Usuario por defecto o del request
     const fechaModificacion = new Date();
     
-    // Inicializamos las banderas
     let setAliasUntrained = false;
     let propagateTareaAmbitoAplanado = false;
     
@@ -634,7 +628,6 @@ exports.updateAlias = async (req, res) => {
           idTipoAlias: acople.idTipoAlias || 2 // Por defecto TIPO_II
         }));
         
-        // Actualizar los acoples
         const updatedAliasAcople = await aliasRepository.updateAliasAcople(
           parseInt(id),
           formattedAcoples,
@@ -670,14 +663,12 @@ exports.updateAlias = async (req, res) => {
       
       const idAliasAmbito = await aliasRepository.getIdAliasAmbito(parseInt(id));
       
-      // Obtener las localizaciones para el ámbito
       const localizaciones = await aliasRepository.findLocalizacionCompraByCadenaMercado(
         aliasData.aliasAmbito.idsCadena || [],
         aliasData.aliasAmbito.idsMercado || []
       );
       
       if (!idAliasAmbito) {
-        // Si no existe un ámbito, lo creamos
         console.log('Creando nuevo ámbito para el alias');
         
         const newIdAmbito = await aliasRepository.createAliasAmbito(
@@ -693,8 +684,7 @@ exports.updateAlias = async (req, res) => {
           localizaciones
         );
         
-        // Crear stock localización
-        const stockMaximo = idTipoAlias === 4 ? null : 100; // 4 = TIPO_IV
+        const stockMaximo = idTipoAlias === 4 ? null : 100;
         await aliasRepository.createStockLocalizacion(
           parseInt(id),
           localizaciones.map(loc => loc.idLocalizacionCompra),
@@ -703,7 +693,6 @@ exports.updateAlias = async (req, res) => {
           usuarioModificacion
         );
       } else {
-        // Si existe un ámbito, lo actualizamos
         console.log('Actualizando ámbito existente para el alias');
         
         const updatedAliasAmbitoAplanado = await aliasRepository.updateAliasAmbitoAplanado(
@@ -758,7 +747,6 @@ exports.updateAlias = async (req, res) => {
       await aliasRepository.updateAliasUntrained([parseInt(id)]);
     }
     
-    // Respondemos con éxito
     res.json({
       success: true,
       message: 'Alias actualizado correctamente',
