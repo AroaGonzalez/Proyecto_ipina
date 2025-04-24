@@ -3304,3 +3304,225 @@ exports.findAliasInfoById = async (idIdioma) => {
     return [];
   }
 };
+
+exports.createAlias = async (aliasData) => {
+  const t = await sequelizeAjenos.transaction();
+  
+  try {
+    // 1. Insertar el alias principal
+    const aliasInsertQuery = `
+      INSERT INTO AJENOS.ALIAS (
+        ID_TIPO_ALIAS, 
+        ID_TIPO_ESTACIONALIDAD, 
+        ID_TIPO_ESTADO_ALIAS, 
+        ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS,
+        ID_TIPO_ORIGEN_DATO_ALIAS,
+        FECHA_ALTA, 
+        USUARIO_ALTA, 
+        FECHA_MODIFICACION
+      ) VALUES (
+        :idTipoAlias, 
+        :idTipoEstacionalidad, 
+        :idTipoEstadoAlias, 
+        :idTipoConexionOrigenDatoAlias,
+        :idTipoOrigenDatoAlias,
+        CURRENT_TIMESTAMP, 
+        'WEBAPP', 
+        CURRENT_TIMESTAMP
+      ) RETURNING ID_ALIAS
+    `;
+    
+    const [aliasResult] = await sequelizeAjenos.query(aliasInsertQuery, {
+      replacements: {
+        idTipoAlias: aliasData.idTipoAlias,
+        idTipoEstacionalidad: aliasData.idTipoEstacionalidad,
+        idTipoEstadoAlias: aliasData.idTipoEstadoAlias,
+        idTipoConexionOrigenDatoAlias: aliasData.idTipoConexionOrigenDatoAlias,
+        idTipoOrigenDatoAlias: aliasData.idTipoOrigenDatoAlias
+      },
+      type: sequelizeAjenos.QueryTypes.INSERT,
+      transaction: t
+    });
+    
+    const idAlias = aliasResult[0].ID_ALIAS;
+    console.log(`Alias creado con ID: ${idAlias}`);
+    
+    // 2. Insertar idiomas del alias
+    for (const idioma of aliasData.idiomas) {
+      const insertIdiomaQuery = `
+        INSERT INTO AJENOS.ALIAS_IDIOMA (
+          ID_ALIAS, 
+          ID_IDIOMA, 
+          NOMBRE, 
+          DESCRIPCION
+        ) VALUES (
+          :idAlias, 
+          :idIdioma, 
+          :nombre, 
+          :descripcion
+        )
+      `;
+      
+      await sequelizeAjenos.query(insertIdiomaQuery, {
+        replacements: {
+          idAlias,
+          idIdioma: idioma.idIdioma,
+          nombre: idioma.nombre,
+          descripcion: idioma.descripcion
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT,
+        transaction: t
+      });
+    }
+    
+    // 3. Insertar relaciones alias-ajeno (artículos)
+    for (const ajeno of aliasData.aliasAjeno) {
+      const insertAjenoQuery = `
+        INSERT INTO AJENOS.ALIAS_AJENO (
+          ID_ALIAS, 
+          ID_AJENO, 
+          ID_TIPO_ESTADO_AJENO_RAM,
+          ID_SINT,
+          FECHA_ALTA, 
+          USUARIO_ALTA
+        ) VALUES (
+          :idAlias, 
+          :idAjeno, 
+          :idTipoEstadoAjenoRam,
+          :idSint,
+          CURRENT_TIMESTAMP, 
+          'WEBAPP'
+        )
+      `;
+      
+      await sequelizeAjenos.query(insertAjenoQuery, {
+        replacements: {
+          idAlias,
+          idAjeno: ajeno.idAjeno,
+          idTipoEstadoAjenoRam: ajeno.idTipoEstadoAjenoRam || 1,
+          idSint: ajeno.idSint || null
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT,
+        transaction: t
+      });
+    }
+    
+    // 4. Insertar ámbitos del alias
+    // Primero creamos el registro de ambito
+    const insertAmbitoQuery = `
+      INSERT INTO AJENOS.ALIAS_AMBITO (
+        ID_ALIAS, 
+        FECHA_ALTA, 
+        USUARIO_ALTA
+      ) VALUES (
+        :idAlias, 
+        CURRENT_TIMESTAMP, 
+        'WEBAPP'
+      ) RETURNING ID_ALIAS_AMBITO
+    `;
+    
+    const [ambitoResult] = await sequelizeAjenos.query(insertAmbitoQuery, {
+      replacements: { idAlias },
+      type: sequelizeAjenos.QueryTypes.INSERT,
+      transaction: t
+    });
+    
+    const idAliasAmbito = ambitoResult[0].ID_ALIAS_AMBITO;
+    
+    // Crear combinaciones de grupos, cadenas y mercados
+    for (const idGrupoCadena of aliasData.aliasAmbito.idsGrupoCadena) {
+      for (const idCadena of aliasData.aliasAmbito.idsCadena) {
+        // Verificar que la cadena pertenece al grupo
+        const checkCadenaGrupoQuery = `
+          SELECT 1 FROM MAESTROS.GRUPO_CADENA_CADENA 
+          WHERE ID_GRUPO_CADENA = :idGrupoCadena AND ID_CADENA = :idCadena
+        `;
+        
+        const cadenaGrupoResult = await sequelizeMaestros.query(checkCadenaGrupoQuery, {
+          replacements: { idGrupoCadena, idCadena },
+          type: sequelizeMaestros.QueryTypes.SELECT,
+          transaction: t
+        });
+        
+        if (cadenaGrupoResult.length === 0) {
+          continue; // Esta cadena no pertenece a este grupo, saltamos
+        }
+        
+        for (const idMercado of aliasData.aliasAmbito.idsMercado) {
+          // Buscar o crear la localización de compra
+          const findLocalizacionQuery = `
+            SELECT ID_LOCALIZACION 
+            FROM AJENOS.LOCALIZACION_COMPRA 
+            WHERE ID_CADENA = :idCadena AND ID_PAIS = :idMercado
+          `;
+          
+          const localizacionResult = await sequelizeAjenos.query(findLocalizacionQuery, {
+            replacements: { idCadena, idMercado },
+            type: sequelizeAjenos.QueryTypes.SELECT,
+            transaction: t
+          });
+          
+          let idLocalizacion;
+          
+          if (localizacionResult.length > 0) {
+            idLocalizacion = localizacionResult[0].ID_LOCALIZACION;
+          } else {
+            // Crear localización si no existe
+            const insertLocalizacionQuery = `
+              INSERT INTO AJENOS.LOCALIZACION_COMPRA (
+                ID_CADENA, 
+                ID_PAIS, 
+                FECHA_ALTA, 
+                USUARIO_ALTA
+              ) VALUES (
+                :idCadena, 
+                :idMercado, 
+                CURRENT_TIMESTAMP, 
+                'WEBAPP'
+              ) RETURNING ID_LOCALIZACION
+            `;
+            
+            const [newLocalizacionResult] = await sequelizeAjenos.query(insertLocalizacionQuery, {
+              replacements: { idCadena, idMercado },
+              type: sequelizeAjenos.QueryTypes.INSERT,
+              transaction: t
+            });
+            
+            idLocalizacion = newLocalizacionResult[0].ID_LOCALIZACION;
+          }
+          
+          // Insertar en ALIAS_AMBITO_APLANADO
+          const insertAmbitoAplanadoQuery = `
+            INSERT INTO AJENOS.ALIAS_AMBITO_APLANADO (
+              ID_ALIAS_AMBITO,
+              ID_LOCALIZACION_COMPRA,
+              FECHA_ALTA,
+              USUARIO_ALTA
+            ) VALUES (
+              :idAliasAmbito,
+              :idLocalizacion,
+              CURRENT_TIMESTAMP,
+              'WEBAPP'
+            )
+          `;
+          
+          await sequelizeAjenos.query(insertAmbitoAplanadoQuery, {
+            replacements: { idAliasAmbito, idLocalizacion },
+            type: sequelizeAjenos.QueryTypes.INSERT,
+            transaction: t
+          });
+        }
+      }
+    }
+    
+    // Commit de la transacción
+    await t.commit();
+    
+    return { success: true, idAlias };
+  } catch (error) {
+    console.error('Error en createAlias:', error);
+    // Rollback de la transacción en caso de error
+    await t.rollback();
+    throw error;
+  }
+};

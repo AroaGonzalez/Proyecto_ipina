@@ -699,7 +699,10 @@ const ParametrizacionAlias = () => {
           >
             <span>{showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}</span>
           </button>
-          <button className="new-alias-button">
+          <button 
+            className="new-alias-button"
+            onClick={() => navigate('/nuevo-alias')}
+          >
             {t('NUEVO ALIAS')}
           </button>
         </div>

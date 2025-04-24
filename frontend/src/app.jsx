@@ -16,6 +16,7 @@ import ConsultaTienda from './components/consultaTienda';
 import ParametrizacionAlias from './components/parametrizacionAlias';
 import EdicionAlias from './components/edicionAlias';
 import Tareas from './components/tareas';
+import NuevoAlias from './components/nuevoAlias';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -57,6 +58,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <ConsultaTienda />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/nuevo-alias"
+              element={
+                <PrivateRoute>
+                  <NuevoAlias />
                 </PrivateRoute>
               }
             />

@@ -792,3 +792,44 @@ exports.getAliasInfo = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener información de alias', error: error.message });
   }
 };
+
+exports.createAlias = async (req, res) => {
+  try {
+    const aliasData = req.body;
+    
+    if (!aliasData.idiomas || aliasData.idiomas.length === 0) {
+      return res.status(400).json({ message: 'Se requieren datos de idiomas para el alias' });
+    }
+    
+    if (!aliasData.aliasAjeno || aliasData.aliasAjeno.length === 0) {
+      return res.status(400).json({ message: 'Se requiere asociar al menos un artículo al alias' });
+    }
+    
+    if (!aliasData.aliasAmbito || 
+        !aliasData.aliasAmbito.idsGrupoCadena || 
+        !aliasData.aliasAmbito.idsCadena || 
+        !aliasData.aliasAmbito.idsMercado ||
+        aliasData.aliasAmbito.idsGrupoCadena.length === 0 || 
+        aliasData.aliasAmbito.idsCadena.length === 0 || 
+        aliasData.aliasAmbito.idsMercado.length === 0) {
+      return res.status(400).json({ message: 'Se requiere definir al menos un ámbito para el alias' });
+    }
+    
+    console.log('Datos recibidos para crear alias:', aliasData);
+    
+    const result = await aliasRepository.createAlias(aliasData);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Alias creado correctamente',
+      idAlias: result.idAlias
+    });
+  } catch (error) {
+    console.error('Error en createAlias:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al crear el alias', 
+      error: error.message 
+    });
+  }
+};
