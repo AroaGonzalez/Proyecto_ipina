@@ -432,7 +432,6 @@ exports.cambiarEstadoLocalizaciones = async (ids, estado) => {
     
     const idEstado = estadoResult[0].ID_TIPO_ESTADO_LOCALIZACION_RAM;
     
-    // Actualizar los registros
     const updateQuery = `
       UPDATE AJENOS.LOCALIZACION_COMPRA_RAM
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = :idEstado,

@@ -125,7 +125,6 @@ exports.getTiposEstadoTarea = async (req, res) => {
   }
 };
 
-// Función auxiliar para convertir parámetros a arrays de enteros
 function parseIntArray(param) {
   if (!param) return null;
  
@@ -140,13 +139,7 @@ exports.updateEstadoTarea = async (req, res) => {
   try {
     const { id } = req.params;
     const { idTipoEstadoTarea, idIdioma = 1 } = req.body;
-    
-    if (!id || !idTipoEstadoTarea) {
-      return res.status(400).json({ 
-        message: 'ID de tarea y ID de tipo estado tarea son requeridos' 
-      });
-    }
-    
+        
     await tareaRepository.updateEstadoTarea(parseInt(id), parseInt(idTipoEstadoTarea));
     
     tareaRepository.invalidateCache('tareas_');

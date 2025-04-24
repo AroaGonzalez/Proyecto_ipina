@@ -110,10 +110,8 @@ const buildWhereClause = (filter) => {
 exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 }) => {
   try {
     const cacheKey = `tareas_${JSON.stringify(filter)}_${pageable.page}_${pageable.size}`;
-    // Comentar esta línea para habilitar caché en producción
     cache.clear(cacheKey);
     
-    // Consulta principal mejorada
     const sqlQuery = `
       SELECT tr.ID_TAREA_RAM, tr.NOMBRE AS NOMBRE_TAREA, tt.ID_TIPO_TAREA, tti.DESCRIPCION AS DESCRIPCION_TIPO_TAREA,
       tetr.ID_TIPO_ESTADO_TAREA_RAM, tetri.DESCRIPCION AS DESCRIPCION_TIPO_ESTADO_TAREA, tr.FECHA_ALTA,
@@ -130,12 +128,14 @@ exports.findTareasByFilter = async (filter = {}, pageable = { page: 0, size: 50 
       WHERE tr.FECHA_BAJA IS NULL
     `;
     
-    // Consulta para el conteo total - debe usar los mismos JOIN que la consulta principal
     const countQuery = `
       SELECT COUNT(DISTINCT tr.ID_TAREA_RAM) as total
       FROM AJENOS.TAREA_RAM tr
       INNER JOIN AJENOS.TIPO_TAREA tt ON tt.ID_TIPO_TAREA = tr.ID_TIPO_TAREA AND tt.ID_TIPO_TAREA <> 3
+      INNER JOIN AJENOS.TIPO_TAREA_IDIOMA tti ON tti.ID_TIPO_TAREA = tt.ID_TIPO_TAREA AND tti.ID_IDIOMA = :idIdioma
       INNER JOIN AJENOS.TIPO_ESTADO_TAREA_RAM tetr ON tetr.ID_TIPO_ESTADO_TAREA_RAM = tr.ID_TIPO_ESTADO_TAREA_RAM
+      LEFT JOIN AJENOS.ALIAS_TAREA ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM AND ta.FECHA_BAJA IS NULL
+      LEFT JOIN AJENOS.ALIAS a ON a.ID_ALIAS = ta.ID_ALIAS
       WHERE tr.FECHA_BAJA IS NULL
     `;
     
@@ -258,7 +258,6 @@ exports.getTiposEstadoTarea = async (idIdioma = 1) => {
   }
 };
 
-// Método auxiliar para depuración
 exports.getAliasesByTaskId = async (idTarea) => {
   try {
     const result = await sequelizeAjenos.query(`

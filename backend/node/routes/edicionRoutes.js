@@ -14,5 +14,8 @@ router.get('/grupos-cadena', aliasController.getGruposCadena);
 router.get('/cadenas', aliasController.getCadenas);
 router.get('/mercados', aliasController.getMercados);
 router.get('/all', ajenoController.getAllAjenos);
+router.get('/alias-info', aliasController.getAliasInfo);
+
+router.put('/alias/:id', aliasController.updateAlias);
 
 module.exports = router;

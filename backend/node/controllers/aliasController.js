@@ -553,3 +553,242 @@ exports.deleteAliasAjeno = async (req, res) => {
     });
   }
 };
+
+exports.updateAlias = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const aliasData = req.body;
+    
+    console.log(`Editando alias ID: ${id}`, aliasData);
+    
+    // En una aplicación real, obtendríamos el usuario autenticado
+    // const usuarioModificacion = req.user.username;
+    const usuarioModificacion = aliasData.usuario || 'WEBAPP'; // Usuario por defecto o del request
+    const fechaModificacion = new Date();
+    
+    // Inicializamos las banderas
+    let setAliasUntrained = false;
+    let propagateTareaAmbitoAplanado = false;
+    
+    // 1. Actualizar el tipo de estado del alias si se proporciona
+    if (aliasData.idEstado || aliasData.idTipoEstadoAlias) {
+      const idTipoEstadoAlias = aliasData.idEstado || aliasData.idTipoEstadoAlias;
+      console.log(`Actualizando estado del alias a: ${idTipoEstadoAlias}`);
+      await aliasRepository.updateTipoEstadoAlias(
+        parseInt(id), 
+        idTipoEstadoAlias, 
+        usuarioModificacion, 
+        fechaModificacion
+      );
+    }
+    
+    // 2. Actualizar los idiomas del alias
+    if (aliasData.idiomas && Array.isArray(aliasData.idiomas)) {
+      console.log(`Actualizando ${aliasData.idiomas.length} idiomas para el alias`);
+      
+      const formattedIdiomas = aliasData.idiomas.map(idioma => ({
+        idIdioma: idioma.idIdioma,
+        nombre: idioma.nombre || '',
+        descripcion: idioma.descripcion || ''
+      }));
+      
+      await aliasRepository.updateAliasIdioma(
+        parseInt(id),
+        formattedIdiomas,
+        usuarioModificacion,
+        fechaModificacion
+      );
+    }
+    
+    // 3. Actualizar los artículos asociados al alias
+    if (aliasData.aliasAjeno && Array.isArray(aliasData.aliasAjeno)) {
+      console.log(`Actualizando ${aliasData.aliasAjeno.length} artículos para el alias`);
+      
+      const formattedArticulos = aliasData.aliasAjeno.map(articulo => ({
+        idAjeno: articulo.idAjeno,
+        idTipoEstadoAjenoRam: articulo.idTipoEstadoAliasAjenoRam || articulo.idTipoEstadoAjenoRam || 1, // Por defecto ACTIVO
+        idSint: articulo.idSint || null
+      }));
+      
+      const result = await aliasRepository.updateAliasAjeno(
+        parseInt(id),
+        formattedArticulos,
+        usuarioModificacion,
+        fechaModificacion
+      );
+      
+      setAliasUntrained = result || setAliasUntrained;
+    }
+    
+    // 4. Actualizar los acoples si es un alias de tipo II con conexión ACOPLE
+    const idTipoAlias = aliasData.idTipoAlias || 1;
+    const idTipoConexion = aliasData.idTipoConexionOrigenDatoAlias || aliasData.idTipoConexion || 1;
+    
+    if (idTipoAlias === 2 && idTipoConexion === 2) { // 2 = TIPO_II y ACOPLE
+      console.log('Procesando acoples para alias tipo II con conexión ACOPLE');
+      
+      if (aliasData.acoples && Array.isArray(aliasData.acoples)) {
+        const formattedAcoples = aliasData.acoples.map(acople => ({
+          idAlias: acople.idAlias,
+          ratioAcople: acople.ratioAcople || 1,
+          idTipoAlias: acople.idTipoAlias || 2 // Por defecto TIPO_II
+        }));
+        
+        // Actualizar los acoples
+        const updatedAliasAcople = await aliasRepository.updateAliasAcople(
+          parseInt(id),
+          formattedAcoples,
+          usuarioModificacion,
+          fechaModificacion
+        );
+        
+        if (updatedAliasAcople) {
+          // Actualizar alias_acople_tarea y alias_tarea si hubo cambios en los acoples
+          await aliasRepository.updateAliasAcopleTarea(
+            parseInt(id),
+            formattedAcoples,
+            usuarioModificacion,
+            fechaModificacion
+          );
+          
+          await aliasRepository.updateAliasTarea(
+            parseInt(id),
+            formattedAcoples,
+            usuarioModificacion,
+            fechaModificacion
+          );
+        }
+        
+        propagateTareaAmbitoAplanado = updatedAliasAcople;
+        setAliasUntrained = setAliasUntrained || updatedAliasAcople;
+      }
+    }
+    
+    // 5. Actualizar el ámbito del alias
+    if (aliasData.aliasAmbito) {
+      console.log('Procesando ámbito del alias');
+      
+      const idAliasAmbito = await aliasRepository.getIdAliasAmbito(parseInt(id));
+      
+      // Obtener las localizaciones para el ámbito
+      const localizaciones = await aliasRepository.findLocalizacionCompraByCadenaMercado(
+        aliasData.aliasAmbito.idsCadena || [],
+        aliasData.aliasAmbito.idsMercado || []
+      );
+      
+      if (!idAliasAmbito) {
+        // Si no existe un ámbito, lo creamos
+        console.log('Creando nuevo ámbito para el alias');
+        
+        const newIdAmbito = await aliasRepository.createAliasAmbito(
+          parseInt(id), 
+          fechaModificacion, 
+          usuarioModificacion
+        );
+        
+        await aliasRepository.createAliasAmbitoAplanado(
+          newIdAmbito,
+          fechaModificacion, 
+          usuarioModificacion, 
+          localizaciones
+        );
+        
+        // Crear stock localización
+        const stockMaximo = idTipoAlias === 4 ? null : 100; // 4 = TIPO_IV
+        await aliasRepository.createStockLocalizacion(
+          parseInt(id),
+          localizaciones.map(loc => loc.idLocalizacionCompra),
+          stockMaximo,
+          fechaModificacion, 
+          usuarioModificacion
+        );
+      } else {
+        // Si existe un ámbito, lo actualizamos
+        console.log('Actualizando ámbito existente para el alias');
+        
+        const updatedAliasAmbitoAplanado = await aliasRepository.updateAliasAmbitoAplanado(
+          parseInt(id), 
+          idAliasAmbito, 
+          localizaciones, 
+          usuarioModificacion, 
+          fechaModificacion
+        );
+        
+        propagateTareaAmbitoAplanado = propagateTareaAmbitoAplanado || updatedAliasAmbitoAplanado;
+        setAliasUntrained = setAliasUntrained || updatedAliasAmbitoAplanado;
+      }
+    }
+    
+    // 6. Propagar cambios en ámbitos aplanados de tareas si es necesario
+    if (propagateTareaAmbitoAplanado && aliasData.aliasAmbito) {
+      console.log('Propagando cambios en ámbitos aplanados de tareas');
+      
+      if (aliasData.acoples && aliasData.acoples.length > 0) {
+        // Si hay acoples definidos, propagar por alias acople
+        await aliasRepository.propagateTareaAmbitoAplanadoByUpdatedAliasAcople(
+          parseInt(id),
+          aliasData.acoples.map(acople => acople.idAlias),
+          aliasData.aliasAmbito,
+          usuarioModificacion,
+          fechaModificacion
+        );
+      } else {
+        // Si no hay acoples definidos, buscar acoples existentes y propagar
+        const aliasAcoples = await aliasRepository.findAcoplesByMainAlias(parseInt(id));
+        
+        const idsAliasAcople = (aliasAcoples && aliasAcoples.length > 0)
+          ? aliasAcoples
+              .filter(acople => acople.fechaBaja === null)
+              .map(acople => acople.idAliasAcople)
+          : [];
+        
+        await aliasRepository.propagateTareaAmbitoAplanadoByUpdatedAlias(
+          parseInt(id),
+          idsAliasAcople,
+          aliasData.aliasAmbito,
+          usuarioModificacion,
+          fechaModificacion
+        );
+      }
+    }
+    
+    // 7. Marcar el alias como no entrenado si es necesario
+    if (setAliasUntrained) {
+      console.log('Marcando alias como no entrenado');
+      await aliasRepository.updateAliasUntrained([parseInt(id)]);
+    }
+    
+    // Respondemos con éxito
+    res.json({
+      success: true,
+      message: 'Alias actualizado correctamente',
+      data: {
+        idAlias: id,
+        timestamp: fechaModificacion,
+        aliasUntrained: setAliasUntrained,
+        propagateTareaAmbitoAplanado
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar alias:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al actualizar el alias', 
+      error: error.message 
+    });
+  }
+};
+
+exports.getAliasInfo = async (req, res) => {
+  try {
+    const idIdioma = parseInt(req.query.idIdioma) || 1;
+    console.log(`Consultando información de alias principales con idIdioma: ${idIdioma}`);
+    
+    const results = await aliasRepository.findAliasInfoById(idIdioma);
+    
+    res.json(results);
+  } catch (error) {
+    console.error('Error al obtener información de alias:', error);
+    res.status(500).json({ message: 'Error al obtener información de alias', error: error.message });
+  }
+};
