@@ -57,7 +57,10 @@ const CreacionAlias = () => {
   const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
   const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
   const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
-  
+
+    const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+    const [selectedCadenas, setSelectedCadenas] = useState([]);
+    const [selectedMercados, setSelectedMercados] = useState([]);
   const dropdownRef = useRef(null);
   const articulosDropdownRef = useRef(null);
   const grupoCadenaDropdownRef = useRef(null);
@@ -438,39 +441,36 @@ const CreacionAlias = () => {
   };
 
   const handleGrupoCadenaSelect = (grupo) => {
+    setSelectedGruposCadena(prev => {
+      if (prev.includes(grupo.id)) {
+        return prev.filter(id => id !== grupo.id);
+      } else {
+        return [...prev, grupo.id];
+      }
+    });
     setSelectedGrupoCadena(grupo.id);
   };
 
   const handleCadenaSelect = (cadena) => {
+    setSelectedCadenas(prev => {
+      if (prev.includes(cadena.id)) {
+        return prev.filter(id => id !== cadena.id);
+      } else {
+        return [...prev, cadena.id];
+      }
+    });
     setSelectedCadena(cadena.id);
   };
 
   const handleMercadoSelect = (mercado) => {
-    setSelectedMercado(mercado.id);
-  };
-
-  const handleAddAmbito = () => {
-    if (selectedGrupoCadena && selectedCadena && selectedMercado) {
-      const grupoCadena = gruposCadenaDisponibles.find(g => g.id === selectedGrupoCadena);
-      const cadena = cadenasDisponibles.find(c => c.id === selectedCadena);
-      const mercado = mercadosDisponibles.find(m => m.id === selectedMercado);
-      
-      if (grupoCadena && cadena && mercado) {
-        const newAmbitoId = `${grupoCadena.id}-${cadena.id}-${mercado.id}`;
-        
-        if (!ambitosTable.some(a => a.id === newAmbitoId)) {
-          const newAmbito = {
-            id: newAmbitoId,
-            grupoCadena,
-            cadena,
-            mercado
-          };
-          
-          setAmbitosTable(prev => [...prev, newAmbito]);
-          setSelectedAmbitos(prev => [...prev, newAmbitoId]);
-        }
+    setSelectedMercados(prev => {
+      if (prev.includes(mercado.id)) {
+        return prev.filter(id => id !== mercado.id);
+      } else {
+        return [...prev, mercado.id];
       }
-    }
+    });
+    setSelectedMercado(mercado.id);
   };
 
   const handleCancel = () => {
@@ -961,42 +961,56 @@ const CreacionAlias = () => {
                 </div>
                 
                 {isGrupoCadenaDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar grupo cadena...')}
-                      value={grupoSearchText}
-                      onChange={handleGrupoSearchChange}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    {grupoSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearGrupoSearch} 
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="dropdown-items">
-                    {filteredGruposCadena.map((grupo) => (
-                      <div 
-                        key={grupo.id} 
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleGrupoCadenaSelect(grupo);
-                          setIsGrupoCadenaDropdownOpen(false);
-                        }}
-                      >
-                        <span className="dropdown-item-text">
-                          {grupo.id} - {grupo.descripcion}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    <div className="filter-dropdown-content">
+                        <div className="dropdown-search">
+                        <FaSearch className="search-icon" />
+                        <input 
+                            type="text" 
+                            placeholder={t('Buscar grupo cadena...')}
+                            value={grupoSearchText}
+                            onChange={handleGrupoSearchChange}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        {grupoSearchText && (
+                            <FaTimes 
+                            className="clear-search-icon" 
+                            onClick={clearGrupoSearch} 
+                            />
+                        )}
+                        </div>
+                        
+                        <div className="dropdown-items">
+                        {filteredGruposCadena.map((grupo) => (
+                            <div 
+                            key={grupo.id} 
+                            className="dropdown-item"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleGrupoCadenaSelect(grupo);
+                            }}
+                            >
+                            <div className="custom-checkbox">
+                                {selectedGruposCadena.includes(grupo.id) && <FaCheck className="checkbox-icon" />}
+                            </div>
+                            <span className="dropdown-item-text">
+                                {grupo.id} - {grupo.descripcion}
+                            </span>
+                            </div>
+                        ))}
+                        </div>
+                        
+                        <div className="select-all-fixed">
+                        <div className="dropdown-item select-all">
+                            <div className="custom-checkbox">
+                            {filteredGruposCadena.length > 0 && 
+                                filteredGruposCadena.every(g => selectedGruposCadena.includes(g.id)) && 
+                                <FaCheck className="checkbox-icon" />
+                            }
+                            </div>
+                            <span>{t('Seleccionar todo')}</span>
+                        </div>
+                        </div>
+                    </div>
                 )}
               </div>
               
@@ -1019,42 +1033,56 @@ const CreacionAlias = () => {
                 </div>
                 
                 {isCadenaDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar cadena...')}
-                      value={cadenaSearchText}
-                      onChange={handleCadenaSearchChange}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    {cadenaSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearCadenaSearch} 
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="dropdown-items">
-                    {filteredCadenas.map((cadena) => (
-                      <div 
-                        key={cadena.id} 
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCadenaSelect(cadena);
-                          setIsCadenaDropdownOpen(false);
-                        }}
-                      >
-                        <span className="dropdown-item-text">
-                          {cadena.id} - {cadena.descripcion}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    <div className="filter-dropdown-content">
+                        <div className="dropdown-search">
+                        <FaSearch className="search-icon" />
+                        <input 
+                            type="text" 
+                            placeholder={t('Buscar cadena...')}
+                            value={cadenaSearchText}
+                            onChange={handleCadenaSearchChange}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        {cadenaSearchText && (
+                            <FaTimes 
+                            className="clear-search-icon" 
+                            onClick={clearCadenaSearch} 
+                            />
+                        )}
+                        </div>
+                        
+                        <div className="dropdown-items">
+                        {filteredCadenas.map((cadena) => (
+                            <div 
+                            key={cadena.id} 
+                            className="dropdown-item"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleCadenaSelect(cadena);
+                            }}
+                            >
+                            <div className="custom-checkbox">
+                                {selectedCadenas?.includes(cadena.id) && <FaCheck className="checkbox-icon" />}
+                            </div>
+                            <span className="dropdown-item-text">
+                                {cadena.id} - {cadena.descripcion}
+                            </span>
+                            </div>
+                        ))}
+                        </div>
+                        
+                        <div className="select-all-fixed">
+                        <div className="dropdown-item select-all">
+                            <div className="custom-checkbox">
+                            {filteredCadenas.length > 0 && 
+                                filteredCadenas.every(c => selectedCadenas?.includes(c.id)) && 
+                                <FaCheck className="checkbox-icon" />
+                            }
+                            </div>
+                            <span>{t('Seleccionar todo')}</span>
+                        </div>
+                        </div>
+                    </div>
                 )}
               </div>
               
@@ -1077,43 +1105,57 @@ const CreacionAlias = () => {
                 </div>
                 
                 {isMercadoDropdownOpen && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder={t('Buscar mercado...')}
-                      value={mercadoSearchText}
-                      onChange={handleMercadoSearchChange}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    {mercadoSearchText && (
-                      <FaTimes 
-                        className="clear-search-icon" 
-                        onClick={clearMercadoSearch} 
-                      />
+                    <div className="filter-dropdown-content">
+                        <div className="dropdown-search">
+                        <FaSearch className="search-icon" />
+                        <input 
+                            type="text" 
+                            placeholder={t('Buscar mercado...')}
+                            value={mercadoSearchText}
+                            onChange={handleMercadoSearchChange}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        {mercadoSearchText && (
+                            <FaTimes 
+                            className="clear-search-icon" 
+                            onClick={clearMercadoSearch} 
+                            />
+                        )}
+                        </div>
+                        
+                        <div className="dropdown-items">
+                        {filteredMercados.map((mercado) => (
+                            <div 
+                            key={mercado.id} 
+                            className="dropdown-item"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleMercadoSelect(mercado);
+                            }}
+                            >
+                            <div className="custom-checkbox">
+                                {selectedMercados?.includes(mercado.id) && <FaCheck className="checkbox-icon" />}
+                            </div>
+                            <span className="dropdown-item-text">
+                                {mercado.id} - {mercado.descripcion}
+                            </span>
+                            </div>
+                        ))}
+                        </div>
+                        
+                        <div className="select-all-fixed">
+                        <div className="dropdown-item select-all">
+                            <div className="custom-checkbox">
+                            {filteredMercados.length > 0 && 
+                                filteredMercados.every(m => selectedMercados?.includes(m.id)) && 
+                                <FaCheck className="checkbox-icon" />
+                            }
+                            </div>
+                            <span>{t('Seleccionar todo')}</span>
+                        </div>
+                        </div>
+                    </div>
                     )}
-                  </div>
-                  
-                  <div className="dropdown-items">
-                    {filteredMercados.map((mercado) => (
-                      <div 
-                        key={mercado.id} 
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMercadoSelect(mercado);
-                          setIsMercadoDropdownOpen(false);
-                        }}
-                      >
-                        <span className="dropdown-item-text">
-                          {mercado.id} - {mercado.descripcion}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                )}
               </div>
             </div>
             
