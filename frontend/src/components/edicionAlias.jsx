@@ -1152,14 +1152,13 @@ const EdicionAlias = () => {
                 </div>
               </div>
             </div>
-            {/* Añadir esta sección después del bloque de estado del alias y antes de la sección de idiomas */}
             {(selectedTipoAlias === '2' || selectedTipoAlias === 2 || alias.idTipoAlias === 2) && 
- (selectedTipoConexion === '2' || selectedTipoConexion === 2 || alias.idTipoConexionOrigenDatoAlias === 2) && (
+              (selectedTipoConexion === '2' || selectedTipoConexion === 2 || alias.idTipoConexionOrigenDatoAlias === 2) && (
               <div className="acople-section">
                 <p className="section-description">{t('Selecciona los alias principales a los que quieres acoplar el alias.')}</p>
                 <div className="aliasesPrincipales-search-container" ref={aliasesDropdownRef}>
                   <div className="field-container">
-                    <label className="dropdown-label">{t('Id o Nombre de Alias')} *</label>
+                    <label className="dropdown-label">{t('Id o Nombre de Alias')} </label>
                     <div className="aliasesPrincipales-search-input-container">
                       <input 
                         type="text" 

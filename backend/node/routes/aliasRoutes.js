@@ -12,6 +12,7 @@ router.get('/ajeno', aliasController.getAjenos);
 router.get('/alias/ajenos/filter', aliasController.getAliasAjenos);
 router.put('/activar-alias-ajeno', aliasController.activarAliasAjeno);
 router.put('/pausar-alias-ajeno', aliasController.pausarAliasAjeno);
-router.put('/delete-alias-ajeno', aliasController.deleteAliasAjeno);
+router.delete('/delete-alias-ajeno', aliasController.deleteAliasAjeno);
+router.delete('/delete-alias', aliasController.deleteAlias);
 
 module.exports = router;

@@ -73,6 +73,15 @@ const CreacionAlias = () => {
     const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
     const [tiposConexion, setTiposConexion] = useState([]);
 
+    // Añadir estos nuevos estados:
+    const [aliasesPrincipales, setAliasesPrincipales] = useState([]);
+    const [selectedAliasesPrincipales, setSelectedAliasesPrincipales] = useState([]);
+    const [aliasSearchText, setAliasSearchText] = useState('');
+    const [filteredAliasesPrincipales, setFilteredAliasesPrincipales] = useState([]);
+    const [isAliasesDropdownOpen, setIsAliasesDropdownOpen] = useState(false);
+    const [acoplesRatio, setAcoplesRatio] = useState({});
+    const aliasesDropdownRef = useRef(null);
+
     useEffect(() => {
         function handleClickOutside(event) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -89,6 +98,9 @@ const CreacionAlias = () => {
         }
         if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
             setIsMercadoDropdownOpen(false);
+        }
+        if (aliasesDropdownRef.current && !aliasesDropdownRef.current.contains(event.target)) {
+          setIsAliasesDropdownOpen(false);
         }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -109,7 +121,8 @@ const CreacionAlias = () => {
                     gruposCadenaRes,
                     cadenasRes,
                     mercadosRes,
-                    tiposConexionRes
+                    tiposConexionRes,
+                    aliasesResponse
                 ] = await Promise.all([
                     axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
                     axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
@@ -118,12 +131,14 @@ const CreacionAlias = () => {
                     axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
                     axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
                     axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
-                    axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`)
+                    axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/creacion/alias-info?idIdioma=${languageId}`)
                 ]);
 
                 setTiposAlias(tiposAliasRes.data || []);
                 setEstacionalidades(estacionalidadesRes.data || []);
                 setIdiomas(idiomasRes.data || []);
+                setAliasesPrincipales(aliasesResponse.data || []);
                 
                 if (idiomasRes.data) {
                     const principalesIds = [1, 3];
@@ -514,6 +529,57 @@ const CreacionAlias = () => {
     setFilteredMercados(mercadosDisponibles);
   };
 
+  const toggleAliasesDropdown = () => {
+    setIsAliasesDropdownOpen(!isAliasesDropdownOpen);
+    setIsGrupoCadenaDropdownOpen(false);
+    setIsCadenaDropdownOpen(false);
+    setIsMercadoDropdownOpen(false);
+    setIsArticulosDropdownOpen(false);
+    
+    if (!isAliasesDropdownOpen) {
+      setAliasSearchText('');
+      setFilteredAliasesPrincipales(aliasesPrincipales);
+    }
+  };
+  
+  const handleAliasSearchChange = (e) => {
+    const value = e.target.value;
+    setAliasSearchText(value);
+    
+    if (value) {
+      const searchValue = value.toLowerCase();
+      const filtered = aliasesPrincipales.filter(
+        alias => 
+          alias.idAlias.toString().toLowerCase().includes(searchValue) || 
+          alias.nombre.toLowerCase().includes(searchValue)
+      );
+      setFilteredAliasesPrincipales(filtered);
+    } else {
+      setFilteredAliasesPrincipales(aliasesPrincipales);
+    }
+  };
+  
+  const clearAliasSearch = () => {
+    setAliasSearchText('');
+    setFilteredAliasesPrincipales(aliasesPrincipales);
+  };
+  
+  const handleAliasPrincipalSelect = (alias) => {
+    setSelectedAliasesPrincipales(prev => {
+      if (prev.some(a => a.idAlias === alias.idAlias)) {
+        return prev.filter(a => a.idAlias !== alias.idAlias);
+      }
+      return [...prev, alias];
+    });
+  };
+  
+  const handleAcopleRatioChange = (idAlias, value) => {
+    setAcoplesRatio(prev => ({
+      ...prev,
+      [idAlias]: parseFloat(value) || 0
+    }));
+  };
+
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);
   };
@@ -668,7 +734,7 @@ const CreacionAlias = () => {
               
               aliasAjeno: articulos.map(articulo => ({
                 idAjeno: parseInt(articulo.idAjeno || articulo.id),
-                idTipoEstadoAjenoRam: idTipoEstadoRam,
+                idTipoEstadoAjenoRam: articulo.idTipoEstadoRam,
                 idSint: articulo.idSint && articulo.idSint !== '-' ? parseInt(articulo.idSint) : null
               })),
               
@@ -678,8 +744,17 @@ const CreacionAlias = () => {
                 idsMercado: [...new Set(ambitosTable.map(ambito => ambito.mercado.id))]
               }
             };
+
+            if (selectedTipoAlias === '2' && selectedTipoConexion === '2' && selectedAliasesPrincipales.length > 0) {
+              nuevoAlias.acoples = selectedAliasesPrincipales.map(alias => ({
+                idAlias: parseInt(alias.idAlias),
+                ratioAcople: parseFloat(acoplesRatio[alias.idAlias] || 1),
+                idTipoAlias: parseInt(alias.idTipoAlias || 1)
+              }));
+            }
             
             const response = await axios.post(`${BASE_URL}/creacion/creacion-Alias`, nuevoAlias);
+
             console.log('Alias creado con ID:', response.data.id);
             
             alert(t('Alias creado correctamente'));
@@ -786,6 +861,134 @@ const CreacionAlias = () => {
                 </select>
               </div>
             </div>
+            {selectedTipoAlias === '2' && selectedTipoConexion === '2' && (
+              <div className="acople-section">
+                <p className="section-description">{t('Selecciona los alias principales a los que quieres acoplar el alias.')}</p>
+                <div className="aliasesPrincipales-search-container" ref={aliasesDropdownRef}>
+                  <div className="field-container">
+                    <label className="dropdown-label">{t('Id o Nombre de Alias')} </label>
+                    <div className="aliasesPrincipales-search-input-container">
+                      <input 
+                        type="text" 
+                        value={aliasSearchText}
+                        onChange={handleAliasSearchChange}
+                        onClick={toggleAliasesDropdown}
+                        className="aliasesPrincipales-search-input"
+                        placeholder={t('Buscar por id o nombre de alias')}
+                      />
+                      {aliasSearchText && (
+                        <button className="aliasesPrincipales-search-clear-btn" onClick={clearAliasSearch}>
+                          <FaTimes />
+                        </button>
+                      )}
+                      <button className="aliasesPrincipales-search-toggle-btn" onClick={toggleAliasesDropdown}>
+                        <FaChevronDown />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {isAliasesDropdownOpen && (
+                    <div className="aliasesPrincipales-dropdown">
+                      <div className="aliasesPrincipales-search-box">
+                        <FaSearch className="aliasesPrincipales-search-icon" />
+                        <input 
+                          type="text"
+                          value={aliasSearchText}
+                          onChange={handleAliasSearchChange}
+                          placeholder={t('Buscar alias...')}
+                          className="aliasesPrincipales-dropdown-search-input"
+                          autoFocus
+                        />
+                        {aliasSearchText && (
+                          <button className="aliasesPrincipales-dropdown-clear-btn" onClick={clearAliasSearch}>
+                            <FaTimes />
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="aliasesPrincipales-dropdown-items">
+                        {filteredAliasesPrincipales.length === 0 ? (
+                          <div className="aliasesPrincipales-no-results">{t('No se encontraron alias')}</div>
+                        ) : (
+                          <>
+                            {filteredAliasesPrincipales.map(alias => (
+                              <div 
+                                key={alias.idAlias} 
+                                className="aliasesPrincipales-dropdown-item"
+                                onClick={() => handleAliasPrincipalSelect(alias)}
+                              >
+                                <div className="custom-checkbox">
+                                  {selectedAliasesPrincipales.some(a => a.idAlias === alias.idAlias) && 
+                                    <FaCheck className="checkbox-icon" />
+                                  }
+                                </div>
+                                <div className="aliasesPrincipales-item-info">
+                                  <div className="aliasesPrincipales-item-id">
+                                    {alias.idAlias} - {normalizeText(alias.nombre)}
+                                  </div>
+                                  <span className={`estado-tag ${alias.descripcion?.toUpperCase().includes('PRODUCCION') ? 'produccion' : 'borrador'}`}>
+                                    {normalizeText(alias.descripcion)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="aliasesPrincipales-count">
+                  {t('Acoplado a los siguientes')} {selectedAliasesPrincipales.length} {t('alias')}
+                </div>
+                
+                <div className="aliasesPrincipales-table-container">
+                  {selectedAliasesPrincipales.length === 0 ? (
+                    <div className="aliasesPrincipales-empty-state">
+                      {t('No hay alias seleccionados. Utilice la búsqueda para añadir alias principales.')}
+                    </div>
+                  ) : (
+                    <table className="aliasesPrincipales-table">
+                      <thead>
+                        <tr>
+                          <th className="checkbox-column"></th>
+                          <th>{t('ID ALIAS PRINCIPAL')}</th>
+                          <th>{t('ALIAS PRINCIPAL')}</th>
+                          <th>{t('RATIO DE ACOPLE (POR UNIDAD PRINCIPAL)')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedAliasesPrincipales.map(alias => (
+                          <tr key={alias.idAlias}>
+                            <td className="checkbox-column">
+                              <div 
+                                className="custom-checkbox"
+                                onClick={() => handleAliasPrincipalSelect(alias)}
+                              >
+                                <FaCheck className="checkbox-icon" />
+                              </div>
+                            </td>
+                            <td>{alias.idAlias}</td>
+                            <td>{normalizeText(alias.nombre)}</td>
+                            <td>
+                              <input 
+                                type="number" 
+                                value={acoplesRatio[alias.idAlias] || 1}
+                                onChange={(e) => handleAcopleRatioChange(alias.idAlias, e.target.value)}
+                                min="0"
+                                step="1"
+                                className="ratio-input"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="form-row">
               <p className="idiomas-description">{t('Añade los idiomas de los mercados donde se distribuirá este alias.')}</p>

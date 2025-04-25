@@ -1,5 +1,6 @@
 // backend/node/repositories/aliasRepository.js
 const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
+const { QueryTypes } = require('sequelize');
 
 const CACHE_DURATION = 30 * 1000;
 
@@ -939,59 +940,6 @@ exports.updateEstadoAliasAjeno = async (idAlias, idAjeno, idTipoEstadoAliasAjeno
   } catch (error) {
     console.error(`Error al actualizar estado de alias-ajeno:`, error);
     throw error;
-  }
-};
-
-exports.deleteAliasAjeno = async (idAlias, idAjeno, usuarioBaja, fechaBaja) => {
-  try {
-    console.log(`Eliminando relación alias-artículo: ${idAlias}-${idAjeno}`);
-    
-    const checkQuery = `
-      SELECT COUNT(*) as count
-      FROM AJENOS.ALIAS_AJENO 
-      WHERE ID_ALIAS = :idAlias 
-        AND ID_AJENO = :idAjeno
-        AND FECHA_BAJA IS NULL
-    `;
-    
-    const checkResults = await sequelizeAjenos.query(checkQuery, {
-      replacements: { idAlias, idAjeno },
-      type: sequelizeAjenos.QueryTypes.SELECT
-    });
-    
-    const exists = checkResults && checkResults.length > 0 && checkResults[0].count > 0;
-    console.log(`Verificación de existencia de relación ${idAlias}-${idAjeno}: ${exists ? 'Existe' : 'No existe'}`);
-    
-    if (!exists) {
-      console.log(`No se encontró la relación ${idAlias}-${idAjeno} para eliminar o ya estaba eliminada`);
-      return false;
-    }
-    
-    const updateQuery = `
-      UPDATE AJENOS.ALIAS_AJENO 
-      SET USUARIO_BAJA = :usuarioBaja, 
-        FECHA_BAJA = :fechaBaja
-      WHERE ID_ALIAS = :idAlias 
-        AND ID_AJENO = :idAjeno
-        AND FECHA_BAJA IS NULL
-    `;
-    
-    try {
-      await sequelizeAjenos.query(updateQuery, {
-        replacements: { idAlias, idAjeno, usuarioBaja, fechaBaja },
-        type: sequelizeAjenos.QueryTypes.UPDATE
-      });
-      
-      console.log(`Actualización de ALIAS_AJENO completada.`);
-      
-      return true;
-    } catch (updateError) {
-      console.error(`Error durante la actualización de ALIAS_AJENO: ${updateError.message}`);
-      return false;
-    }
-  } catch (error) {
-    console.error(`Error general al eliminar relación alias-artículo:`, error);
-    return false;
   }
 };
 
@@ -2912,5 +2860,353 @@ exports.findAliasInfoById = async (idIdioma) => {
   } catch (error) {
     console.error('Error en findAliasInfoById:', error);
     return [];
+  }
+};
+
+exports.createAlias = async (alias, fechaAlta, usuarioAlta) => {
+  try {
+    // Primero, obtén el último ID de alias para incrementarlo
+    const getLastIdQuery = `
+      SELECT MAX(ID_ALIAS) as maxId FROM AJENOS.ALIAS
+    `;
+    
+    const lastIdResult = await sequelizeAjenos.query(getLastIdQuery, {
+      type: QueryTypes.SELECT
+    });
+    
+    const newAliasId = (lastIdResult[0].maxId || 0) + 1;
+    
+    // Ahora incluye el ID_ALIAS en la consulta de inserción
+    const query = `
+      INSERT INTO AJENOS.ALIAS (
+        ID_ALIAS,
+        ID_TIPO_ALIAS, 
+        ID_TIPO_ESTADO_ALIAS, 
+        ID_TIPO_ESTACIONALIDAD, 
+        ENTRENADO, 
+        USUARIO_ALTA, 
+        FECHA_ALTA, 
+        ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS, 
+        INFORMACION_ORIGEN_DATO
+      ) VALUES (
+        :idAlias,
+        :idTipoAlias, 
+        :idTipoEstadoAlias, 
+        :idTipoEstacionalidad, 
+        0, 
+        :usuarioAlta, 
+        :fechaAlta, 
+        :idTipoConexionOrigenDatoAlias, 
+        :informacionOrigenDato
+      )`;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: {
+        idAlias: newAliasId,
+        idTipoAlias: alias.idTipoAlias,
+        idTipoEstadoAlias: alias.idTipoEstadoAlias,
+        idTipoEstacionalidad: alias.idTipoEstacionalidad,
+        usuarioAlta,
+        fechaAlta,
+        idTipoConexionOrigenDatoAlias: alias.idTipoConexionOrigenDatoAlias,
+        informacionOrigenDato: alias.informacionOrigenDato
+      },
+      type: QueryTypes.INSERT
+    });
+    
+    return newAliasId;
+  } catch (error) {
+    console.error('Error al crear alias:', error);
+    throw error;
+  }
+};
+
+exports.createAliasIdioma = async (idAlias, idiomas) => {
+  try {
+    // Preparar consultas para cada idioma
+    const queries = idiomas.map(idioma => `
+      INSERT INTO AJENOS.ALIAS_IDIOMA (
+        ID_ALIAS, 
+        ID_IDIOMA, 
+        NOMBRE, 
+        DESCRIPCION
+      ) VALUES (
+        ${idAlias}, 
+        ${idioma.idIdioma}, 
+        '${idioma.nombre.replace(/'/g, "''")}', 
+        '${idioma.descripcion.replace(/'/g, "''")}'
+      )
+    `);
+    
+    // Ejecutar las consultas en una transacción
+    await sequelizeAjenos.transaction(async (t) => {
+      for (const query of queries) {
+        await sequelizeAjenos.query(query, { transaction: t });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error al crear alias_idioma:', error);
+    throw error;
+  }
+};
+
+exports.createAliasAjeno = async (idAlias, fechaAlta, usuarioAlta, aliasAjenos) => {
+  try {
+    // Preparar consultas para cada ajeno
+    const queries = aliasAjenos.map(ajeno => `
+      INSERT INTO AJENOS.ALIAS_AJENO (
+        ID_ALIAS, 
+        ID_AJENO, 
+        ID_TIPO_ESTADO_AJENO_RAM, 
+        ID_SINT, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        ${idAlias}, 
+        ${ajeno.idAjeno}, 
+        ${ajeno.idTipoEstadoAjenoRam}, 
+        ${ajeno.idSint ? `'${ajeno.idSint}'` : 'NULL'}, 
+        '${usuarioAlta}', 
+        '${fechaAlta.toISOString().split('T')[0]}'
+      )
+    `);
+    
+    // Ejecutar las consultas en una transacción
+    await sequelizeAjenos.transaction(async (t) => {
+      for (const query of queries) {
+        await sequelizeAjenos.query(query, { transaction: t });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error al crear alias_ajeno:', error);
+    throw error;
+  }
+};
+
+exports.createAliasAcople = async (idAlias, fechaAlta, usuarioAlta, aliasAcoples) => {
+  try {
+    // Preparar consultas para cada acople
+    const insertQueries = aliasAcoples.map(acople => `
+      INSERT INTO AJENOS.ALIAS_ACOPLE (
+        ID_ALIAS, 
+        ID_ALIAS_ACOPLE, 
+        ID_TIPO_ORIGEN_DATO_ALIAS, 
+        RATIO_ACOPLE, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        ${acople.idAlias}, 
+        ${idAlias}, 
+        2, 
+        ${acople.ratioAcople}, 
+        '${usuarioAlta}', 
+        '${fechaAlta.toISOString().split('T')[0]}'
+      )
+    `);
+    
+    // Obtener IDs de tarea para alias acople
+    const idsAlias = aliasAcoples.map(acople => acople.idAlias);
+    const idsTareaQuery = `
+      SELECT DISTINCT ID_TAREA_RAM FROM AJENOS.ALIAS_ACOPLE_TAREA 
+      WHERE ID_ALIAS IN (${idsAlias.join(',')})
+    `;
+    
+    const idsTareaResult = await sequelizeAjenos.query(idsTareaQuery, {
+      type: QueryTypes.SELECT
+    });
+    const idsTarea = idsTareaResult.map(row => row.ID_TAREA);
+    
+    // Preparar consultas para alias acople tarea
+    const tareaQueries = [];
+    for (const idTarea of idsTarea) {
+      for (const acople of aliasAcoples) {
+        tareaQueries.push(`
+          INSERT INTO AJENOS.ALIAS_ACOPLE_TAREA (
+            ID_ALIAS_ACOPLE, 
+            ID_ALIAS, 
+            ID_TAREA_RAM, 
+            ID_TIPO_ORIGEN_DATO_ALIAS, 
+            USUARIO_ALTA, 
+            FECHA_ALTA
+          ) VALUES (
+            ${idAlias}, 
+            ${acople.idAlias}, 
+            ${idTarea}, 
+            1, 
+            '${usuarioAlta}', 
+            '${fechaAlta.toISOString().split('T')[0]}'
+          )
+        `);
+      }
+    }
+    
+    // Ejecutar todas las consultas en una transacción
+    await sequelizeAjenos.transaction(async (t) => {
+      for (const query of insertQueries) {
+        await sequelizeAjenos.query(query, { transaction: t });
+      }
+      for (const query of tareaQueries) {
+        await sequelizeAjenos.query(query, { transaction: t });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error al crear alias_acople:', error);
+    throw error;
+  }
+};
+
+const TipoReglaAmbito = {
+  CADENA_Y_MERCADO: 1,
+  MERCADO: 2,
+  LOCALIZACION: 3
+};
+
+exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
+  try {
+    // Primero, obtén el último ID de alias_ambito para incrementarlo
+    const getLastIdQuery = `
+      SELECT MAX(ID_ALIAS_AMBITO) as maxId FROM AJENOS.ALIAS_AMBITO
+    `;
+    
+    const lastIdResult = await sequelizeAjenos.query(getLastIdQuery, {
+      type: QueryTypes.SELECT
+    });
+    
+    const newAliasAmbitoId = (lastIdResult[0].maxId || 0) + 1;
+    
+    // Ahora incluye el ID_ALIAS_AMBITO en la consulta de inserción
+    const query = `
+      INSERT INTO AJENOS.ALIAS_AMBITO (
+        ID_ALIAS_AMBITO,
+        ID_ALIAS, 
+        ID_TIPO_REGLA_AMBITO, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        :idAliasAmbito,
+        :idAlias, 
+        :idTipoReglaAmbito, 
+        :usuarioAlta, 
+        :fechaAlta
+      )`;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: {
+        idAliasAmbito: newAliasAmbitoId,
+        idAlias,
+        idTipoReglaAmbito: TipoReglaAmbito.CADENA_Y_MERCADO,
+        usuarioAlta,
+        fechaAlta: fechaAlta.toISOString().split('T')[0]
+      },
+      type: QueryTypes.INSERT
+    });
+    
+    return newAliasAmbitoId;
+  } catch (error) {
+    console.error('Error al crear alias_ambito:', error);
+    throw error;
+  }
+};
+
+exports.createStockLocalizacion = async (idAlias, idsLocalizacion, stockMaximo, fechaAlta, usuarioAlta) => {
+  try {
+    const queries = idsLocalizacion.map(idLocalizacion => `
+      INSERT INTO AJENOS.STOCK_LOCALIZACION_RAM (
+        ID_ALIAS, 
+        ID_LOCALIZACION_COMPRA, 
+        STOCK_MAXIMO, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        ${idAlias}, 
+        ${idLocalizacion}, 
+        ${stockMaximo !== null ? stockMaximo : 'NULL'}, 
+        '${usuarioAlta}', 
+        '${fechaAlta.toISOString().split('T')[0]}'
+      )
+    `);
+    
+    // Ejecutar en una transacción
+    await sequelizeAjenos.transaction(async (t) => {
+      for (const query of queries) {
+        await sequelizeAjenos.query(query, { transaction: t });
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error al crear stock_localizacion_ram:', error);
+    throw error;
+  }
+};
+
+exports.deleteAliasArticulo = async (idAjeno, idAlias, usuarioBaja, fechaBaja) => {
+  try {
+    const query = `
+      UPDATE AJENOS.ALIAS_AJENO 
+      SET USUARIO_BAJA = :usuarioBaja, 
+          FECHA_BAJA = :fechaBaja
+      WHERE ID_ALIAS = :idAlias 
+      AND ID_AJENO = :idAjeno
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idAjeno, idAlias, usuarioBaja, fechaBaja },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    return result[1] > 0;
+  } catch (error) {
+    console.error(`Error en deleteAliasArticulo: ${error.message}`);
+    throw error;
+  }
+};
+
+exports.updateAliasAmbitoAplanado = async (idAjeno, idAlias, usuarioModificacion, fechaModificacion) => {
+  try {
+    // Primero obtener los IDs que necesitamos actualizar
+    const findIdsQuery = `
+      SELECT aaa.ID_ALIAS_AMBITO_APLANADO
+      FROM AJENOS.ALIAS_AMBITO aa
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO
+      WHERE aa.ID_ALIAS = :idAlias 
+      AND aaa.ID_AJENO_SECCION_GLOBAL = :idAjeno
+    `;
+    
+    const idsResult = await sequelizeAjenos.query(findIdsQuery, {
+      replacements: { idAjeno, idAlias },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    const ids = idsResult.map(r => r.ID_ALIAS_AMBITO_APLANADO);
+    
+    if (ids.length === 0) {
+      return false;
+    }
+    
+    // Luego hacer la actualización con los IDs obtenidos
+    const updateQuery = `
+      UPDATE AJENOS.ALIAS_AMBITO_APLANADO 
+      SET USUARIO_MODIFICACION = :usuarioModificacion, 
+          FECHA_MODIFICACION = :fechaModificacion,
+          ID_AJENO_SECCION_GLOBAL = NULL
+      WHERE ID_ALIAS_AMBITO_APLANADO IN (:ids)
+    `;
+    
+    const result = await sequelizeAjenos.query(updateQuery, {
+      replacements: { ids, usuarioModificacion, fechaModificacion },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    return result[1] > 0;
+  } catch (error) {
+    console.error(`Error en updateAliasAmbitoAplanado: ${error.message}`);
+    throw error;
   }
 };

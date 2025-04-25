@@ -12,6 +12,7 @@ router.get('/mercados', aliasController.getMercados);
 router.get('/ajenos', ajenoController.getAllAjenos);
 router.get('/tipos-estacionalidad', aliasController.getEstacionalidades);
 router.get('/tipos-alias', aliasController.getTiposAlias);
+router.get('/alias-info', aliasController.getAliasInfo);
 
 router.post('/creacion-Alias', aliasController.createAlias);
 

@@ -193,14 +193,13 @@ const ParametrizacionAlias = () => {
     try {
       if (selectedItemsAjenos.length === 0) return;
       
-      // Confirmar antes de eliminar
       if (!window.confirm(t('¿Está seguro de que desea eliminar los artículos seleccionados?'))) {
         return;
       }
       
       setLoadingAjenos(true);
       
-      // Extraer los IDs de alias y ajeno de los elementos seleccionados
+      // Format the selected items
       const selectedIds = selectedItemsAjenos.map(item => {
         const [idAlias, idAjeno] = item.split('-');
         return { 
@@ -209,18 +208,15 @@ const ParametrizacionAlias = () => {
         };
       });
       
-      console.log("IDs a eliminar:", selectedIds);
-      
-      // Llamada a la API para eliminar los artículos
-      const response = await axios.put(`${BASE_URL}/delete-alias-ajeno`, {
-        items: selectedIds,
-        usuario: 'WEBAPP'
+      // Use PUT method with items in the request body
+      const response = await axios.delete(`${BASE_URL}/delete-alias-ajeno`, {
+        data: {
+          items: selectedIds,
+          usuario: 'WEBAPP'
+        }
       });
       
-      console.log("Respuesta del servidor:", response.data);
-      
       if (response.data.success) {
-        // Filtrar los elementos eliminados del estado local
         const filteredAliasAjenos = aliasAjenos.filter(item => 
           !selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)
         );
@@ -231,7 +227,6 @@ const ParametrizacionAlias = () => {
         
         alert(t(`${response.data.successCount} artículos han sido eliminados correctamente`));
         
-        // Recargar los datos para asegurarse de que todo esté actualizado
         await fetchAliasAjenos();
       }
     } catch (error) {
@@ -636,10 +631,40 @@ const ParametrizacionAlias = () => {
     }
   };
 
-  const handleDelete = () => {
-    console.log('Eliminar alias:', selectedItems);
-    setSelectedItems([]);
-    fetchAliases();
+  const handleDelete = async () => {
+    if (selectedItems.length === 0) return;
+    
+    if (!window.confirm(t('¿Está seguro de que desea eliminar los alias seleccionados?'))) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const response = await axios.delete(`${BASE_URL}/delete-alias`, {
+        data: { 
+          ids: selectedItems,
+          usuario: 'WEBAPP'
+        }
+      });
+      
+      if (response.data.success) {
+        alert(t(`${response.data.successCount} alias han sido eliminados correctamente`));
+        setSelectedItems([]);
+        setSelectAll(false);
+        
+        // Recargar la lista de alias
+        fetchAliases();
+      } else {
+        alert(t('Error al eliminar los alias seleccionados'));
+      }
+    } catch (error) {
+      console.error('Error al eliminar alias:', error);
+      setError(t('Error al eliminar alias'));
+      alert(t('Error al eliminar alias. Por favor, inténtelo de nuevo.'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditRelations = () => {

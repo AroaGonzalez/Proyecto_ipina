@@ -1,5 +1,6 @@
 // backend/node/controllers/aliasController.js
 const aliasRepository = require('../repositories/aliasRepository');
+const deleteAliasRepository = require('../repositories/deleteAliasRepository');
 
 const queryCache = {
   data: {},
@@ -517,24 +518,13 @@ exports.deleteAliasAjeno = async (req, res) => {
         
         console.log(`Procesando eliminación para idAlias: ${idAlias}, idAjeno: ${idAjeno}`);
         
-        const bajaResult = await aliasRepository.deleteAliasAjeno(
-          idAlias, 
-          idAjeno, 
-          usuarioBaja, 
-          fechaBaja
-        );
+        // 1. Eliminar la relación alias_ajeno
+        await aliasRepository.deleteAliasArticulo(idAjeno, idAlias, usuarioBaja, fechaBaja);
         
-        console.log(`Resultado baja: ${bajaResult}`);
+        // 2. Actualizar el ámbito aplanado
+        await aliasRepository.updateAliasAmbitoAplanado(idAjeno, idAlias, usuarioBaja, fechaBaja);
         
-        if (bajaResult) {
-          successCount++;
-        } else {
-          errors.push({
-            idAlias,
-            idAjeno, 
-            error: 'No se pudo eliminar la relación. Es posible que ya haya sido eliminada o no exista.'
-          });
-        }
+        successCount++;
       } catch (itemError) {
         console.error(`Error eliminando relación alias-artículo (ID Alias: ${item.idAlias}, ID Ajeno: ${item.idAjeno}):`, itemError);
         errors.push({
@@ -790,5 +780,217 @@ exports.getAliasInfo = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener información de alias:', error);
     res.status(500).json({ message: 'Error al obtener información de alias', error: error.message });
+  }
+};
+
+exports.createAlias = async (req, res) => {
+  try {
+    const request = req.body;
+    
+    if (!validateRequest(request)) {
+      return res.status(400).json({ message: 'Solicitud inválida. Faltan campos requeridos.' });
+    }
+    
+    const usuarioAlta = req.user ? req.user.username : 'sistema';
+    const fechaAlta = new Date();
+    
+    const idAlias = await aliasRepository.createAlias(request, fechaAlta, usuarioAlta);
+    
+    await aliasRepository.createAliasIdioma(idAlias, request.idiomas);
+    
+    const localizaciones = await aliasRepository.findLocalizacionCompraByCadenaMercado(
+      request.aliasAmbito.idsCadena,
+      request.aliasAmbito.idsMercado,
+      [1, 2, 3]
+    );
+    
+    await aliasRepository.createAliasAjeno(idAlias, fechaAlta, usuarioAlta, request.aliasAjeno);
+    
+    if (request.acoples && request.acoples.length > 0) {
+      await aliasRepository.createAliasAcople(idAlias, fechaAlta, usuarioAlta, request.acoples);
+    }
+    
+    const idAliasAmbito = await aliasRepository.createAliasAmbito(idAlias, fechaAlta, usuarioAlta);
+    
+    await aliasRepository.createAliasAmbitoAplanado(idAliasAmbito, fechaAlta, usuarioAlta, localizaciones);
+    
+    const stockMaximo = request.idTipoAlias === 4 ? null : 100;
+    await aliasRepository.createStockLocalizacion(
+      idAlias, 
+      localizaciones.map(loc => loc.idLocalizacionCompra), 
+      stockMaximo, 
+      fechaAlta, 
+      usuarioAlta
+    );
+    
+    res.status(201).json({ 
+      message: 'Alias creado correctamente',
+      idAlias 
+    });
+    
+  } catch (error) {
+    console.error('Error al crear alias:', error);
+    res.status(500).json({ 
+      message: 'Error al crear el alias', 
+      error: error.message 
+    });
+  }
+};
+
+function validateRequest(request) {
+  return request 
+    && request.aliasAmbito 
+    && request.aliasAmbito.idsMercado && request.aliasAmbito.idsMercado.length > 0
+    && request.aliasAmbito.idsCadena && request.aliasAmbito.idsCadena.length > 0
+    && request.idiomas && request.idiomas.length > 0;
+}
+
+const TIPO_ALIAS = {
+  TIPO_I: 1,
+  TIPO_II: 2,
+  TIPO_III: 3,
+  TIPO_IV: 4
+};
+
+const TIPO_CONEXION_ORIGEN_DATO_ALIAS = {
+  PRINCIPAL: 1,
+  ACOPLE: 2
+};
+
+const TIPO_TAREA = {
+  DISTRIBUTION: 1,
+  COUNT: 2
+};
+
+exports.deleteAlias = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Se requiere un array de IDs de alias para eliminar' 
+      });
+    }
+    
+    const usuarioBaja = req.body.usuario || 'WEBAPP';
+    const fechaBaja = new Date();
+    
+    console.log(`Eliminando ${ids.length} alias:`, ids);
+    
+    let successCount = 0;
+    let errors = [];
+    
+    for (const idAlias of ids) {
+      try {
+        const parsedIdAlias = parseInt(idAlias);
+        
+        // 1. Obtener información básica del alias
+        const baseAlias = await deleteAliasRepository.findIdAlias(parsedIdAlias);
+        
+        // 2. Marcar alias como eliminado
+        await deleteAliasRepository.deleteAlias(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        // 3. Si es un alias tipo II y de conexión ACOPLE
+        if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
+            baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.ACOPLE) {
+          
+          await deleteAliasRepository.deleteAliasAcople(parsedIdAlias, usuarioBaja, fechaBaja);
+          await deleteAliasRepository.deleteAliasAcopleTarea(parsedIdAlias, usuarioBaja, fechaBaja);
+        }
+        
+        // 4. Si es un alias tipo II y de conexión PRINCIPAL
+        if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
+            baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.PRINCIPAL) {
+          
+          await deleteAliasRepository.deleteAliasAcopleTareaIdPrincipal(parsedIdAlias, usuarioBaja, fechaBaja);
+        }
+        
+        // 5. Eliminar idiomas asociados
+        await deleteAliasRepository.deleteAliasIdioma(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        // 6. Eliminar relaciones con ajenos
+        await deleteAliasRepository.deleteAliasAjenoByIdAlias(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        // 7. Eliminar stock localización
+        await deleteAliasRepository.deleteStockLocalizacion(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        // 8. Eliminar tareas asociadas y obtener IDs
+        const idsTarea = await deleteAliasRepository.deleteAliasTarea(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        // 9. Eliminar ámbito y ámbito aplanado
+        const idAliasAmbito = await deleteAliasRepository.deleteAliasAmbito(parsedIdAlias, usuarioBaja, fechaBaja);
+        
+        if (idAliasAmbito) {
+          await deleteAliasRepository.deleteAliasAmbitoAplanado(idAliasAmbito, usuarioBaja, fechaBaja);
+        }
+        
+        // 10. Procesar ámbitos aplanados de tareas afectadas
+        if (idsTarea && idsTarea.length > 0) {
+          for (const idTarea of idsTarea) {
+            // Obtener información de la tarea
+            const baseTarea = await deleteAliasRepository.findBaseTarea(idTarea);
+            
+            let idsTareaAmbitoAplanado = [];
+            
+            // Procesar según tipo de tarea y alias
+            if (baseTarea.idTipoTarea === TIPO_TAREA.DISTRIBUTION) {
+              // Alias tipo II y conexión ACOPLE
+              if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
+                  baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.ACOPLE) {
+                
+                idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoAcople(idTarea, parsedIdAlias);
+              }
+              
+              // Alias tipo II y conexión PRINCIPAL
+              if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
+                  baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.PRINCIPAL) {
+                
+                idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
+              }
+              
+              // Alias tipo I
+              if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_I) {
+                idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
+              }
+            }
+            
+            // Tarea tipo COUNT
+            if (baseTarea.idTipoTarea === TIPO_TAREA.COUNT) {
+              idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
+            }
+            
+            // Eliminar ámbitos aplanados de tarea si existen
+            if (idsTareaAmbitoAplanado && idsTareaAmbitoAplanado.length > 0) {
+              await deleteAliasRepository.deleteTareaAmbitoAplanado(idsTareaAmbitoAplanado, fechaBaja, usuarioBaja);
+            }
+          }
+        }
+        
+        successCount++;
+      } catch (itemError) {
+        console.error(`Error eliminando alias ID ${idAlias}:`, itemError);
+        errors.push({
+          idAlias,
+          error: itemError.message
+        });
+      }
+    }
+    
+    res.json({
+      success: successCount > 0,
+      message: `${successCount} alias eliminados correctamente`,
+      totalProcessed: ids.length,
+      successCount,
+      errors: errors.length > 0 ? errors : undefined
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar alias:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error del servidor al eliminar alias', 
+      error: error.message 
+    });
   }
 };
