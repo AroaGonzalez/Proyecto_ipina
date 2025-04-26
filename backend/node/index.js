@@ -6,14 +6,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Sequelize } = require('sequelize');
-const tiendaRoutes = require('./routes/tiendaRoutes');
-const aliasRoutes = require('./routes/aliasRoutes');
-const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
-const edicionRoutes = require('./routes/edicionRoutes');
-const tareaRoutes = require('./routes/tareaRoutes');
-const creacionRoutes = require('./routes/creationRoutes');
 const app = express();
-const JWT_SECRET = 'your_jwt_secret'; 
+const JWT_SECRET = 'your_jwt_secret';
 
 const swaggerOptions = {
   definition: {
@@ -88,6 +82,15 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const tiendaRoutes = require('./routes/tiendaRoutes');
+const aliasRoutes = require('./routes/aliasRoutes');
+const ajenoRamRoutes = require('./routes/AjenoRamRoutes');
+const edicionRoutes = require('./routes/edicionRoutes');
+const tareaRoutes = require('./routes/tareaRoutes');
+const creacionRoutes = require('./routes/creationRoutes');
+const aliasRelacionesRoutes = require('./routes/aliasRelacionesRoutes');
+
 
 const User = require('./models/user')(sequelizeAjenos);
 
@@ -170,15 +173,6 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Error del servidor', error: error.message });
   }
 });
-
-app.use('/ajenos', ajenoRamRoutes);
-app.use('/inventario', ajenoRamRoutes);
-app.use('/tiendas', tiendaRoutes);
-app.use('/', aliasRoutes);
-app.use('/edicion', edicionRoutes);
-app.use('/api/tareas', tareaRoutes);
-app.use('/creacion', creacionRoutes);
-
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -264,6 +258,15 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' });
   }
 });
+
+app.use('/ajenos', ajenoRamRoutes);
+app.use('/inventario', ajenoRamRoutes);
+app.use('/tiendas', tiendaRoutes);
+app.use('/', aliasRoutes);
+app.use('/edicion', edicionRoutes);
+app.use('/api/tareas', tareaRoutes);
+app.use('/creacion', creacionRoutes);
+app.use('/relaciones', aliasRelacionesRoutes);
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

@@ -28,6 +28,8 @@ const EdicionAlias = () => {
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
   const dropdownRef = useRef(null);
+  const [selectedAliasesIds, setSelectedAliasesIds] = useState([]);
+  const [showDeleteAliasIcon, setShowDeleteAliasIcon] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,6 +132,28 @@ const EdicionAlias = () => {
       setAliasSearchText('');
       setFilteredAliasesPrincipales(aliasesPrincipales);
     }
+  };
+
+  const handleAliasPrincipalCheckboxChange = (aliasId) => {
+    setSelectedAliasesIds(prev => {
+      if (prev.includes(aliasId)) {
+        const newSelected = prev.filter(id => id !== aliasId);
+        setShowDeleteAliasIcon(newSelected.length > 0);
+        return newSelected;
+      }
+      else {
+        setShowDeleteAliasIcon(true);
+        return [...prev, aliasId];
+      }
+    });
+  };
+
+  const handleDeleteSelectedAliases = () => {
+    setSelectedAliasesPrincipales(prev => 
+      prev.filter(alias => !selectedAliasesIds.includes(alias.idAlias))
+    );
+    setSelectedAliasesIds([]);
+    setShowDeleteAliasIcon(false);
   };
 
   const handleAliasSearchChange = (e) => {
@@ -1252,42 +1276,61 @@ const EdicionAlias = () => {
                       {t('No hay alias seleccionados. Utilice la búsqueda para añadir alias principales.')}
                     </div>
                   ) : (
-                    <table className="aliasesPrincipales-table">
-                      <thead>
-                        <tr>
-                          <th className="checkbox-column"></th>
-                          <th>{t('ID ALIAS PRINCIPAL')}</th>
-                          <th>{t('ALIAS PRINCIPAL')}</th>
-                          <th>{t('RATIO DE ACOPLE (POR UNIDAD PRINCIPAL)')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedAliasesPrincipales.map(alias => (
-                          <tr key={alias.idAlias}>
-                            <td className="checkbox-column">
-                              <div 
-                                className="custom-checkbox"
-                                onClick={() => handleAliasPrincipalSelect(alias)}
-                              >
-                                <FaCheck className="checkbox-icon" />
-                              </div>
-                            </td>
-                            <td>{alias.idAlias}</td>
-                            <td>{normalizeText(alias.nombre)}</td>
-                            <td>
-                              <input 
-                                type="number" 
-                                value={acoplesRatio[alias.idAlias] || 1}
-                                onChange={(e) => handleAcopleRatioChange(alias.idAlias, e.target.value)}
-                                min="0"
-                                step="1"
-                                className="ratio-input"
-                              />
-                            </td>
+                    <>
+                      {showDeleteAliasIcon && (
+                        <div className="articulos-actions-bar">
+                          <div className="articulos-selection-info">
+                            <span className="articulos-selected-count">
+                              {selectedAliasesIds.length} {t('seleccionados')}
+                            </span>
+                          </div>
+                          <button
+                            className="articulos-action-btn delete-btn"
+                            onClick={handleDeleteSelectedAliases}
+                            title={t('Eliminar alias seleccionados')}
+                          >
+                            <FaTrash className="action-icon" />
+                            <span>{t('Eliminar')}</span>
+                          </button>
+                        </div>
+                      )}
+                      <table className="aliasesPrincipales-table">
+                        <thead>
+                          <tr>
+                            <th className="checkbox-column"></th>
+                            <th>{t('ID ALIAS PRINCIPAL')}</th>
+                            <th>{t('ALIAS PRINCIPAL')}</th>
+                            <th>{t('RATIO DE ACOPLE (POR UNIDAD PRINCIPAL)')}</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {selectedAliasesPrincipales.map(alias => (
+                            <tr key={alias.idAlias}>
+                              <td className="checkbox-column">
+                                <div 
+                                  className="custom-checkbox"
+                                  onClick={() => handleAliasPrincipalCheckboxChange(alias.idAlias)}
+                                >
+                                  {selectedAliasesIds.includes(alias.idAlias) && <FaCheck className="checkbox-icon" />}
+                                </div>
+                              </td>
+                              <td>{alias.idAlias}</td>
+                              <td>{normalizeText(alias.nombre)}</td>
+                              <td>
+                                <input 
+                                  type="number" 
+                                  value={acoplesRatio[alias.idAlias] || 1}
+                                  onChange={(e) => handleAcopleRatioChange(alias.idAlias, e.target.value)}
+                                  min="0"
+                                  step="1"
+                                  className="ratio-input"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
                   )}
                 </div>
               </div>

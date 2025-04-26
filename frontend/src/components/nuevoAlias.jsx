@@ -9,289 +9,319 @@ import '../styles/nuevoAlias.css';
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const CreacionAlias = () => {
-    const navigate = useNavigate();
-    const { t } = useTranslation();
-    const { languageId } = useContext(LanguageContext);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { languageId } = useContext(LanguageContext);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedAliasesIds, setSelectedAliasesIds] = useState([]);
+  const [showDeleteAliasIcon, setShowDeleteAliasIcon] = useState(false);
     
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    
-    // Datos básicos del alias
-    const [tiposAlias, setTiposAlias] = useState([]);
-    const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
-    const [estacionalidades, setEstacionalidades] = useState([]);
-    const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
-    
-    // Idiomas
-    const [idiomas, setIdiomas] = useState([]);
-    const [selectedIdiomas, setSelectedIdiomas] = useState([]);
-    const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
-    const [openDropdown, setOpenDropdown] = useState(null);
-    const [searchText, setSearchText] = useState('');
-    const [checkAll, setCheckAll] = useState(false);
-    
-    // Artículos
-    const [articulos, setArticulos] = useState([]);
-    const [articulosDisponibles, setArticulosDisponibles] = useState([]);
-    const [filteredArticulos, setFilteredArticulos] = useState([]);
-    const [articuloSearchText, setArticuloSearchText] = useState('');
-    const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
-    const [checkAllArticulos, setCheckAllArticulos] = useState(false);
+  // Datos básicos del alias
+  const [tiposAlias, setTiposAlias] = useState([]);
+  const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
+  const [estacionalidades, setEstacionalidades] = useState([]);
+  const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
+  
+  // Idiomas
+  const [idiomas, setIdiomas] = useState([]);
+  const [selectedIdiomas, setSelectedIdiomas] = useState([]);
+  const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [checkAll, setCheckAll] = useState(false);
+  
+  // Artículos
+  const [articulos, setArticulos] = useState([]);
+  const [articulosDisponibles, setArticulosDisponibles] = useState([]);
+  const [filteredArticulos, setFilteredArticulos] = useState([]);
+  const [articuloSearchText, setArticuloSearchText] = useState('');
+  const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
+  const [checkAllArticulos, setCheckAllArticulos] = useState(false);
 
-    // Ámbitos
-    const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
-    const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
-    const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
-    const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
-    const [selectedCadena, setSelectedCadena] = useState('');
-    const [selectedMercado, setSelectedMercado] = useState('');
-    const [ambitosTable, setAmbitosTable] = useState([]);
-    const [selectedAmbitos, setSelectedAmbitos] = useState([]);
-    
-    const [grupoSearchText, setGrupoSearchText] = useState('');
-    const [cadenaSearchText, setCadenaSearchText] = useState('');
-    const [mercadoSearchText, setMercadoSearchText] = useState('');
-    const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
-    const [filteredCadenas, setFilteredCadenas] = useState([]);
-    const [filteredMercados, setFilteredMercados] = useState([]);
-    const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
-    const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
-    const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
+  // Ámbitos
+  const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
+  const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
+  const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
+  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
+  const [selectedCadena, setSelectedCadena] = useState('');
+  const [selectedMercado, setSelectedMercado] = useState('');
+  const [ambitosTable, setAmbitosTable] = useState([]);
+  const [selectedAmbitos, setSelectedAmbitos] = useState([]);
+  
+  const [grupoSearchText, setGrupoSearchText] = useState('');
+  const [cadenaSearchText, setCadenaSearchText] = useState('');
+  const [mercadoSearchText, setMercadoSearchText] = useState('');
+  const [filteredGruposCadena, setFilteredGruposCadena] = useState([]);
+  const [filteredCadenas, setFilteredCadenas] = useState([]);
+  const [filteredMercados, setFilteredMercados] = useState([]);
+  const [isGrupoCadenaDropdownOpen, setIsGrupoCadenaDropdownOpen] = useState(false);
+  const [isCadenaDropdownOpen, setIsCadenaDropdownOpen] = useState(false);
+  const [isMercadoDropdownOpen, setIsMercadoDropdownOpen] = useState(false);
 
-    const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
-    const [selectedCadenas, setSelectedCadenas] = useState([]);
-    const [selectedMercados, setSelectedMercados] = useState([]);
-    const dropdownRef = useRef(null);
-    const articulosDropdownRef = useRef(null);
-    const grupoCadenaDropdownRef = useRef(null);
-    const cadenaDropdownRef = useRef(null);
-    const mercadoDropdownRef = useRef(null);
+  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+  const [selectedCadenas, setSelectedCadenas] = useState([]);
+  const [selectedMercados, setSelectedMercados] = useState([]);
+  const dropdownRef = useRef(null);
+  const articulosDropdownRef = useRef(null);
+  const grupoCadenaDropdownRef = useRef(null);
+  const cadenaDropdownRef = useRef(null);
+  const mercadoDropdownRef = useRef(null);
 
-    const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
-    const [showDeleteIcon, setShowDeleteIcon] = useState(false);
+  const [selectedArticulosIds, setSelectedArticulosIds] = useState([]);
+  const [showDeleteIcon, setShowDeleteIcon] = useState(false);
 
-    const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
-    const [tiposConexion, setTiposConexion] = useState([]);
+  const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
+  const [tiposConexion, setTiposConexion] = useState([]);
 
-    // Añadir estos nuevos estados:
-    const [aliasesPrincipales, setAliasesPrincipales] = useState([]);
-    const [selectedAliasesPrincipales, setSelectedAliasesPrincipales] = useState([]);
-    const [aliasSearchText, setAliasSearchText] = useState('');
-    const [filteredAliasesPrincipales, setFilteredAliasesPrincipales] = useState([]);
-    const [isAliasesDropdownOpen, setIsAliasesDropdownOpen] = useState(false);
-    const [acoplesRatio, setAcoplesRatio] = useState({});
-    const aliasesDropdownRef = useRef(null);
+  // Añadir estos nuevos estados:
+  const [aliasesPrincipales, setAliasesPrincipales] = useState([]);
+  const [selectedAliasesPrincipales, setSelectedAliasesPrincipales] = useState([]);
+  const [aliasSearchText, setAliasSearchText] = useState('');
+  const [filteredAliasesPrincipales, setFilteredAliasesPrincipales] = useState([]);
+  const [isAliasesDropdownOpen, setIsAliasesDropdownOpen] = useState(false);
+  const [acoplesRatio, setAcoplesRatio] = useState({});
+  const aliasesDropdownRef = useRef(null);
 
-    useEffect(() => {
-        function handleClickOutside(event) {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-            setOpenDropdown(null);
-        }
-        if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
-            setIsArticulosDropdownOpen(false);
-        }
-        if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
-            setIsGrupoCadenaDropdownOpen(false);
-        }
-        if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
-            setIsCadenaDropdownOpen(false);
-        }
-        if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
-            setIsMercadoDropdownOpen(false);
-        }
-        if (aliasesDropdownRef.current && !aliasesDropdownRef.current.contains(event.target)) {
-          setIsAliasesDropdownOpen(false);
-        }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
+  
 
-    useEffect(() => {
-        const fetchInitialData = async () => {
-            setLoading(true);
-            try {
-                const [
-                    tiposAliasRes,
-                    estacionalidadesRes,
-                    idiomasRes,
-                    articulosRes,
-                    gruposCadenaRes,
-                    cadenasRes,
-                    mercadosRes,
-                    tiposConexionRes,
-                    aliasesResponse
-                ] = await Promise.all([
-                    axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/idiomas?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/ajenos?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
-                    axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`),
-                    axios.get(`${BASE_URL}/creacion/alias-info?idIdioma=${languageId}`)
-                ]);
+  useEffect(() => {
+      function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setOpenDropdown(null);
+      }
+      if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
+          setIsArticulosDropdownOpen(false);
+      }
+      if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
+          setIsGrupoCadenaDropdownOpen(false);
+      }
+      if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
+          setIsCadenaDropdownOpen(false);
+      }
+      if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
+          setIsMercadoDropdownOpen(false);
+      }
+      if (aliasesDropdownRef.current && !aliasesDropdownRef.current.contains(event.target)) {
+        setIsAliasesDropdownOpen(false);
+      }
+      }
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      };
+  }, []);
 
-                setTiposAlias(tiposAliasRes.data || []);
-                setEstacionalidades(estacionalidadesRes.data || []);
-                setIdiomas(idiomasRes.data || []);
-                setAliasesPrincipales(aliasesResponse.data || []);
-                
-                if (idiomasRes.data) {
-                    const principalesIds = [1, 3];
-                    setSelectedIdiomas(principalesIds);
-                    
-                    const idiomasValues = {};
-                    principalesIds.forEach(id => {
-                      idiomasValues[id] = { nombre: '', descripcion: '' };
-                    });
-                    setIdiomasAliasValues(idiomasValues);
-                }
-                
-                setArticulosDisponibles(articulosRes.data || []);
-                setFilteredArticulos(articulosRes.data || []);
-                setTiposConexion(tiposConexionRes.data || []);
-                const gruposCadena = gruposCadenaRes.data || [];
-                setGruposCadenaDisponibles(gruposCadena);
-                setFilteredGruposCadena(gruposCadena);
-                
-                const cadenas = cadenasRes.data || [];
-                setCadenasDisponibles(cadenas);
-                setFilteredCadenas(cadenas);
-                
-                const mercados = mercadosRes.data || [];
-                setMercadosDisponibles(mercados);
-                setFilteredMercados(mercados);
+  useEffect(() => {
+    const fetchInitialData = async () => {
+        setLoading(true);
+        try {
+            const [
+                tiposAliasRes,
+                estacionalidadesRes,
+                idiomasRes,
+                articulosRes,
+                gruposCadenaRes,
+                cadenasRes,
+                mercadosRes,
+                tiposConexionRes,
+                aliasesResponse
+            ] = await Promise.all([
+                axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/idiomas?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/ajenos?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
+                axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`),
+                axios.get(`${BASE_URL}/creacion/alias-info?idIdioma=${languageId}`)
+            ]);
 
-            } catch (error) {
-                console.error('Error fetching initial data:', error);
-                setError('No se pudieron cargar los datos iniciales');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchInitialData();
-    }, [languageId]);
-
-    const handleDropdownToggle = (dropdownName) => {
-        setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-        setSearchText('');
-    };
-
-    const handleArticuloCheckboxChange = (articuloId) => {
-        setSelectedArticulosIds(prev => {
-        if (prev.includes(articuloId)) {
-            const newSelected = prev.filter(id => id !== articuloId);
-            setShowDeleteIcon(newSelected.length > 0);
-            return newSelected;
-        }
-        else {
-            setShowDeleteIcon(true);
-            return [...prev, articuloId];
-        }
-        });
-    };
-
-    const normalizeText = (text) => {
-        if (!text) return '';
-    
-        let normalizedText = text;
-    
-        normalizedText = normalizedText
-        .replace(/ESPA.?.'A/g, 'ESPAÑA')
-        .replace(/ESPA.?.A/g, 'ESPAÑA')
-        .replace(/ESPA.A/g, 'ESPAÑA')
-        .replace('ESPAÃ\'A', 'ESPAÑA')
-        .replace('ESPAÃA', 'ESPAÑA')
-        .replace('ESPAÃ±A', 'ESPAÑA')
-        .replace('ESPAÑA', 'ESPAÑA');
-    
-        const replacements = {
-          'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
-          'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
-          'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
-          'Ã¼': 'ü', 'Ã\u009C': 'Ü',
-          'Âº': 'º', 'Âª': 'ª',
-          'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
-          'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
-          'â‚¬': '€',
-          'â€"': '–', 'â€"': '—',
-          'â€œ': '"', 'â€': '"',
-          'â€¢': '•',
-          'â€¦': '…',
-          'Â¡': '¡', 'Â¿': '¿'
-        };
-    
-        Object.entries(replacements).forEach(([badChar, goodChar]) => {
-          normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
-        });
-    
-        return normalizedText;
-    };
-
-    useEffect(() => {
-        if (selectedGrupoCadena && selectedCadenas.length > 0 && selectedMercados.length > 0) {
-          generateAmbitosTable();
-        }
-      }, [selectedGrupoCadena, selectedCadenas, selectedMercados]);
-      
-    const generateAmbitosTable = () => {
-        const newAmbitos = [];
-        let ambitoId = 1; // Reset ID counter
-      
-        selectedGruposCadena.forEach(grupoId => {
-          const grupoCadena = gruposCadenaDisponibles.find(g => g.id === grupoId);
-          
-          const cadenasFiltradas = selectedCadenas.filter(cadenaId => 
-            cadenasDisponibles.find(c => c.id === cadenaId && c.idGrupoCadena === grupoId)
-          );
-          
-          cadenasFiltradas.forEach(cadenaId => {
-            const cadena = cadenasDisponibles.find(c => c.id === cadenaId);
+            setTiposAlias(tiposAliasRes.data || []);
+            setEstacionalidades(estacionalidadesRes.data || []);
+            setIdiomas(idiomasRes.data || []);
+            setAliasesPrincipales(aliasesResponse.data || []);
             
-            selectedMercados.forEach(mercadoId => {
-              const mercado = mercadosDisponibles.find(m => m.id === mercadoId);
-              
-              if (grupoCadena && cadena && mercado) {
-                newAmbitos.push({
-                  id: ambitoId++,
-                  grupoCadena: {
-                    id: grupoId,
-                    descripcion: grupoCadena.descripcion
-                  },
-                  cadena: {
-                    id: cadenaId,
-                    descripcion: cadena.descripcion
-                  },
-                  mercado: {
-                    id: mercadoId,
-                    descripcion: mercado.descripcion
-                  }
+            if (idiomasRes.data) {
+                const principalesIds = [1, 3];
+                setSelectedIdiomas(principalesIds);
+                
+                const idiomasValues = {};
+                principalesIds.forEach(id => {
+                  idiomasValues[id] = { nombre: '', descripcion: '' };
                 });
-              }
-            });
+                setIdiomasAliasValues(idiomasValues);
+            }
+            
+            setArticulosDisponibles(articulosRes.data || []);
+            setFilteredArticulos(articulosRes.data || []);
+            setTiposConexion(tiposConexionRes.data || []);
+            const gruposCadena = gruposCadenaRes.data || [];
+            setGruposCadenaDisponibles(gruposCadena);
+            setFilteredGruposCadena(gruposCadena);
+            
+            const cadenas = cadenasRes.data || [];
+            setCadenasDisponibles(cadenas);
+            setFilteredCadenas(cadenas);
+            
+            const mercados = mercadosRes.data || [];
+            setMercadosDisponibles(mercados);
+            setFilteredMercados(mercados);
+
+        } catch (error) {
+            console.error('Error fetching initial data:', error);
+            setError('No se pudieron cargar los datos iniciales');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchInitialData();
+  }, [languageId]);
+
+  const handleAliasPrincipalCheckboxChange = (aliasId) => {
+    setSelectedAliasesIds(prev => {
+      if (prev.includes(aliasId)) {
+        const newSelected = prev.filter(id => id !== aliasId);
+        setShowDeleteAliasIcon(newSelected.length > 0);
+        return newSelected;
+      }
+      else {
+        setShowDeleteAliasIcon(true);
+        return [...prev, aliasId];
+      }
+    });
+  };
+
+  const handleDeleteSelectedAliases = () => {
+    setSelectedAliasesPrincipales(prev => 
+      prev.filter(alias => !selectedAliasesIds.includes(alias.idAlias))
+    );
+    setSelectedAliasesIds([]);
+    setShowDeleteAliasIcon(false);
+  };
+
+  const handleDropdownToggle = (dropdownName) => {
+      setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
+      setSearchText('');
+  };
+
+  const handleArticuloCheckboxChange = (articuloId) => {
+      setSelectedArticulosIds(prev => {
+      if (prev.includes(articuloId)) {
+          const newSelected = prev.filter(id => id !== articuloId);
+          setShowDeleteIcon(newSelected.length > 0);
+          return newSelected;
+      }
+      else {
+          setShowDeleteIcon(true);
+          return [...prev, articuloId];
+      }
+      });
+  };
+
+  const normalizeText = (text) => {
+      if (!text) return '';
+  
+      let normalizedText = text;
+  
+      normalizedText = normalizedText
+      .replace(/ESPA.?.'A/g, 'ESPAÑA')
+      .replace(/ESPA.?.A/g, 'ESPAÑA')
+      .replace(/ESPA.A/g, 'ESPAÑA')
+      .replace('ESPAÃ\'A', 'ESPAÑA')
+      .replace('ESPAÃA', 'ESPAÑA')
+      .replace('ESPAÃ±A', 'ESPAÑA')
+      .replace('ESPAÑA', 'ESPAÑA');
+  
+      const replacements = {
+        'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+        'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+        'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+        'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+        'Âº': 'º', 'Âª': 'ª',
+        'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+        'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+        'â‚¬': '€',
+        'â€"': '–', 'â€"': '—',
+        'â€œ': '"', 'â€': '"',
+        'â€¢': '•',
+        'â€¦': '…',
+        'Â¡': '¡', 'Â¿': '¿'
+      };
+  
+      Object.entries(replacements).forEach(([badChar, goodChar]) => {
+        normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+      });
+  
+      return normalizedText;
+  };
+
+  useEffect(() => {
+    // Verificar que todos tienen elementos seleccionados
+    if (selectedGruposCadena.length > 0 && selectedCadenas.length > 0 && selectedMercados.length > 0) {
+      generateAmbitosTable();
+    } else {
+      // Si alguno está vacío, limpiar la tabla
+      setAmbitosTable([]);
+    }
+  }, [selectedGruposCadena, selectedCadenas, selectedMercados]);
+      
+  const generateAmbitosTable = () => {
+      const newAmbitos = [];
+      let ambitoId = 1; // Reset ID counter
+    
+      selectedGruposCadena.forEach(grupoId => {
+        const grupoCadena = gruposCadenaDisponibles.find(g => g.id === grupoId);
+        
+        const cadenasFiltradas = selectedCadenas.filter(cadenaId => 
+          cadenasDisponibles.find(c => c.id === cadenaId && c.idGrupoCadena === grupoId)
+        );
+        
+        cadenasFiltradas.forEach(cadenaId => {
+          const cadena = cadenasDisponibles.find(c => c.id === cadenaId);
+          
+          selectedMercados.forEach(mercadoId => {
+            const mercado = mercadosDisponibles.find(m => m.id === mercadoId);
+            
+            if (grupoCadena && cadena && mercado) {
+              newAmbitos.push({
+                id: ambitoId++,
+                grupoCadena: {
+                  id: grupoId,
+                  descripcion: grupoCadena.descripcion
+                },
+                cadena: {
+                  id: cadenaId,
+                  descripcion: cadena.descripcion
+                },
+                mercado: {
+                  id: mercadoId,
+                  descripcion: mercado.descripcion
+                }
+              });
+            }
           });
         });
-      
-        setAmbitosTable(newAmbitos); // Reemplaza la tabla completa
-    };
+      });
+    
+      setAmbitosTable(newAmbitos); // Reemplaza la tabla completa
+  };
 
-    const handleSelectAllCadenas = () => {
-        if (filteredCadenas.every(c => selectedCadenas.includes(c.id))) {
-        // Deseleccionar todas
-        setSelectedCadenas(selectedCadenas.filter(id => 
-            !filteredCadenas.some(c => c.id === id)
-        ));
-        } else {
-        // Seleccionar todas
-        const newIds = filteredCadenas.map(c => c.id).filter(id => !selectedCadenas.includes(id));
-        setSelectedCadenas([...selectedCadenas, ...newIds]);
-        }
-    };
+  const handleSelectAllCadenas = () => {
+      if (filteredCadenas.every(c => selectedCadenas.includes(c.id))) {
+      // Deseleccionar todas
+      setSelectedCadenas(selectedCadenas.filter(id => 
+          !filteredCadenas.some(c => c.id === id)
+      ));
+      } else {
+      // Seleccionar todas
+      const newIds = filteredCadenas.map(c => c.id).filter(id => !selectedCadenas.includes(id));
+      setSelectedCadenas([...selectedCadenas, ...newIds]);
+      }
+  };
 
   const handleDeleteSelectedArticulos = () => {
     setArticulos(prev => prev.filter(articulo => 
@@ -302,23 +332,23 @@ const CreacionAlias = () => {
   };
 
   const toggleArticulosDropdown = () => {
-        if (!isArticulosDropdownOpen) {
-        setArticuloSearchText('');
-        // Actualiza el estado selected de cada artículo basado en si ya está en la tabla
-        setFilteredArticulos(articulosDisponibles.map(articulo => ({
-            ...articulo,
-            selected: articulos.some(a => 
-            a.idAjeno === articulo.idAjeno || 
-            a.id === articulo.idAjeno
-            )
-        })));
-        }
-        
-        setIsArticulosDropdownOpen(!isArticulosDropdownOpen);
-        setIsGrupoCadenaDropdownOpen(false);
-        setIsCadenaDropdownOpen(false);
-        setIsMercadoDropdownOpen(false);
-    };
+    if (!isArticulosDropdownOpen) {
+      setArticuloSearchText('');
+      // Actualiza el estado selected de cada artículo basado en si ya está en la tabla
+      setFilteredArticulos(articulosDisponibles.map(articulo => ({
+          ...articulo,
+          selected: articulos.some(a => 
+          a.idAjeno === articulo.idAjeno || 
+          a.id === articulo.idAjeno
+          )
+      })));
+    }
+      
+    setIsArticulosDropdownOpen(!isArticulosDropdownOpen);
+    setIsGrupoCadenaDropdownOpen(false);
+    setIsCadenaDropdownOpen(false);
+    setIsMercadoDropdownOpen(false);
+  };
 
   const toggleGrupoCadenaDropdown = () => {
     setIsGrupoCadenaDropdownOpen(!isGrupoCadenaDropdownOpen);
@@ -625,6 +655,10 @@ const CreacionAlias = () => {
         : [...selectedGruposCadena, grupo.id];
         
         setSelectedGruposCadena(newSelectedGrupos);
+
+        if (newSelectedGrupos.length === 0) {
+          setAmbitosTable([]);
+        }
         
         // Filtrar y mostrar las cadenas pertenecientes a los grupos seleccionados
         const cadenasFiltradas = cadenasDisponibles.filter(
@@ -660,25 +694,41 @@ const CreacionAlias = () => {
     };
 
   const handleCadenaSelect = (cadena) => {
-    setSelectedCadenas(prev => {
-      if (prev.includes(cadena.id)) {
-        return prev.filter(id => id !== cadena.id);
-      } else {
-        return [...prev, cadena.id];
-      }
-    });
+    const newSelectedCadenas = selectedCadenas.includes(cadena.id)
+      ? selectedCadenas.filter(id => id !== cadena.id)
+      : [...selectedCadenas, cadena.id];
+    
+    setSelectedCadenas(newSelectedCadenas);
     setSelectedCadena(cadena.id);
+    
+    // Si se eliminaron todas las cadenas, limpiar la tabla de ámbitos
+    if (newSelectedCadenas.length === 0) {
+      setAmbitosTable([]);
+    }
+    
+    // Actualizar tabla si tenemos todas las selecciones
+    if (selectedGruposCadena.length > 0 && newSelectedCadenas.length > 0 && selectedMercados.length > 0) {
+      generateAmbitosTable();
+    }
   };
 
   const handleMercadoSelect = (mercado) => {
-    setSelectedMercados(prev => {
-      const newSelection = prev.includes(mercado.id)
-        ? prev.filter(id => id !== mercado.id)
-        : [...prev, mercado.id];
-      
-      setSelectedMercado(mercado.id);
-      return newSelection;
-    });
+    const newSelectedMercados = selectedMercados.includes(mercado.id)
+      ? selectedMercados.filter(id => id !== mercado.id)
+      : [...selectedMercados, mercado.id];
+    
+    setSelectedMercados(newSelectedMercados);
+    setSelectedMercado(mercado.id);
+    
+    // Si se eliminaron todos los mercados, limpiar la tabla de ámbitos
+    if (newSelectedMercados.length === 0) {
+      setAmbitosTable([]);
+    }
+    
+    // Actualizar tabla si tenemos todas las selecciones
+    if (selectedGruposCadena.length > 0 && selectedCadenas.length > 0 && newSelectedMercados.length > 0) {
+      generateAmbitosTable();
+    }
   };
 
   const handleCancel = () => {
@@ -949,42 +999,61 @@ const CreacionAlias = () => {
                       {t('No hay alias seleccionados. Utilice la búsqueda para añadir alias principales.')}
                     </div>
                   ) : (
-                    <table className="aliasesPrincipales-table">
-                      <thead>
-                        <tr>
-                          <th className="checkbox-column"></th>
-                          <th>{t('ID ALIAS PRINCIPAL')}</th>
-                          <th>{t('ALIAS PRINCIPAL')}</th>
-                          <th>{t('RATIO DE ACOPLE (POR UNIDAD PRINCIPAL)')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedAliasesPrincipales.map(alias => (
-                          <tr key={alias.idAlias}>
-                            <td className="checkbox-column">
-                              <div 
-                                className="custom-checkbox"
-                                onClick={() => handleAliasPrincipalSelect(alias)}
-                              >
-                                <FaCheck className="checkbox-icon" />
-                              </div>
-                            </td>
-                            <td>{alias.idAlias}</td>
-                            <td>{normalizeText(alias.nombre)}</td>
-                            <td>
-                              <input 
-                                type="number" 
-                                value={acoplesRatio[alias.idAlias] || 1}
-                                onChange={(e) => handleAcopleRatioChange(alias.idAlias, e.target.value)}
-                                min="0"
-                                step="1"
-                                className="ratio-input"
-                              />
-                            </td>
+                    <>
+                      {showDeleteAliasIcon && (
+                        <div className="articulos-actions-bar">
+                          <div className="articulos-selection-info">
+                            <span className="articulos-selected-count">
+                              {selectedAliasesIds.length} {t('seleccionados')}
+                            </span>
+                          </div>
+                          <button
+                            className="articulos-action-btn delete-btn"
+                            onClick={handleDeleteSelectedAliases}
+                            title={t('Eliminar alias seleccionados')}
+                          >
+                            <FaTrash className="action-icon" />
+                            <span>{t('Eliminar')}</span>
+                          </button>
+                        </div>
+                      )}
+                      <table className="aliasesPrincipales-table">
+                        <thead>
+                          <tr>
+                            <th className="checkbox-column"></th>
+                            <th>{t('ID ALIAS PRINCIPAL')}</th>
+                            <th>{t('ALIAS PRINCIPAL')}</th>
+                            <th>{t('RATIO DE ACOPLE (POR UNIDAD PRINCIPAL)')}</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {selectedAliasesPrincipales.map(alias => (
+                            <tr key={alias.idAlias}>
+                              <td className="checkbox-column">
+                                <div 
+                                  className="custom-checkbox"
+                                  onClick={() => handleAliasPrincipalCheckboxChange(alias.idAlias)}
+                                >
+                                  {selectedAliasesIds.includes(alias.idAlias) && <FaCheck className="checkbox-icon" />}
+                                </div>
+                              </td>
+                              <td>{alias.idAlias}</td>
+                              <td>{normalizeText(alias.nombre)}</td>
+                              <td>
+                                <input 
+                                  type="number" 
+                                  value={acoplesRatio[alias.idAlias] || 1}
+                                  onChange={(e) => handleAcopleRatioChange(alias.idAlias, e.target.value)}
+                                  min="0"
+                                  step="1"
+                                  className="ratio-input"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
                   )}
                 </div>
               </div>
@@ -1351,12 +1420,12 @@ const CreacionAlias = () => {
                    <span>
                         {selectedGruposCadena.length > 1 
                             ? `${selectedGruposCadena.length} seleccionados`
-                            : selectedGrupoCadena 
-                            ? (() => {
+                            : selectedGruposCadena.length === 1 
+                              ? (() => {
                                 const grupo = gruposCadenaDisponibles.find(g => g.id === selectedGrupoCadena);
                                 return grupo ? `${grupo.id} - ${normalizeText(grupo.descripcion)}` : selectedGrupoCadena;
-                                })() 
-                            : t('Seleccionar grupo cadena')
+                              })() 
+                              : t('Seleccionar grupo cadena')
                         }
                     </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -1422,15 +1491,15 @@ const CreacionAlias = () => {
                     onClick={selectedGruposCadena.length > 0 ? toggleCadenaDropdown : null}
                     >
                     <span>
-                        {selectedCadenas.length > 0 
+                      {selectedCadenas.length > 0 
                         ? `${selectedCadenas.length} seleccionados`
-                        : selectedCadena 
-                            ? (() => {
-                                const cadena = cadenasDisponibles.find(c => c.id === selectedCadena);
-                                return cadena ? `${cadena.id} - ${normalizeText(cadena.descripcion)}` : selectedCadena;
+                        : selectedCadenas.length === 1 && selectedCadena
+                          ? (() => {
+                              const cadena = cadenasDisponibles.find(c => c.id === selectedCadena);
+                              return cadena ? `${cadena.id} - ${normalizeText(cadena.descripcion)}` : selectedCadena;
                             })() 
-                            : t('Seleccionar cadena')
-                        }
+                          : t('Seleccionar cadena')
+                      }
                     </span>
                     <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -1492,12 +1561,14 @@ const CreacionAlias = () => {
                   onClick={toggleMercadoDropdown}
                 >
                   <span>
-                    {selectedMercado ? 
-                      (() => {
-                        const mercado = mercadosDisponibles.find(m => m.id === selectedMercado);
-                        return mercado ? `${mercado.id} - ${normalizeText(mercado.descripcion)}` : selectedMercado;
-                      })() : 
-                      t('Seleccionar mercado')
+                    {selectedMercados.length > 0 
+                      ? `${selectedMercados.length} seleccionados`
+                      : selectedMercados.length === 1 && selectedMercado
+                        ? (() => {
+                            const mercado = mercadosDisponibles.find(m => m.id === selectedMercado);
+                            return mercado ? `${mercado.id} - ${normalizeText(mercado.descripcion)}` : selectedMercado;
+                          })() 
+                        : t('Seleccionar mercado')
                     }
                   </span>
                   <FaChevronDown className="dropdown-arrow" />

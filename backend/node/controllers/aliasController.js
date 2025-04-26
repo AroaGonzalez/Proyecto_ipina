@@ -28,7 +28,7 @@ const queryCache = {
 
 queryCache.clear();
 
-exports.getAlias = async (req, res) => {
+exports.getAliasFilter = async (req, res) => {
   try {
     const { 
       page = 0, 
@@ -145,11 +145,11 @@ exports.getAjenos = async (req, res) => {
   }
 };
 
-exports.getAliasFilter = async (req, res) => {
+exports.getAlias = async (req, res) => {
   try {
     const { idIdioma = 1 } = req.query;
     
-    const result = await aliasRepository.getAliasesForFilter(parseInt(idIdioma));
+    const result = await aliasRepository.getAlias(parseInt(idIdioma));
     
     console.log(`Alias para filtro obtenidos: ${result.length}`);
     

@@ -17,6 +17,7 @@ import ParametrizacionAlias from './components/parametrizacionAlias';
 import EdicionAlias from './components/edicionAlias';
 import Tareas from './components/tareas';
 import NuevoAlias from './components/nuevoAlias';
+import EdicionRelaciones from './components/edicionRelaciones';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -107,6 +108,13 @@ function App() {
               element={
                 <PrivateRoute>
                   <EdicionAlias />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/edicion-relaciones"
+              element={
+                <PrivateRoute>
+                  <EdicionRelaciones />
                 </PrivateRoute>
               }
             />

@@ -235,7 +235,7 @@ exports.getEstadosAlias = async (idIdioma = 1) => {
       SELECT tea.ID_TIPO_ESTADO_ALIAS as id, teai.DESCRIPCION as descripcion
       FROM AJENOS.TIPO_ESTADO_ALIAS tea
       INNER JOIN AJENOS.TIPO_ESTADO_ALIAS_IDIOMA teai ON teai.ID_TIPO_ESTADO_ALIAS = tea.ID_TIPO_ESTADO_ALIAS
-      WHERE teai.ID_IDIOMA = :idIdioma
+      WHERE teai.ID_IDIOMA = :idIdioma AND tea.ID_TIPO_ESTADO_ALIAS <> 0
       ORDER BY tea.ID_TIPO_ESTADO_ALIAS
     `, {
       replacements: { idIdioma },
@@ -274,7 +274,7 @@ exports.getEstacionalidades = async (idIdioma = 1) => {
   }
 };
 
-exports.getAliasesForFilter = async (idIdioma = 1) => {
+exports.getAlias = async (idIdioma = 1) => {
   try {
     
     const result = await sequelizeAjenos.query(`
@@ -722,7 +722,8 @@ exports.findCadenasByIdAlias = async (idAlias) => {
       INNER JOIN MAESTROS.GRUPO_CADENA gc ON gc.ID_GRUPO_CADENA = gcc.ID_GRUPO_CADENA AND gc.ID_TIPO_GRUPO_CADENA = 6
       INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = :idAlias
       INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO AND aaa.FECHA_BAJA IS NULL
-      INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION = aaa.ID_LOCALIZACION_COMPRA AND lc.ID_CADENA = c.ID_CADENA
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA 
+      AND lc.ID_CADENA = c.ID_CADENA
     `;
 
     const result = await sequelizeAjenos.query(query, {
@@ -750,7 +751,7 @@ exports.findMercadosByIdAlias = async (idAlias, idIdioma = 1) => {
       INNER JOIN MAESTROS.PAIS_IDIOMA pi ON pi.ID_PAIS = p.ID_PAIS AND pi.ID_IDIOMA = :idIdioma
       INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = :idAlias
       INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO AND aaa.FECHA_BAJA IS NULL
-      INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION = aaa.ID_LOCALIZACION_COMPRA AND lc.ID_PAIS = p.ID_PAIS
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA AND lc.ID_PAIS = p.ID_PAIS
     `;
 
     const result = await sequelizeAjenos.query(query, {

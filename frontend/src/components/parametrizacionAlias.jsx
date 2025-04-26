@@ -668,7 +668,25 @@ const ParametrizacionAlias = () => {
   };
 
   const handleEditRelations = () => {
-    console.log('Editar relaciones de alias:', selectedItems);
+    if (selectedItems.length === 0) {
+      alert(t('Por favor, seleccione al menos un alias para editar relaciones'));
+      return;
+    }
+    
+    // Navegar a la página de edición de relaciones con los IDs de alias seleccionados y filtros actuales
+    const currentFilters = {
+      tipoAlias: selectedTiposAlias,
+      estadoAlias: selectedEstadosAlias,
+      estacionalidad: selectedEstacionalidades,
+      articulos: selectedArticulos
+    };
+    
+    navigate('/edicion-relaciones', { 
+      state: { 
+        selectedItems: selectedItems,
+        filters: currentFilters
+      } 
+    });
   };
 
   const filteredAliasOptions = searchText 
