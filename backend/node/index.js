@@ -91,7 +91,6 @@ const tareaRoutes = require('./routes/tareaRoutes');
 const creacionRoutes = require('./routes/creationRoutes');
 const aliasRelacionesRoutes = require('./routes/aliasRelacionesRoutes');
 
-
 const User = require('./models/user')(sequelizeAjenos);
 
 app.post('/login', async (req, res) => {

@@ -27,7 +27,6 @@ const ParametrizacionAlias = () => {
   const tableContainerRef = useRef(null);
   const tableEndRef = useRef(null);
 
-  // Estados para la pestaña de ARTÍCULOS
   const [aliasAjenos, setAliasAjenos] = useState([]);
   const [loadingAjenos, setLoadingAjenos] = useState(false);
   const [loadingMoreAjenos, setLoadingMoreAjenos] = useState(false);
@@ -49,7 +48,6 @@ const ParametrizacionAlias = () => {
   const [selectedEstacionalidades, setSelectedEstacionalidades] = useState([]);
   const [selectedArticulos, setSelectedArticulos] = useState([]);
 
-  // Estados para los textos de búsqueda en cada filtro
   const [searchText, setSearchText] = useState('');
   const [tipoAliasSearchText, setTipoAliasSearchText] = useState('');
   const [estadoAliasSearchText, setEstadoAliasSearchText] = useState('');
@@ -198,8 +196,6 @@ const ParametrizacionAlias = () => {
       }
       
       setLoadingAjenos(true);
-      
-      // Format the selected items
       const selectedIds = selectedItemsAjenos.map(item => {
         const [idAlias, idAjeno] = item.split('-');
         return { 
@@ -208,7 +204,6 @@ const ParametrizacionAlias = () => {
         };
       });
       
-      // Use PUT method with items in the request body
       const response = await axios.delete(`${BASE_URL}/delete-alias-ajeno`, {
         data: {
           items: selectedIds,
@@ -374,7 +369,6 @@ const ParametrizacionAlias = () => {
       params.append('page', page);
       params.append('size', 50);
       
-      // Añadir los filtros aplicados actualmente
       if (selectedNombresAlias.length > 0) {
         const nombresAliasToFilter = selectedNombresAlias.filter(id => id !== 'selectAll');
         nombresAliasToFilter.forEach(id => {
@@ -382,7 +376,6 @@ const ParametrizacionAlias = () => {
         });
       }
       
-      // Otros filtros específicos para artículos si son necesarios
       const articulosToFilter = selectedArticulos.filter(id => id !== 'selectAll');
       if (articulosToFilter.length > 0) {
         articulosToFilter.forEach(id => {
@@ -653,7 +646,6 @@ const ParametrizacionAlias = () => {
         setSelectedItems([]);
         setSelectAll(false);
         
-        // Recargar la lista de alias
         fetchAliases();
       } else {
         alert(t('Error al eliminar los alias seleccionados'));
@@ -672,8 +664,6 @@ const ParametrizacionAlias = () => {
       alert(t('Por favor, seleccione al menos un alias para editar relaciones'));
       return;
     }
-    
-    // Navegar a la página de edición de relaciones con los IDs de alias seleccionados y filtros actuales
     const currentFilters = {
       tipoAlias: selectedTiposAlias,
       estadoAlias: selectedEstadosAlias,

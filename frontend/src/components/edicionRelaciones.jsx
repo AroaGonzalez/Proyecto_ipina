@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { FaSyncAlt, FaSearch, FaChevronDown, FaPencilAlt, FaTrash, FaArrowLeft } from 'react-icons/fa';
+import { FaSyncAlt, FaSearch, FaChevronDown, FaPencilAlt, FaTrash, FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/parametrizacionAlias.css';
@@ -16,7 +16,7 @@ const EdicionRelaciones = () => {
   const location = useLocation();
   const idsAliasSelected = location.state?.selectedItems || [];
   const originalFilters = location.state?.filters || {};
-  
+  const [ajenos, setAjenos] = useState([]);
   const [relaciones, setRelaciones] = useState([]);
   const [filteredRelaciones, setFilteredRelaciones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,8 +30,13 @@ const EdicionRelaciones = () => {
   const [openFilter, setOpenFilter] = useState(null);
   const tableContainerRef = useRef(null);
   const tableEndRef = useRef(null);
-
-  // Filtros
+  const [relacionesUnidades, setRelacionesUnidades] = useState([]);
+  const [allRelaciones, setAllRelaciones] = useState([]);
+  const [loadingAllItems, setLoadingAllItems] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [globalAjenosSelected, setGlobalAjenosSelected] = useState({});
+  
   const [mercados, setMercados] = useState([]);
   const [cadenas, setCadenas] = useState([]);
   const [alias, setAlias] = useState([]);
@@ -43,7 +48,6 @@ const EdicionRelaciones = () => {
   const [selectedUnidadesCompra, setSelectedUnidadesCompra] = useState([]);
   const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
   
-  // Estados para los textos de búsqueda en cada filtro
   const [mercadoSearchText, setMercadoSearchText] = useState('');
   const [cadenaSearchText, setCadenaSearchText] = useState('');
   const [aliasSearchText, setAliasSearchText] = useState('');
@@ -70,6 +74,168 @@ const EdicionRelaciones = () => {
     };
   }, [openFilter]);
 
+  useEffect(() => {
+    // Crear un objeto con los ajenos seleccionados inicialmente
+    const initialGlobalAjenos = {};
+    relaciones.forEach(relacion => {
+      initialGlobalAjenos[relacion.idAliasAmbitoAplanado] = relacion.idAjenoSeccionGlobal || 0;
+    });
+    setGlobalAjenosSelected(initialGlobalAjenos);
+  }, [relaciones.length]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (tableContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = tableContainerRef.current;
+        
+        if (!loadingMore && hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
+          loadMoreData();
+        }
+      }
+    };
+  
+    const tableContainer = tableContainerRef.current;
+    if (tableContainer) {
+      tableContainer.addEventListener('scroll', handleScroll);
+    }
+  
+    return () => {
+      if (tableContainer) {
+        tableContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [loadingMore, hasMore, totalElements, relaciones.length]);
+
+  const handleGlobalAjenoChange = (idAliasAmbitoAplanado, idAjenoSeccionGlobal) => {
+    // Actualizar el estado de selección
+    setGlobalAjenosSelected(prev => ({
+      ...prev,
+      [idAliasAmbitoAplanado]: idAjenoSeccionGlobal
+    }));
+    
+    // Actualizar las relaciones
+    const updatedRelaciones = relaciones.map(rel => {
+      if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
+        return {
+          ...rel,
+          idAjenoSeccionGlobal: idAjenoSeccionGlobal
+        };
+      }
+      return rel;
+    });
+    
+    setRelaciones(updatedRelaciones);
+    setFilteredRelaciones(updatedRelaciones);
+    setIsModified(true);
+  };
+
+  const loadMoreData = async () => {
+    if (!hasMore || loadingMore) return;
+    
+    if (relaciones.length >= totalElements) {
+      setHasMore(false);
+      return;
+    }
+    
+    setLoadingMore(true);
+    
+    try {
+      const nextPage = currentPage + 1;
+      
+      let aliasToUse = [];
+      
+      if (idsAliasSelected.length > 0) {
+        if (selectedAlias.length > 0) {
+          aliasToUse = selectedAlias.filter(id => idsAliasSelected.includes(id));
+        } else {
+          aliasToUse = [...idsAliasSelected];
+        }
+      } else {
+        aliasToUse = selectedAlias;
+      }
+      
+      const filter = {
+        idIdioma: languageId,
+        idsMercado: selectedMercados.length > 0 ? selectedMercados : undefined,
+        idsCadena: selectedCadenas.length > 0 ? selectedCadenas : undefined,
+        idsUnidadComprasGestora: selectedUnidadesCompra.length > 0 ? selectedUnidadesCompra : undefined,
+        idsLocalizacion: selectedLocalizaciones.length > 0 ? selectedLocalizaciones : undefined
+      };
+      
+      const payload = {
+        filter,
+        idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
+        processAllAlias: false,
+        aliasTableOriginalFilter: originalFilters,
+        page: {
+          number: nextPage,
+          size: pageSize
+        }
+      };
+      
+      console.log('Cargando más datos, página:', nextPage);
+      
+      const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
+      
+      if (response.data) {
+        const newRelaciones = response.data.relaciones || [];
+        const newTotalElements = response.data.page?.total || 0;
+        
+        if (newTotalElements !== totalElements) {
+          setTotalElements(newTotalElements);
+        }
+        
+        if (response.data.ajenos) {
+          const newAjenos = response.data.ajenos || [];
+          const combinedAjenos = [...ajenos];
+          
+          newAjenos.forEach(newAjeno => {
+            const existingIndex = combinedAjenos.findIndex(a => a.idAlias === newAjeno.idAlias);
+            if (existingIndex >= 0) {
+              const existingDataAjenos = combinedAjenos[existingIndex].dataAjenos || [];
+              const newDataAjenos = newAjeno.dataAjenos || [];
+              
+              const combinedDataAjenos = [...existingDataAjenos];
+              
+              newDataAjenos.forEach(dataAjeno => {
+                if (!combinedDataAjenos.some(da => da.idAjeno === dataAjeno.idAjeno)) {
+                  combinedDataAjenos.push(dataAjeno);
+                }
+              });
+              
+              combinedAjenos[existingIndex].dataAjenos = combinedDataAjenos;
+            } else {
+              combinedAjenos.push(newAjeno);
+            }
+          });
+          
+          setAjenos(combinedAjenos);
+        }
+        
+        if (newRelaciones.length > 0) {
+          const updatedRelaciones = [...relaciones, ...newRelaciones];
+          setRelaciones(updatedRelaciones);
+          setFilteredRelaciones(updatedRelaciones);
+          setCurrentPage(nextPage);
+          
+          if (updatedRelaciones.length >= newTotalElements) {
+            setHasMore(false);
+          }
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error al cargar más datos:', error);
+      setError(t('Error al cargar más datos'));
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const fetchFilterOptions = async () => {
     try {
       const [mercadosRes, cadenasRes, aliasRes, unidadesCompraRes, relacionesUnidadesRes] = await Promise.all([
@@ -80,55 +246,133 @@ const EdicionRelaciones = () => {
         axios.get(`${BASE_URL}/relaciones/unidades-compra`)
       ]);
       
-      setMercados(mercadosRes.data);
-      setCadenas(cadenasRes.data);
-      setAlias(aliasRes.data);
-      setUnidadesCompra(unidadesCompraRes.data);
-        setRelacionesUnidades(relacionesUnidadesRes.data);
+      setMercados(Array.isArray(mercadosRes.data) ? mercadosRes.data : []);
+      setCadenas(Array.isArray(cadenasRes.data) ? cadenasRes.data : []);
+      if (aliasRes.data && aliasRes.data.content && Array.isArray(aliasRes.data.content)) {
+        console.log('Datos de alias recibidos correctamente:', aliasRes.data.content.length);
+        const processedAlias = aliasRes.data.content.map(item => ({
+          id: item.id,
+          descripcion: item.descripcion || item.nombreAlias
+        }));
+        setAlias(processedAlias);
+      } else if (Array.isArray(aliasRes.data)) {
+        console.log('Datos de alias recibidos en formato array:', aliasRes.data.length);
+        setAlias(aliasRes.data);
+      } else {
+        console.error('Error: datos de alias no válidos:', aliasRes.data);
+        setAlias([]);
+      }
+
+      setUnidadesCompra(Array.isArray(unidadesCompraRes.data) ? unidadesCompraRes.data : []);
+      setRelacionesUnidades(Array.isArray(relacionesUnidadesRes.data) ? relacionesUnidadesRes.data : []);
+    
     } catch (error) {
       console.error('Error al cargar opciones de filtro:', error);
+      setMercados([]);
+      setCadenas([]);
+      setAlias([]);
+      setUnidadesCompra([]);
+      setRelacionesUnidades([]);
       setError(t('Error al cargar opciones de filtro'));
     }
   };
-    const handleEditRelations = () => {
-        if (selectedItems.length === 0) {
-        alert(t('Por favor, seleccione al menos un alias para editar relaciones'));
-        return;
-        }
-        
-        // Navegar a la página de edición de relaciones con los IDs de alias seleccionados y filtros actuales
-        const currentFilters = {
-        tipoAlias: selectedTiposAlias,
-        estadoAlias: selectedEstadosAlias,
-        estacionalidad: selectedEstacionalidades,
-        articulos: selectedArticulos
-        };
-        
-        navigate('/edicion-relaciones', { 
-        state: { 
-            selectedItems: selectedItems,
-            filters: currentFilters
-        } 
-        });
+
+  const normalizeText = (text) => {
+    if (!text) return '';
+
+    let normalizedText = text;
+
+    normalizedText = normalizedText
+    .replace(/ESPA.?.'A/g, 'ESPAÑA')
+    .replace(/ESPA.?.A/g, 'ESPAÑA')
+    .replace(/ADMINISTRACI[Ã]["]N/g, 'ADMINISTRACIÓN')
+    .replace(/ADMINISTRACI.?.N/g, 'ADMINISTRACIÓN')
+    .replace(/ALMAC.?.N/g, 'ALMACÉN')
+    .replace(/M.?.XICO/g, 'MÉXICO')
+    .replace(/PREVENCI.?.N/g, 'PREVENCIÓN')
+    .replace(/P.?.RDIDAS/g, 'PÉRDIDAS')
+    .replace(/GESTI.?.N/g, 'GESTIÓN')
+    .replace(/DECORACI.?.N/g, 'DECORACIÓN');
+
+    const replacements = {
+      'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+      'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+      'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+      'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+      'Âº': 'º', 'Âª': 'ª',
+      'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+      'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+      'â‚¬': '€',
+      'â€"': '–', 'â€"': '—',
+      'â€œ': '"', 'â€': '"',
+      'â€¢': '•',
+      'â€¦': '…',
+      'Â¡': '¡', 'Â¿': '¿'
     };
+
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+      normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+
+    return normalizedText;
+  };
+
+  const getFilteredAlias = () => {
+    if (!Array.isArray(alias)) {
+      console.error('Error: "alias" no es un array:', alias);
+      return [];
+    }
+    
+    try {
+      if (aliasSearchText) {
+        return alias.filter(a => {
+          if (a && typeof a === 'object') {
+            const idStr = a.id?.toString() || '';
+            const descStr = a.descripcion?.toLowerCase() || '';
+            return idStr.includes(aliasSearchText) || descStr.includes(aliasSearchText.toLowerCase());
+          }
+          return false;
+        });
+      }
+      
+      return alias;
+    } catch (error) {
+      console.error('Error al filtrar alias:', error);
+      return []; 
+    }
+  };
+
+  const filteredAlias = getFilteredAlias();
 
   const fetchRelaciones = async () => {
     setLoading(true);
     setError(null);
+    setHasMore(true);
+    setCurrentPage(0);
     
     try {
+      let aliasToUse = [];      
+      if (idsAliasSelected.length > 0) {
+        if (selectedAlias.length > 0) {
+          aliasToUse = selectedAlias.filter(id => idsAliasSelected.includes(id));
+        } else {
+          aliasToUse = [...idsAliasSelected];
+        }
+      } else {
+        aliasToUse = selectedAlias;
+      }
+      
       const filter = {
         idIdioma: languageId,
         idsMercado: selectedMercados.length > 0 ? selectedMercados : undefined,
         idsCadena: selectedCadenas.length > 0 ? selectedCadenas : undefined,
-        idsAlias: selectedAlias.length > 0 ? selectedAlias : undefined,
         idsUnidadComprasGestora: selectedUnidadesCompra.length > 0 ? selectedUnidadesCompra : undefined,
         idsLocalizacion: selectedLocalizaciones.length > 0 ? selectedLocalizaciones : undefined
       };
       
       const payload = {
         filter,
-        idsAliasSelected: selectedAlias.length > 0 ? selectedAlias : idsAliasSelected,
+        idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
         processAllAlias: false,
         aliasTableOriginalFilter: originalFilters,
         page: {
@@ -137,22 +381,39 @@ const EdicionRelaciones = () => {
         }
       };
       
-      console.log('Consultando relaciones con payload:', payload);
-      
       const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
       
       if (response.data) {
-        setRelaciones(response.data.relaciones || []);
-        setFilteredRelaciones(response.data.relaciones || []);
-        setTotalElements(response.data.page?.total || 0);
+        const initialRelaciones = response.data.relaciones || [];
+        const totalCount = response.data.page?.total || 0;
+        
+        setRelaciones(initialRelaciones);
+        setFilteredRelaciones(initialRelaciones);
+        setTotalElements(totalCount);
+        
+        if (response.data.ajenos) {
+          setAjenos(response.data.ajenos || []);
+        } else {
+          setAjenos([]);
+        }
+        
+        setHasMore(initialRelaciones.length < totalCount);
+        
+        if (response.data.allRelaciones) {
+          setAllRelaciones(response.data.allRelaciones || []);
+        }
       } else {
         setRelaciones([]);
         setFilteredRelaciones([]);
+        setAllRelaciones([]);
         setTotalElements(0);
+        setHasMore(false);
+        setAjenos([]);
       }
     } catch (error) {
       console.error('Error al cargar relaciones:', error);
       setError(t('Error al cargar relaciones'));
+      setAjenos([]);
     } finally {
       setLoading(false);
     }
@@ -180,9 +441,17 @@ const EdicionRelaciones = () => {
         );
         break;
       case 'alias':
-        setSelectedAlias(prev => 
-          prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-        );
+        if (idsAliasSelected.length > 0) {
+          if (idsAliasSelected.includes(value)) {
+            setSelectedAlias(prev => 
+              prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+            );
+          }
+        } else {
+          setSelectedAlias(prev => 
+            prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+          );
+        }
         break;
       case 'unidadCompra':
         setSelectedUnidadesCompra(prev => 
@@ -211,21 +480,39 @@ const EdicionRelaciones = () => {
     });
   };
 
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredRelaciones.map(item => item.idAliasAmbitoAplanado));
+  const handleSelectAll = async () => {
+    setLoadingAllItems(true);
+    
+    try {
+      if (selectAll) {
+        setSelectedItems([]);
+        setSelectAll(false);
+      } else {
+        if (allRelaciones && allRelaciones.length > 0) {
+          const allIds = allRelaciones.map(item => item.idAliasAmbitoAplanado);
+          setSelectedItems(allIds);
+        } else {
+          const visibleIds = filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
+          setSelectedItems(visibleIds);
+        }
+        setSelectAll(true);
+      }
+    } catch (error) {
+      console.error('Error en handleSelectAll:', error);
+      const visibleIds = filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
+      setSelectedItems(visibleIds);
+      setSelectAll(true);
+    } finally {
+      setLoadingAllItems(false);
     }
-    setSelectAll(!selectAll);
   };
 
   const filteredMercados = mercadoSearchText
-    ? mercados.filter(mercado => 
-        mercado.id.toString().includes(mercadoSearchText) || 
-        mercado.descripcion.toLowerCase().includes(mercadoSearchText.toLowerCase())
-      )
-    : mercados;
+    ? (Array.isArray(mercados) ? mercados.filter(mercado => 
+        mercado.id?.toString().includes(mercadoSearchText) || 
+        (mercado.descripcion || '').toLowerCase().includes(mercadoSearchText.toLowerCase())
+      ) : [])
+    : mercados || [];
 
   const filteredCadenas = cadenaSearchText
     ? cadenas.filter(cadena => 
@@ -234,19 +521,12 @@ const EdicionRelaciones = () => {
       )
     : cadenas;
 
-  const filteredAlias = aliasSearchText
-    ? alias.filter(a => 
-        a.id.toString().includes(aliasSearchText) || 
-        a.descripcion.toLowerCase().includes(aliasSearchText.toLowerCase())
-      )
-    : alias;
-
   const filteredUnidadesCompra = unidadCompraSearchText
-    ? unidadesCompra.filter(unidad => 
+    ? relacionesUnidades.filter(unidad => 
         unidad.id.toString().includes(unidadCompraSearchText) || 
         unidad.descripcion.toLowerCase().includes(unidadCompraSearchText.toLowerCase())
       )
-    : unidadesCompra;
+    : relacionesUnidades;
 
   const currentTime = new Date().toLocaleTimeString('es-ES', {
     hour: '2-digit',
@@ -257,7 +537,13 @@ const EdicionRelaciones = () => {
     if (selectedItems.length === 0) return;
     
     try {
-      const selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      let selectedRelations = [];
+      
+      if (allRelaciones && allRelaciones.length > 0) {
+        selectedRelations = allRelaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      } else {
+        selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      }
       
       const response = await axios.put(`${BASE_URL}/relaciones/activate`, {
         relaciones: selectedRelations,
@@ -265,7 +551,6 @@ const EdicionRelaciones = () => {
       });
       
       if (response.data.success) {
-        // Actualizar las relaciones localmente
         const updatedRelaciones = relaciones.map(rel => {
           if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
             return {
@@ -280,6 +565,22 @@ const EdicionRelaciones = () => {
         
         setRelaciones(updatedRelaciones);
         setFilteredRelaciones(updatedRelaciones);
+        
+        if (allRelaciones.length > 0) {
+          const updatedAllRelaciones = allRelaciones.map(rel => {
+            if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
+              return {
+                ...rel,
+                idTipoEstadoLocalizacionRam: 1,
+                descripcionTipoEstadoLocalizacionRam: 'Active',
+                fechaHoraFinPausa: null
+              };
+            }
+            return rel;
+          });
+          setAllRelaciones(updatedAllRelaciones);
+        }
+        
         setSelectedItems([]);
         setSelectAll(false);
         
@@ -294,12 +595,17 @@ const EdicionRelaciones = () => {
   const handlePauseRelations = async () => {
     if (selectedItems.length === 0) return;
     
-    // Puedes implementar un modal para seleccionar la fecha de fin de pausa
     const fechaHoraFinPausa = new Date();
-    fechaHoraFinPausa.setDate(fechaHoraFinPausa.getDate() + 30); // 30 días por defecto
+    fechaHoraFinPausa.setDate(fechaHoraFinPausa.getDate() + 30);
     
     try {
-      const selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      let selectedRelations = [];
+      
+      if (allRelaciones && allRelaciones.length > 0) {
+        selectedRelations = allRelaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      } else {
+        selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
+      }
       
       const response = await axios.put(`${BASE_URL}/relaciones/pause`, {
         relaciones: selectedRelations,
@@ -308,7 +614,6 @@ const EdicionRelaciones = () => {
       });
       
       if (response.data.success) {
-        // Actualizar las relaciones localmente
         const updatedRelaciones = relaciones.map(rel => {
           if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
             return {
@@ -323,6 +628,22 @@ const EdicionRelaciones = () => {
         
         setRelaciones(updatedRelaciones);
         setFilteredRelaciones(updatedRelaciones);
+        
+        if (allRelaciones.length > 0) {
+          const updatedAllRelaciones = allRelaciones.map(rel => {
+            if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
+              return {
+                ...rel,
+                idTipoEstadoLocalizacionRam: 2,
+                descripcionTipoEstadoLocalizacionRam: 'Pausado',
+                fechaHoraFinPausa: fechaHoraFinPausa.toISOString()
+              };
+            }
+            return rel;
+          });
+          setAllRelaciones(updatedAllRelaciones);
+        }
+        
         setSelectedItems([]);
         setSelectAll(false);
         
@@ -336,11 +657,13 @@ const EdicionRelaciones = () => {
 
   const handleSave = async () => {
     try {
-      // Aquí implementarías la lógica para guardar los cambios en las relaciones
-      // Por ejemplo, actualizar las unidades de compra asignadas
+      const updatedRelaciones = relaciones.map(rel => ({
+        ...rel,
+        idAjenoSeccionGlobal: globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0
+      }));
       
       const response = await axios.put(`${BASE_URL}/relaciones/update`, {
-        relaciones: relaciones,
+        relaciones: updatedRelaciones,
         usuario: 'WEBAPP'
       });
       
@@ -379,7 +702,7 @@ const EdicionRelaciones = () => {
   };
 
   const estadoClassName = (estado) => {
-    if (estado === 'Active' || estado === 'ACTIVO') return 'estado-tag ACTIVO';
+    if (estado === 'Active' || estado === 'ACTIVA') return 'estado-tag ACTIVA';
     if (estado === 'Pausado' || estado === 'PAUSADO') return 'estado-tag PAUSADO';
     return 'estado-tag';
   };
@@ -424,54 +747,93 @@ const EdicionRelaciones = () => {
         </div>
       </div>
 
+      {idsAliasSelected && idsAliasSelected.length > 0 && (
+        <div className="info-message">
+          <FaInfoCircle className="info-icon" />
+          <span>
+            {idsAliasSelected.length === 1 
+              ? t('Solo se muestran relaciones para el alias seleccionado en la pantalla anterior. No es posible cambiar el alias en esta vista.')
+              : t('Solo se muestran relaciones para los alias seleccionados en la pantalla anterior. Puede filtrar entre estos alias, pero no es posible añadir alias adicionales.')}
+          </span>
+        </div>
+      )}
+
       {showFilters && (
         <div className="filters-section">
           <div className="filters-row">
-            <div className="filter-item">
-              <div 
-                className="filter-dropdown"
-                onClick={() => toggleFilter('alias')}
-              >
-                <span className="filter-label">Id o Nombre de Alias</span>
-                <div className="filter-value">
-                  <span className="filter-placeholder">
-                    {selectedAlias.length > 0 
-                      ? `${selectedAlias.length} seleccionados` 
-                      : 'Seleccionar'}
-                  </span>
-                  <FaChevronDown className="dropdown-arrow" />
-                </div>
-                {openFilter === 'alias' && (
-                  <div className="filter-dropdown-content">
-                    <div className="dropdown-search">
-                      <input 
-                        type="text" 
-                        placeholder="Buscar alias..." 
-                        value={aliasSearchText}
-                        onChange={(e) => handleSearchTextChange(e, setAliasSearchText)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {filteredAlias.map((item) => (
+          <div className="filter-item">
+            <div 
+              className="filter-dropdown"
+              onClick={() => toggleFilter('alias')}
+            >
+              <span className="filter-label">Id o Nombre de Alias</span>
+              <div className="filter-value">
+                <span className="filter-placeholder">
+                  {selectedAlias.length > 0 
+                    ? `${selectedAlias.length} seleccionados` 
+                    : 'Seleccionar'}
+                </span>
+                <FaChevronDown className="dropdown-arrow" />
+              </div>
+              {openFilter === 'alias' && (
+                <div className="filter-dropdown-content">
+                  <div className="dropdown-search">
+                    <input 
+                      type="text" 
+                      placeholder="Buscar alias..." 
+                      value={aliasSearchText}
+                      onChange={(e) => handleSearchTextChange(e, setAliasSearchText)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div className="dropdown-items-container">
+                    <div className="dropdown-items">
+                      {filteredAlias.map((item) => {
+                        const isSelectable = !idsAliasSelected.length || idsAliasSelected.includes(item.id);
+                        
+                        return (
                           <div 
                             key={item.id} 
-                            className="dropdown-item"
+                            className={`dropdown-item ${!isSelectable ? 'disabled-item' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleFilterSelect('alias', item.id);
+                              if (isSelectable) {
+                                handleFilterSelect('alias', item.id);
+                              }
                             }}
                           >
                             <input 
                               type="checkbox" 
                               checked={selectedAlias.includes(item.id)}
                               readOnly
+                              disabled={!isSelectable}
                             />
                             <span>{item.id} - {item.descripcion}</span>
                           </div>
-                        ))}
+                        );
+                      })}
+                    </div>
+                    
+                    {idsAliasSelected.length > 0 ? (
+                      <div 
+                        className="dropdown-item select-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (selectedAlias.length === idsAliasSelected.length) {
+                            setSelectedAlias([]);
+                          } else {
+                            setSelectedAlias([...idsAliasSelected]);
+                          }
+                        }}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={selectedAlias.length === idsAliasSelected.length && idsAliasSelected.length > 0}
+                          readOnly
+                        />
+                        <span>Seleccionar todos los preseleccionados</span>
                       </div>
+                    ) : (
                       <div 
                         className="dropdown-item select-all"
                         onClick={(e) => {
@@ -490,11 +852,12 @@ const EdicionRelaciones = () => {
                         />
                         <span>Seleccionar todo</span>
                       </div>
-                    </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
+          </div>
             
             <div className="filter-item">
               <div 
@@ -717,16 +1080,16 @@ const EdicionRelaciones = () => {
                         className="dropdown-item select-all"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (selectedUnidadesCompra.length === unidadesCompra.length + 1) {
+                          if (selectedUnidadesCompra.length === relacionesUnidades.length + 1) {
                             setSelectedUnidadesCompra([]);
                           } else {
-                            setSelectedUnidadesCompra([0, ...unidadesCompra.map(u => u.id)]);
+                            setSelectedUnidadesCompra([0, ...relacionesUnidades.map(u => u.id)]);
                           }
                         }}
                       >
                         <input 
                           type="checkbox" 
-                          checked={selectedUnidadesCompra.length === unidadesCompra.length + 1 && unidadesCompra.length > 0}
+                          checked={selectedUnidadesCompra.length === relacionesUnidades.length + 1 && relacionesUnidades.length > 0}
                           readOnly
                         />
                         <span>Seleccionar todo</span>
@@ -807,7 +1170,7 @@ const EdicionRelaciones = () => {
                   type="checkbox" 
                   checked={selectAll} 
                   onChange={handleSelectAll} 
-                  disabled={relaciones.length === 0}
+                  disabled={relaciones.length === 0 || loading || loadingAllItems}
                 />
               </th>
               <th>{t('ID ALIAS')}</th>
@@ -818,15 +1181,14 @@ const EdicionRelaciones = () => {
               <th>{t('ESTADO RELACIÓN')}</th>
               <th>{t('PAUSADO HASTA')}</th>
               <th>{t('ID/NOMBRE UNIDAD COMPRAS GESTORA')}</th>
-              <th>{t('TIENDA PUEDE PEDIR')}</th>
               <th>{t('GLOBAL')}</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading || loadingAllItems ? (
               <tr>
                 <td colSpan="14" className="loading-cell">
-                  {t('Cargando datos...')}
+                  {loadingAllItems ? t('Seleccionando todas las relaciones...') : t('Cargando datos...')}
                 </td>
               </tr>
             ) : relaciones.length > 0 ? (
@@ -842,17 +1204,17 @@ const EdicionRelaciones = () => {
                     </td>
                     <td>{relacion.idAlias}</td>
                     <td>{relacion.idLocalizacionCompra}</td>
-                    <td>{relacion.descripcionLocalizacionCompra}</td>
+                    <td>{normalizeText(relacion.descripcionLocalizacionCompra)}</td>
                     <td>{relacion.descripcionCortaCadena}</td>
                     <td>
                       <div className="mercado-cell">
                         <img 
                           src={`/images/flags/${relacion.codigoIsoMercado?.toLowerCase()}.png`} 
-                          alt={relacion.descripcionMercado}
+                          alt={normalizeText(relacion.descripcionMercado)}
                           className="flag-icon"
                           onError={(e) => { e.target.style.display = 'none' }}
                         />
-                        <span>{relacion.descripcionMercado}</span>
+                        <span>{normalizeText(relacion.descripcionMercado)}</span>
                       </div>
                     </td>
                     <td>
@@ -878,34 +1240,33 @@ const EdicionRelaciones = () => {
                         <option value={0}>Ninguna unidad de compra gestora</option>
                         {unidadesCompra.map(unidad => (
                           <option key={unidad.id} value={unidad.id}>
-                            {unidad.descripcion}
+                            {unidad.id} - {normalizeText(unidad.descripcion)}
                           </option>
                         ))}
                       </select>
-                    </td>
-                    <td className="checkbox-column">
-                      <input 
-                        type="checkbox" 
-                        checked={relacion.esSolicitable} 
-                        onChange={() => {
-                          const updatedRelaciones = relaciones.map(rel => {
-                            if (rel.idAliasAmbitoAplanado === relacion.idAliasAmbitoAplanado) {
-                              return { ...rel, esSolicitable: !rel.esSolicitable };
-                            }
-                            return rel;
-                          });
-                          setRelaciones(updatedRelaciones);
-                          setFilteredRelaciones(updatedRelaciones);
-                          setIsModified(true);
-                        }}
-                      />
-                    </td>
-                    <td className="checkbox-column">
-                      <input 
-                        type="checkbox" 
-                        checked={relacion.idAjenoSeccionGlobal && relacion.idAjenoSeccionGlobal > 0}
-                        disabled={true}
-                      />
+                    </td>                    
+                    <td className="global-column">
+                      <select 
+                        value={globalAjenosSelected[relacion.idAliasAmbitoAplanado] || 0}
+                        onChange={(e) => handleGlobalAjenoChange(relacion.idAliasAmbitoAplanado, parseInt(e.target.value))}
+                        className="global-ajeno-select"
+                      >
+                        <option value={0}>Ningún global asignado</option>
+                        {/* Buscar los ajenos para el idAlias actual */}
+                        {ajenos && ajenos.length > 0 && 
+                          ajenos
+                            .filter(ajeno => ajeno.idAlias === relacion.idAlias)
+                            .flatMap(ajeno => 
+                              ajeno.dataAjenos && ajeno.dataAjenos.length > 0 
+                                ? ajeno.dataAjenos.map(dataAjeno => (
+                                    <option key={dataAjeno.idAjeno} value={dataAjeno.idAjeno}>
+                                      {dataAjeno.idAjeno}
+                                    </option>
+                                  ))
+                                : []
+                            )
+                        }
+                      </select>
                     </td>
                   </tr>
                 ))}

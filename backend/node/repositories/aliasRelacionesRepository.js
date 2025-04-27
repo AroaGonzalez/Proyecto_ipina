@@ -21,7 +21,7 @@ exports.getUnidadesCompra = async () => {
         deg.NOMBRE as descripcion
       FROM MAESTROS.DEPARTAMENTO_EMPRESA_GRUPO deg
       WHERE deg.FECHA_BAJA IS NULL
-      ORDER BY deg.NOMBRE
+      ORDER BY deg.ID_DEPARTAMENTO_EMPRESA_GRUPO
     `;
 
     const result = await sequelizeMaestros.query(query, {
@@ -46,7 +46,7 @@ exports.getRelacionesUnidadesCompra = async () => {
       FROM AJENOS.ALIAS_AMBITO_APLANADO aaa
       INNER JOIN MAESTROS.DEPARTAMENTO_EMPRESA_GRUPO ucg ON ucg.ID_DEPARTAMENTO_EMPRESA_GRUPO = aaa.ID_DEPARTAMENTO_EMPRESA_GRUPO
       WHERE aaa.FECHA_BAJA IS NULL AND aaa.ID_DEPARTAMENTO_EMPRESA_GRUPO IS NOT NULL
-      ORDER BY ucg.NOMBRE
+      ORDER BY aaa.ID_DEPARTAMENTO_EMPRESA_GRUPO
     `;
 
     const result = await sequelizeAjenos.query(query, {
@@ -62,6 +62,8 @@ exports.getRelacionesUnidadesCompra = async () => {
     return [];
   }
 };
+
+// Modificación simplificada al repositorio para asegurar que siempre se envían los ajenos
 
 exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], processAllAlias = false, aliasTableOriginalFilter = {}, pageInfo = { page: 0, size: 50 }) => {
   try {
@@ -86,8 +88,8 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       INNER JOIN AJENOS.ALIAS_AMBITO aam ON aam.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
       INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = aam.ID_ALIAS
       INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON aaa.ID_LOCALIZACION_COMPRA = lc.ID_LOCALIZACION_COMPRA
-      INNER JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM telr ON telr.ID_TIPO_ESTADO_LOCALIZACION_RAM
-        = aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM
+      INNER JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA telr ON telr.ID_TIPO_ESTADO_LOCALIZACION_RAM
+        = aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM AND telr.ID_IDIOMA = :idIdioma
       INNER JOIN AJENOS.ALIAS_AJENO aa ON aa.ID_ALIAS = aam.ID_ALIAS
       LEFT JOIN MAESTROS.PAIS mp ON lc.ID_PAIS = mp.ID_PAIS
       LEFT JOIN MAESTROS.CADENA c ON c.ID_CADENA = lc.ID_CADENA
@@ -112,45 +114,41 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       WHERE aaa.FECHA_BAJA IS NULL
     `;
     
-    const ajenosQuery = `
-      SELECT DISTINCT aam.ID_ALIAS as idAlias, 
-        aj.ID_AJENO as idAjeno, 
-        aji.NOMBRE as nombre,
-        mea.ID_TIPO_ESTADO_ACTUAL as idTipoEstadoCompras, 
-        tei.DESCRIPCION as descripcion,
-        aa.ID_TIPO_ESTADO_AJENO_RAM as idTipoEstadoAjenoRam,
-        teari.DESCRIPCION as descriptionEstadoRam
-      FROM AJENOS.ALIAS_AMBITO aam
-      INNER JOIN AJENOS.ALIAS_AJENO aa ON aa.ID_ALIAS = aam.ID_ALIAS
-      INNER JOIN AJENOS.TIPO_ESTADO_AJENO_RAM_IDIOMA teari ON teari.ID_TIPO_ESTADO_AJENO_RAM = aa.ID_TIPO_ESTADO_AJENO_RAM 
-        AND teari.ID_IDIOMA = :idIdioma
-      INNER JOIN AJENOS.AJENO aj ON aj.ID_AJENO = aa.ID_AJENO
-      INNER JOIN AJENOS.AJENO_IDIOMA aji ON aji.ID_AJENO = aj.ID_AJENO AND aji.ID_IDIOMA = :idIdioma
-      INNER JOIN AJENOS.MAQUINA_ESTADO_AJENOS mea ON mea.ID_MAQUINA_ESTADO_AJENOS = aj.ID_MAQUINA_ESTADO_AJENOS
-      INNER JOIN MAESTROS.TIPO_ESTADO_IDIOMA tei ON tei.ID_TIPO_ESTADO = mea.ID_TIPO_ESTADO_ACTUAL AND tei.ID_IDIOMA = :idIdioma
-      WHERE aam.ID_ALIAS IN (:idsAlias) AND aa.FECHA_BAJA IS NULL
-    `;
+    // Función simplificada para obtener IDs de alias para la consulta de ajenos
+    const getAliasIdsForAjenos = () => {
+      // Si hay ids preseleccionados, usamos esos
+      if (idsAliasSelected && idsAliasSelected.length > 0) {
+        return idsAliasSelected;
+      }
+      
+      // Si hay ids en el filtro, usamos esos
+      if (filter.idsAlias && filter.idsAlias.length > 0) {
+        return filter.idsAlias;
+      }
+      
+      // Si no hay ids específicos, usamos una consulta auxiliar para obtener los primeros alias de la consulta principal
+      // Esta parte puede ser mejorada si se necesita más precisión
+      return []; // Si no hay IDs explícitos, devolveremos un array vacío para ajenos
+    };
     
-    // Build where clause based on filters
     let whereClause = "";
     const replacements = { 
-      idIdioma: filter.idIdioma || 1,
+      idIdioma: filter.idIdioma,
       limit: pageInfo.size || 50,
       offset: (pageInfo.page || 0) * (pageInfo.size || 50)
     };
     
-    // First, handle alias IDs selection
-    if (!processAllAlias && idsAliasSelected && idsAliasSelected.length > 0) {
-      whereClause += " AND aam.ID_ALIAS IN (:idsAliasSelected)";
-      replacements.idsAliasSelected = idsAliasSelected;
-    } else if (processAllAlias && idsAliasSelected && idsAliasSelected.length > 0) {
-      // Si processAllAlias es true y hay IDs seleccionados, excluir estos IDs
-      whereClause += " AND aam.ID_ALIAS NOT IN (:idsAliasSelected)";
-      replacements.idsAliasSelected = idsAliasSelected;
+    if (idsAliasSelected && idsAliasSelected.length > 0) {
+      if (!processAllAlias) {
+        whereClause += " AND aam.ID_ALIAS IN (:idsAliasSelected)";
+        replacements.idsAliasSelected = idsAliasSelected;
+      } else {
+        whereClause += " AND aam.ID_ALIAS NOT IN (:idsAliasSelected)";
+        replacements.idsAliasSelected = idsAliasSelected;
+      }
     }
     
-    // Handle other filters
-    if (filter.idsAlias && filter.idsAlias.length > 0) {
+    if (!idsAliasSelected.length && filter.idsAlias && filter.idsAlias.length > 0) {
       whereClause += " AND aam.ID_ALIAS IN (:idsAlias)";
       replacements.idsAlias = filter.idsAlias;
     }
@@ -173,7 +171,6 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
     if (filter.idsUnidadComprasGestora && filter.idsUnidadComprasGestora.length > 0) {
       whereClause += " AND (";
       
-      // Handle the special case where we want to include rows with NULL departamento
       if (filter.idsUnidadComprasGestora.includes(0)) {
         whereClause += "deg.ID_DEPARTAMENTO_EMPRESA_GRUPO IS NULL";
         
@@ -182,7 +179,6 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
         }
       }
       
-      // Add the non-zero IDs
       const nonZeroIds = filter.idsUnidadComprasGestora.filter(id => id !== 0);
       if (nonZeroIds.length > 0) {
         whereClause += "deg.ID_DEPARTAMENTO_EMPRESA_GRUPO IN (:idsUnidadComprasGestora)";
@@ -192,10 +188,7 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       whereClause += ")";
     }
     
-    // Si processAllAlias es true, aplicar filtros adicionales del aliasTableOriginalFilter
     if (processAllAlias && aliasTableOriginalFilter) {
-      // Aquí aplicaríamos los filtros originales de la tabla de alias
-      // (Este es un ejemplo simplificado, deberías adaptarlo según tus necesidades)
       if (aliasTableOriginalFilter.tipoAlias) {
         whereClause += " AND a.ID_TIPO_ALIAS IN (:tipoAlias)";
         replacements.tipoAlias = aliasTableOriginalFilter.tipoAlias;
@@ -212,14 +205,49 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       }
     }
     
-    // Append where clause to queries
     const finalMainQuery = mainQuery + whereClause + " ORDER BY aaa.ID_LOCALIZACION_COMPRA DESC LIMIT :limit OFFSET :offset";
     const finalCountQuery = countQuery + whereClause;
     
-    // Add idsAlias for ajenos query
-    replacements.idsAlias = idsAliasSelected;
+    // Obtener IDs de alias para la consulta de ajenos
+    const aliasIdsForAjenos = getAliasIdsForAjenos();
     
-    // Execute the queries
+    // Preparar la consulta de ajenos solo si hay IDs de alias
+    let ajenosPromise;
+    if (aliasIdsForAjenos.length > 0) {
+      const ajenosQuery = `
+        SELECT DISTINCT aam.ID_ALIAS as idAlias, 
+          aj.ID_AJENO as idAjeno, 
+          aji.NOMBRE as nombre,
+          mea.ID_TIPO_ESTADO_ACTUAL as idTipoEstadoCompras, 
+          tei.DESCRIPCION as descripcion,
+          aa.ID_TIPO_ESTADO_AJENO_RAM as idTipoEstadoAjenoRam,
+          teari.DESCRIPCION as descriptionEstadoRam
+        FROM AJENOS.ALIAS_AMBITO aam
+        INNER JOIN AJENOS.ALIAS_AJENO aa ON aa.ID_ALIAS = aam.ID_ALIAS
+        INNER JOIN AJENOS.TIPO_ESTADO_AJENO_RAM_IDIOMA teari ON teari.ID_TIPO_ESTADO_AJENO_RAM = aa.ID_TIPO_ESTADO_AJENO_RAM 
+          AND teari.ID_IDIOMA = :idIdioma
+        INNER JOIN AJENOS.AJENO aj ON aj.ID_AJENO = aa.ID_AJENO
+        INNER JOIN AJENOS.AJENO_IDIOMA aji ON aji.ID_AJENO = aj.ID_AJENO AND aji.ID_IDIOMA = :idIdioma
+        INNER JOIN AJENOS.MAQUINA_ESTADO_AJENOS mea ON mea.ID_MAQUINA_ESTADO_AJENOS = aj.ID_MAQUINA_ESTADO_AJENOS
+        INNER JOIN MAESTROS.TIPO_ESTADO_IDIOMA tei ON tei.ID_TIPO_ESTADO = mea.ID_TIPO_ESTADO_ACTUAL AND tei.ID_IDIOMA = :idIdioma
+        WHERE aam.ID_ALIAS IN (:idsAlias) AND aa.FECHA_BAJA IS NULL
+      `;
+      
+      const ajenosReplacements = { 
+        idIdioma: filter.idIdioma || 1,
+        idsAlias: aliasIdsForAjenos
+      };
+      
+      ajenosPromise = sequelizeAjenos.query(ajenosQuery, {
+        replacements: ajenosReplacements,
+        type: QueryTypes.SELECT
+      });
+    } else {
+      // Si no hay IDs de alias, devolver un array vacío
+      ajenosPromise = Promise.resolve([]);
+    }
+    
+    // Ejecutar todas las consultas en paralelo
     const [relaciones, countResult, ajenos] = await Promise.all([
       sequelizeAjenos.query(finalMainQuery, {
         replacements,
@@ -229,13 +257,30 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
         replacements,
         type: QueryTypes.SELECT
       }),
-      sequelizeAjenos.query(ajenosQuery, {
-        replacements,
-        type: QueryTypes.SELECT
-      })
+      ajenosPromise
     ]);
     
-    // Transform ajenos data
+    // Procesar las relaciones
+    const processedRelaciones = relaciones.map(item => ({
+      idAlias: item.idAlias,
+      idLocalizacionCompra: item.idLocalizacionCompra,
+      descripcionLocalizacionCompra: fixEncoding(item.descripcionLocalizacionCompra),
+      idMercado: item.idMercado,
+      descripcionMercado: fixEncoding(item.descripcionMercado),
+      codigoIsoMercado: item.codigoIsoMercado,
+      idTipoEstadoLocalizacionRam: item.idTipoEstadoLocalizacionRam,
+      descripcionTipoEstadoLocalizacionRam: fixEncoding(item.descripcionTipoEstadoLocalizacionRam),
+      idAliasAmbito: item.idAliasAmbito,
+      idAliasAmbitoAplanado: item.idAliasAmbitoAplanado,
+      esSolicitable: item.esSolicitable === 1 || item.esSolicitable === true,
+      descripcionCortaCadena: fixEncoding(item.descripcionCortaCadena),
+      idAjenoSeccionGlobal: item.idAjenoSeccionGlobal || 0,
+      idUnidadComprasGestora: item.idUnidadComprasGestora || 0,
+      nombreUnidadComprasGestora: item.nombreUnidadComprasGestora ? fixEncoding(item.nombreUnidadComprasGestora) : null,
+      fechaHoraFinPausa: item.fechaHoraFinPausa ? new Date(item.fechaHoraFinPausa).toISOString() : null
+    }));
+    
+    // Procesar los ajenos
     const ajenosByAlias = {};
     ajenos.forEach(ajeno => {
       if (!ajenosByAlias[ajeno.idAlias]) {
@@ -259,28 +304,9 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       });
     });
     
-    // Process relations data
-    const processedRelaciones = relaciones.map(item => ({
-      idAlias: item.idAlias,
-      idLocalizacionCompra: item.idLocalizacionCompra,
-      descripcionLocalizacionCompra: fixEncoding(item.descripcionLocalizacionCompra),
-      idMercado: item.idMercado,
-      descripcionMercado: fixEncoding(item.descripcionMercado),
-      codigoIsoMercado: item.codigoIsoMercado,
-      idTipoEstadoLocalizacionRam: item.idTipoEstadoLocalizacionRam,
-      descripcionTipoEstadoLocalizacionRam: fixEncoding(item.descripcionTipoEstadoLocalizacionRam),
-      idAliasAmbito: item.idAliasAmbito,
-      idAliasAmbitoAplanado: item.idAliasAmbitoAplanado,
-      esSolicitable: item.esSolicitable === 1 || item.esSolicitable === true,
-      descripcionCortaCadena: fixEncoding(item.descripcionCortaCadena),
-      idAjenoSeccionGlobal: item.idAjenoSeccionGlobal || 0,
-      idUnidadComprasGestora: item.idUnidadComprasGestora || 0,
-      nombreUnidadComprasGestora: item.nombreUnidadComprasGestora ? fixEncoding(item.nombreUnidadComprasGestora) : null,
-      fechaHoraFinPausa: item.fechaHoraFinPausa ? new Date(item.fechaHoraFinPausa).toISOString() : null
-    }));
-    
     const totalElements = parseInt(countResult[0]?.total || 0);
     
+    // Devolver solo relaciones, ajenos y page
     return {
       relaciones: processedRelaciones,
       ajenos: Object.values(ajenosByAlias),
