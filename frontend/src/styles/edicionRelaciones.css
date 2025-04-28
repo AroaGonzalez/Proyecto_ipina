@@ -42,7 +42,7 @@ cursor: not-allowed;
 margin-right: 8px;
 }
 
-info-icon {
+.info-icon {
 margin-right: 10px;
 color: #2196F3;
 font-size: 1.2em;
@@ -197,4 +197,217 @@ box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.25);
 .global-column {
 min-width: 250px;
 max-width: 350px;
+}
+
+.estado-tag.PAUSADO, .estado-tag.PAUSADA, 
+span:contains('PAUSADA') {
+  background-color: #95a5a6 !important; /* Gris */
+  color: white;
+}
+
+.estado-tag.ACTIVO, .estado-tag.ACTIVA,
+span:contains('ACTIVA') {
+  background-color: #2ecc71 !important; /* Verde */
+  color: white;
+}
+
+.selection-toolbar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 15px;
+background-color: #f5f5f5;
+border-radius: 4px;
+margin-bottom: 15px;
+}
+
+.selection-info {
+font-size: 14px;
+color: #555;
+}
+
+.selection-actions {
+display: flex;
+gap: 10px;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 3px;
+    font-weight: normal;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.activate-button {
+    background-color: rgba(46, 204, 113, 0.8);
+    color: white;
+}
+
+.activate-button:hover:not(:disabled) {
+background-color: #27ae60;
+}
+
+.pause-button, .pause-until-button {
+    background-color: rgba(52, 152, 219, 0.8);
+    color: white;
+}
+
+.pause-button:hover:not(:disabled), .pause-until-button:hover:not(:disabled) {
+background-color: rgba(52, 152, 219, 0.8);
+}
+
+.action-icon {
+    margin-right: 6px;
+    font-size: 14px;
+}
+.dropdown-arrow {
+margin-left: 4px;
+font-size: 10px;
+}
+
+/* Modal de pausa */
+.modal-overlay {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+justify-content: center;
+align-items: center;
+z-index: 1000;
+}
+
+.pause-modal {
+background-color: white;
+border-radius: 8px;
+padding: 20px;
+width: 400px;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pause-modal h2 {
+margin-top: 0;
+color: #333;
+font-size: 18px;
+}
+
+.date-picker-container {
+margin: 20px 0;
+}
+
+.date-picker-wrapper {
+position: relative;
+display: flex;
+align-items: center;
+margin-top: 8px;
+}
+
+.date-picker-input {
+width: 100%;
+padding: 10px;
+border: 1px solid #ccc;
+border-radius: 4px;
+font-size: 14px;
+}
+
+.calendar-icon {
+position: absolute;
+right: 10px;
+color: #666;
+}
+
+.modal-buttons {
+display: flex;
+justify-content: flex-end;
+gap: 10px;
+margin-top: 20px;
+}
+
+.cancel-button, .confirm-button {
+padding: 8px 16px;
+border-radius: 4px;
+font-weight: 500;
+cursor: pointer;
+border: none;
+transition: background-color 0.2s;
+}
+
+.cancel-button {
+background-color: #f1f1f1;
+color: #333;
+}
+
+.confirm-button {
+background-color: #0074d9;
+color: white;
+}
+
+.cancel-button:hover:not(:disabled) {
+background-color: #e1e1e1;
+}
+
+.confirm-button:hover:not(:disabled) {
+background-color: #0066bf;
+}
+
+.cancel-button:disabled, .confirm-button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.table-container {
+  max-height: 400px; /* Altura fija más corta */
+  overflow-y: auto;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  position: relative;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+  position: sticky;
+  bottom: 0;
+}
+
+.load-more-indicator {
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+  color: #666;
+}
+
+.empty-table-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+  
+.action-buttons-container {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  background-color: #fff;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }

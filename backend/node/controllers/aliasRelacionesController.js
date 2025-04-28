@@ -66,3 +66,105 @@ exports.getRelacionesUnidadesCompra = async (req, res) => {
     });
   }
 };
+
+exports.activateRelaciones = async (req, res) => {
+  try {
+    const { relaciones, usuario } = req.body;
+    
+    if (!relaciones || !Array.isArray(relaciones) || relaciones.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere al menos una relación para activar'
+      });
+    }
+    
+    console.log(`Activando ${relaciones.length} relaciones por usuario ${usuario || 'SISTEMA'}`);
+    
+    const result = await aliasRelacionesRepository.activateRelaciones(
+      relaciones,
+      usuario || 'SISTEMA'
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en activateRelaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al activar relaciones',
+      error: error.message
+    });
+  }
+};
+
+exports.pauseRelaciones = async (req, res) => {
+  try {
+    const { relaciones, fechaHoraFinPausa, usuario } = req.body;
+    
+    if (!relaciones || !Array.isArray(relaciones) || relaciones.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere al menos una relación para pausar'
+      });
+    }
+    
+    console.log(`Pausando ${relaciones.length} relaciones hasta ${fechaHoraFinPausa} por usuario ${usuario || 'SISTEMA'}`);
+    
+    const result = await aliasRelacionesRepository.pauseRelaciones(
+      relaciones,
+      fechaHoraFinPausa,
+      usuario || 'SISTEMA'
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en pauseRelaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al pausar relaciones',
+      error: error.message
+    });
+  }
+};
+
+exports.checkPausedRelations = async (req, res) => {
+  try {
+    const result = await aliasRelacionesRepository.activateExpiredPauses();
+    res.json(result);
+  } catch (error) {
+    console.error('Error al comprobar relaciones pausadas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al comprobar relaciones pausadas',
+      error: error.message
+    });
+  }
+};
+
+exports.updateRelaciones = async (req, res) => {
+  try {
+    const { relaciones, usuario } = req.body;
+    
+    if (!relaciones || !Array.isArray(relaciones) || relaciones.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere al menos una relación para actualizar'
+      });
+    }
+    
+    console.log(`Actualizando ${relaciones.length} relaciones por usuario ${usuario || 'SISTEMA'}`);
+    
+    const result = await aliasRelacionesRepository.updateRelaciones(
+      relaciones,
+      usuario || 'SISTEMA'
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en updateRelaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar relaciones',
+      error: error.message
+    });
+  }
+};

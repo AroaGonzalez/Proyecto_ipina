@@ -114,21 +114,16 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       WHERE aaa.FECHA_BAJA IS NULL
     `;
     
-    // Función simplificada para obtener IDs de alias para la consulta de ajenos
     const getAliasIdsForAjenos = () => {
-      // Si hay ids preseleccionados, usamos esos
       if (idsAliasSelected && idsAliasSelected.length > 0) {
         return idsAliasSelected;
       }
       
-      // Si hay ids en el filtro, usamos esos
       if (filter.idsAlias && filter.idsAlias.length > 0) {
         return filter.idsAlias;
       }
       
-      // Si no hay ids específicos, usamos una consulta auxiliar para obtener los primeros alias de la consulta principal
-      // Esta parte puede ser mejorada si se necesita más precisión
-      return []; // Si no hay IDs explícitos, devolveremos un array vacío para ajenos
+      return [];
     };
     
     let whereClause = "";
@@ -208,10 +203,8 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
     const finalMainQuery = mainQuery + whereClause + " ORDER BY aaa.ID_LOCALIZACION_COMPRA DESC LIMIT :limit OFFSET :offset";
     const finalCountQuery = countQuery + whereClause;
     
-    // Obtener IDs de alias para la consulta de ajenos
     const aliasIdsForAjenos = getAliasIdsForAjenos();
     
-    // Preparar la consulta de ajenos solo si hay IDs de alias
     let ajenosPromise;
     if (aliasIdsForAjenos.length > 0) {
       const ajenosQuery = `
@@ -243,11 +236,9 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
         type: QueryTypes.SELECT
       });
     } else {
-      // Si no hay IDs de alias, devolver un array vacío
       ajenosPromise = Promise.resolve([]);
     }
     
-    // Ejecutar todas las consultas en paralelo
     const [relaciones, countResult, ajenos] = await Promise.all([
       sequelizeAjenos.query(finalMainQuery, {
         replacements,
@@ -260,7 +251,6 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       ajenosPromise
     ]);
     
-    // Procesar las relaciones
     const processedRelaciones = relaciones.map(item => ({
       idAlias: item.idAlias,
       idLocalizacionCompra: item.idLocalizacionCompra,
@@ -280,7 +270,6 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
       fechaHoraFinPausa: item.fechaHoraFinPausa ? new Date(item.fechaHoraFinPausa).toISOString() : null
     }));
     
-    // Procesar los ajenos
     const ajenosByAlias = {};
     ajenos.forEach(ajeno => {
       if (!ajenosByAlias[ajeno.idAlias]) {
@@ -306,7 +295,6 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
     
     const totalElements = parseInt(countResult[0]?.total || 0);
     
-    // Devolver solo relaciones, ajenos y page
     return {
       relaciones: processedRelaciones,
       ajenos: Object.values(ajenosByAlias),
@@ -319,5 +307,197 @@ exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], proc
   } catch (error) {
     console.error('Error en findRelacionesByFilter:', error);
     throw error;
+  }
+};
+
+exports.activateRelaciones = async (relaciones, usuario) => {
+  try {
+    if (!relaciones || relaciones.length === 0) {
+      return { success: false, message: 'No se proporcionaron relaciones para activar', updatedCount: 0 };
+    }
+
+    const idsAmbitoAplanado = relaciones.map(rel => rel.idAliasAmbitoAplanado);
+    
+    // Usar CURRENT_TIMESTAMP en lugar de GETDATE() para compatibilidad
+    const query = `
+      UPDATE AJENOS.ALIAS_AMBITO_APLANADO
+      SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 1,
+          FECHA_MODIFICACION = CURRENT_TIMESTAMP,
+          USUARIO_MODIFICACION = :usuario,
+          FECHA_HORA_FIN_PAUSA = NULL
+      WHERE ID_ALIAS_AMBITO_APLANADO IN (:idsAmbitoAplanado)
+      AND FECHA_BAJA IS NULL
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idsAmbitoAplanado, usuario },
+      type: QueryTypes.UPDATE
+    });
+    
+    return {
+      success: true,
+      message: 'Relaciones activadas correctamente',
+      updatedCount: result[1] || relaciones.length
+    };
+  } catch (error) {
+    console.error('Error al activar relaciones:', error);
+    throw new Error('Error al activar relaciones: ' + error.message);
+  }
+};
+
+exports.pauseRelaciones = async (relaciones, fechaHoraFinPausa, usuario) => {
+  try {
+    if (!relaciones || relaciones.length === 0) {
+      return { success: false, message: 'No se proporcionaron relaciones para pausar', updatedCount: 0 };
+    }
+
+    const idsAmbitoAplanado = relaciones.map(rel => rel.idAliasAmbitoAplanado);
+    
+    // Formatear la fecha correctamente para MySQL
+    let formattedDate = null;
+    if (fechaHoraFinPausa) {
+      const date = new Date(fechaHoraFinPausa);
+      // Formato: YYYY-MM-DD HH:MM:SS
+      formattedDate = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    
+    const query = `
+      UPDATE AJENOS.ALIAS_AMBITO_APLANADO
+      SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 2,
+          FECHA_MODIFICACION = CURRENT_TIMESTAMP,
+          USUARIO_MODIFICACION = :usuario,
+          FECHA_HORA_FIN_PAUSA = :fechaHoraFinPausa
+      WHERE ID_ALIAS_AMBITO_APLANADO IN (:idsAmbitoAplanado)
+        AND ID_TIPO_ESTADO_LOCALIZACION_RAM = 1
+        AND FECHA_BAJA IS NULL
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { 
+        idsAmbitoAplanado, 
+        usuario,
+        fechaHoraFinPausa: formattedDate
+      },
+      type: QueryTypes.UPDATE
+    });
+    
+    return {
+      success: true,
+      message: 'Relaciones pausadas correctamente',
+      updatedCount: result[1] || relaciones.length
+    };
+  } catch (error) {
+    console.error('Error en pauseRelations:', error);
+    throw new Error('Error al pausar relaciones: ' + error.message);
+  }
+};
+
+exports.activateExpiredPauses = async () => {
+  try {
+    const query = `
+      UPDATE AJENOS.ALIAS_AMBITO_APLANADO
+      SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 1,
+        FECHA_MODIFICACION = CURRENT_TIMESTAMP,
+        USUARIO_MODIFICACION = 'SISTEMA',
+        FECHA_HORA_FIN_PAUSA = NULL
+      WHERE ID_TIPO_ESTADO_LOCALIZACION_RAM = 2
+        AND FECHA_HORA_FIN_PAUSA IS NOT NULL
+        AND FECHA_HORA_FIN_PAUSA <= CURRENT_TIMESTAMP
+        AND FECHA_BAJA IS NULL
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      type: QueryTypes.UPDATE
+    });
+    
+    return {
+      success: true,
+      message: 'Relaciones con pausa expirada activadas correctamente',
+      updatedCount: result[1] || 0
+    };
+  } catch (error) {
+    console.error('Error al activar relaciones con pausa expirada:', error);
+    throw error;
+  }
+};
+
+exports.updateRelaciones = async (relaciones, usuario) => {
+  try {
+    if (!relaciones || relaciones.length === 0) {
+      return { success: false, message: 'No se proporcionaron relaciones para actualizar', updatedCount: 0 };
+    }
+
+    // Procesar las relaciones en lotes para mayor eficiencia
+    const batchSize = 500;
+    let updatedCount = 0;
+    
+    // Dividir el array en lotes
+    for (let i = 0; i < relaciones.length; i += batchSize) {
+      const batch = relaciones.slice(i, i + batchSize);
+      
+      // Preparar las consultas para el lote
+      const queries = batch.map(relacion => {
+        // Manejar el idUnidadComprasGestora cuando es 0 (se debe guardar como NULL)
+        const idUnidadComprasGestora = relacion.idUnidadComprasGestora === 0 ? null : relacion.idUnidadComprasGestora;
+        
+        // Usamos PATCH logic - solo actualizamos los campos que vienen en la solicitud
+        const updateFields = [];
+        const replacements = {
+          usuario,
+          idAliasAmbitoAplanado: relacion.idAliasAmbitoAplanado
+        };
+        
+        // FECHA_MODIFICACION siempre se actualiza
+        updateFields.push("FECHA_MODIFICACION = CURRENT_TIMESTAMP");
+        updateFields.push("USUARIO_MODIFICACION = :usuario");
+        
+        if (relacion.idAjenoSeccionGlobal !== undefined) {
+          updateFields.push("ID_AJENO_SECCION_GLOBAL = :idAjenoSeccionGlobal");
+          replacements.idAjenoSeccionGlobal = relacion.idAjenoSeccionGlobal || 0;
+        }
+        
+        if (relacion.esSolicitable !== undefined) {
+          updateFields.push("ES_SOLICITABLE = :esSolicitable");
+          replacements.esSolicitable = relacion.esSolicitable ? 1 : 0;
+        }
+        
+        if (relacion.idUnidadComprasGestora !== undefined) {
+          updateFields.push("ID_DEPARTAMENTO_EMPRESA_GRUPO = :idUnidadComprasGestora");
+          replacements.idUnidadComprasGestora = idUnidadComprasGestora;
+        }
+        
+        const query = `
+          UPDATE AJENOS.ALIAS_AMBITO_APLANADO
+          SET ${updateFields.join(', ')}
+          WHERE ID_ALIAS_AMBITO_APLANADO = :idAliasAmbitoAplanado
+            AND FECHA_BAJA IS NULL
+        `;
+        
+        return { query, replacements };
+      });
+      
+      // Ejecutar todas las consultas del lote en paralelo
+      const results = await Promise.all(
+        queries.map(({ query, replacements }) => 
+          sequelizeAjenos.query(query, {
+            replacements,
+            type: QueryTypes.UPDATE
+          })
+        )
+      );
+      
+      // Contar las filas actualizadas
+      const batchUpdated = results.reduce((sum, result) => sum + (result[1] || 0), 0);
+      updatedCount += batchUpdated;
+    }
+    
+    return {
+      success: true,
+      message: 'Relaciones actualizadas correctamente',
+      updatedCount
+    };
+  } catch (error) {
+    console.error('Error al actualizar relaciones:', error);
+    throw new Error('Error al actualizar relaciones: ' + error.message);
   }
 };

@@ -1,13 +1,257 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { FaSyncAlt, FaSearch, FaChevronDown, FaPencilAlt, FaTrash, FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
+import { FaSyncAlt, FaSearch, FaChevronDown, FaCalendarAlt, FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
 import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { es } from 'date-fns/locale';
 import { LanguageContext } from '../context/LanguageContext';
-import '../styles/parametrizacionAlias.css';
 import '../styles/edicionRelaciones.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
+
+// Memoized components for better performance
+const FilterDropdown = React.memo(({ 
+  label, 
+  placeholder, 
+  isOpen, 
+  toggleFilter, 
+  searchText, 
+  setSearchText, 
+  filteredItems, 
+  selectedItems, 
+  handleFilterSelect, 
+  handleSelectAll, 
+  allItems, 
+  itemRenderer,
+  isDisabled = () => false,
+  filterName
+}) => (
+  <div className="filter-item">
+    <div className="filter-dropdown" onClick={() => toggleFilter(filterName)}>
+      <span className="filter-label">{label}</span>
+      <div className="filter-value">
+        <span className="filter-placeholder">
+          {selectedItems.length > 0 ? `${selectedItems.length} seleccionados` : placeholder}
+        </span>
+        <FaChevronDown className="dropdown-arrow" />
+      </div>
+      {isOpen && (
+        <div className="filter-dropdown-content">
+          <div className="dropdown-search">
+            <input 
+              type="text" 
+              placeholder={`Buscar ${label.toLowerCase()}...`} 
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="dropdown-items-container">
+            <div className="dropdown-items">
+              {filteredItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className={`dropdown-item ${isDisabled(item) ? 'disabled-item' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isDisabled(item)) {
+                      handleFilterSelect(filterName, item.id);
+                    }
+                  }}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={selectedItems.includes(item.id)}
+                    readOnly
+                    disabled={isDisabled(item)}
+                  />
+                  <span>{itemRenderer ? itemRenderer(item) : `${item.id} - ${item.descripcion}`}</span>
+                </div>
+              ))}
+            </div>
+            <div 
+              className="dropdown-item select-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectAll();
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={selectedItems.length === allItems.length && allItems.length > 0}
+                readOnly
+              />
+              <span>Seleccionar todo</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+));
+
+// Checkbox component to optimize selection performance
+const SelectionCheckbox = React.memo(({ 
+  id, 
+  isSelected, 
+  handleSelectItem 
+}) => {
+  return (
+    <input 
+      type="checkbox" 
+      checked={isSelected} 
+      onChange={() => handleSelectItem(id)}
+    />
+  );
+});
+
+const TableRow = React.memo(({ 
+  relacion, 
+  selectedItems, 
+  handleSelectItem, 
+  normalizeText, 
+  unidadesCompra, 
+  updateUnidadCompra, 
+  globalAjenosSelected, 
+  handleGlobalAjenoChange, 
+  ajenos 
+}) => (
+  <tr 
+    className={selectedItems.includes(relacion.idAliasAmbitoAplanado) ? 'selected-row' : ''}
+  >
+    <td className="checkbox-column">
+      <SelectionCheckbox 
+        id={relacion.idAliasAmbitoAplanado}
+        isSelected={selectedItems.includes(relacion.idAliasAmbitoAplanado)}
+        handleSelectItem={handleSelectItem}
+      />
+    </td>
+    <td>{relacion.idAlias}</td>
+    <td>{relacion.idLocalizacionCompra}</td>
+    <td>{normalizeText(relacion.descripcionLocalizacionCompra)}</td>
+    <td>{relacion.descripcionCortaCadena}</td>
+    <td>
+      <div className="mercado-cell">
+        <img 
+          src={`/images/flags/${relacion.codigoIsoMercado?.toLowerCase()}.png`} 
+          alt={normalizeText(relacion.descripcionMercado)}
+          className="flag-icon"
+          onError={(e) => { e.target.style.display = 'none' }}
+        />
+        <span>{normalizeText(relacion.descripcionMercado)}</span>
+      </div>
+    </td>
+    <td>
+      <span className={`estado-tag ${relacion.idTipoEstadoLocalizacionRam === 1 ? 'ACTIVO' : 'PAUSADO'}`}>
+        {relacion.descripcionTipoEstadoLocalizacionRam}
+      </span>
+    </td>
+    <td>
+      {relacion.fechaHoraFinPausa ? 
+        new Date(relacion.fechaHoraFinPausa).toLocaleDateString() : 
+        '-'
+      }
+    </td>
+    <td>
+      <select 
+        value={relacion.idUnidadComprasGestora || 0}
+        onChange={(e) => updateUnidadCompra(
+          relacion.idAliasAmbitoAplanado, 
+          parseInt(e.target.value)
+        )}
+        className="unidad-compra-select"
+      >
+        <option value={0}>Ninguna unidad de compra gestora</option>
+        {unidadesCompra.map(unidad => (
+          <option key={unidad.id} value={unidad.id}>
+            {unidad.id} - {normalizeText(unidad.descripcion)}
+          </option>
+        ))}
+      </select>
+    </td>                    
+    <td className="global-column">
+      <select 
+        value={globalAjenosSelected[relacion.idAliasAmbitoAplanado] || 0}
+        onChange={(e) => handleGlobalAjenoChange(relacion.idAliasAmbitoAplanado, parseInt(e.target.value))}
+        className="global-ajeno-select"
+      >
+        <option value={0}>Ningún global asignado</option>
+        {ajenos && ajenos.length > 0 && 
+          ajenos
+            .filter(ajeno => ajeno.idAlias === relacion.idAlias)
+            .flatMap(ajeno => 
+              ajeno.dataAjenos && ajeno.dataAjenos.length > 0 
+                ? ajeno.dataAjenos.map(dataAjeno => (
+                    <option key={dataAjeno.idAjeno} value={dataAjeno.idAjeno}>
+                      {dataAjeno.idAjeno}
+                    </option>
+                  ))
+                : []
+            )
+        }
+      </select>
+    </td>
+  </tr>
+));
+
+// Optimized PauseModal component
+const PauseModal = React.memo(({ isOpen, onClose, onConfirm, pauseDate, setPauseDate, loading }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="modal-overlay">
+      <div className="pause-modal">
+        <h2>Pausar relaciones seleccionadas</h2>
+        <p>Seleccione la fecha hasta la que estarán pausadas las relaciones:</p>
+        
+        <div className="date-picker-container">
+          <label>Pausar hasta:</label>
+          <div className="date-picker-wrapper">
+            <DatePicker
+              selected={pauseDate}
+              onChange={date => setPauseDate(date)}
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              locale={es}
+              className="date-picker-input"
+            />
+            <FaCalendarAlt className="calendar-icon" />
+          </div>
+        </div>
+        
+        <div className="modal-buttons">
+          <button 
+            className="cancel-button"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button 
+            className="confirm-button"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? "Procesando..." : "Confirmar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Creación de mapa optimizado para consultas de estado
+const useRelacionesStatusMap = (relaciones) => {
+  return useMemo(() => {
+    const statusMap = new Map();
+    relaciones.forEach(relacion => {
+      statusMap.set(relacion.idAliasAmbitoAplanado, relacion.idTipoEstadoLocalizacionRam);
+    });
+    return statusMap;
+  }, [relaciones]);
+};
 
 const EdicionRelaciones = () => {
   const { t } = useTranslation();
@@ -16,55 +260,83 @@ const EdicionRelaciones = () => {
   const location = useLocation();
   const idsAliasSelected = location.state?.selectedItems || [];
   const originalFilters = location.state?.filters || {};
-  const [ajenos, setAjenos] = useState([]);
-  const [relaciones, setRelaciones] = useState([]);
-  const [filteredRelaciones, setFilteredRelaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
-  const [totalElements, setTotalElements] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [openFilter, setOpenFilter] = useState(null);
+  
+  // State management - grouped by functionality
+  // Data states
+  const [data, setData] = useState({
+    ajenos: [],
+    relaciones: [],
+    filteredRelaciones: [],
+    relacionesUnidades: [],
+    allRelaciones: [],
+    mercados: [],
+    cadenas: [],
+    alias: [],
+    unidadesCompra: [],
+    globalAjenosSelected: {}
+  });
+  
+  // UI states
+  const [ui, setUi] = useState({
+    loading: true,
+    error: null,
+    showFilters: true,
+    totalElements: 0,
+    currentPage: 0,
+    pageSize: 50,
+    selectAll: false,
+    selectedItems: [],
+    openFilter: null,
+    loadingAllItems: false,
+    hasMore: true,
+    loadingMore: false,
+    isModified: false,
+    mercadoSearchText: '',
+    cadenaSearchText: '',
+    aliasSearchText: '',
+    unidadCompraSearchText: '',
+    localizacionSearchText: '',
+  });
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    selectedMercados: [],
+    selectedCadenas: [],
+    selectedAlias: idsAliasSelected || [],
+    selectedUnidadesCompra: [],
+    selectedLocalizaciones: [],
+  });
+  
+  // Modal states
+  const [modal, setModal] = useState({
+    pauseModalOpen: false,
+    pauseUntilDate: (() => {
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 30);
+      return defaultDate;
+    })(),
+    pauseLoading: false,
+    activateLoading: false,
+  });
+
+  // Refs
   const tableContainerRef = useRef(null);
   const tableEndRef = useRef(null);
-  const [relacionesUnidades, setRelacionesUnidades] = useState([]);
-  const [allRelaciones, setAllRelaciones] = useState([]);
-  const [loadingAllItems, setLoadingAllItems] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [globalAjenosSelected, setGlobalAjenosSelected] = useState({});
   
-  const [mercados, setMercados] = useState([]);
-  const [cadenas, setCadenas] = useState([]);
-  const [alias, setAlias] = useState([]);
-  const [unidadesCompra, setUnidadesCompra] = useState([]);
+  // Crear mapa de status para consultas O(1)
+  const relacionesStatusMap = useRelacionesStatusMap(data.relaciones);
   
-  const [selectedMercados, setSelectedMercados] = useState([]);
-  const [selectedCadenas, setSelectedCadenas] = useState([]);
-  const [selectedAlias, setSelectedAlias] = useState(idsAliasSelected || []);
-  const [selectedUnidadesCompra, setSelectedUnidadesCompra] = useState([]);
-  const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
-  
-  const [mercadoSearchText, setMercadoSearchText] = useState('');
-  const [cadenaSearchText, setCadenaSearchText] = useState('');
-  const [aliasSearchText, setAliasSearchText] = useState('');
-  const [unidadCompraSearchText, setUnidadCompraSearchText] = useState('');
-  const [localizacionSearchText, setLocalizacionSearchText] = useState('');
-
-  const [isModified, setIsModified] = useState(false);
-
+  // Fetch filter options and initial relaciones
   useEffect(() => {
     fetchFilterOptions();
     fetchRelaciones();
   }, [languageId]);
 
+  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openFilter && !event.target.closest('.filter-dropdown')) {
-        setOpenFilter(null);
+      if (ui.openFilter && !event.target.closest('.filter-dropdown')) {
+        setUi(prev => ({ ...prev, openFilter: null }));
       }
     };
 
@@ -72,23 +344,56 @@ const EdicionRelaciones = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openFilter]);
+  }, [ui.openFilter]);
 
+  // Initialize global ajenos selections
   useEffect(() => {
-    // Crear un objeto con los ajenos seleccionados inicialmente
+    if (data.relaciones.length === 0) return;
+    
     const initialGlobalAjenos = {};
-    relaciones.forEach(relacion => {
+    data.relaciones.forEach(relacion => {
       initialGlobalAjenos[relacion.idAliasAmbitoAplanado] = relacion.idAjenoSeccionGlobal || 0;
     });
-    setGlobalAjenosSelected(initialGlobalAjenos);
-  }, [relaciones.length]);
+    
+    setData(prev => ({
+      ...prev,
+      globalAjenosSelected: initialGlobalAjenos
+    }));
+  }, [data.relaciones.length]);
 
+  useEffect(() => {
+    if (data.relaciones.length === 0) return;
+    
+    // Inicializar valores originales para todas las relaciones la primera vez
+    const needsInitialization = !data.relaciones.some(rel => 
+      rel.hasOwnProperty('originalAjenoSeccionGlobal') && 
+      rel.hasOwnProperty('originalUnidadComprasGestora')
+    );
+    
+    if (needsInitialization) {
+      console.log('Inicializando valores originales...');
+      
+      const relationsWithOriginals = data.relaciones.map(rel => ({
+        ...rel,
+        originalAjenoSeccionGlobal: rel.idAjenoSeccionGlobal || 0,
+        originalUnidadComprasGestora: rel.idUnidadComprasGestora || 0
+      }));
+      
+      setData(prev => ({
+        ...prev,
+        relaciones: relationsWithOriginals,
+        filteredRelaciones: relationsWithOriginals
+      }));
+    }
+  }, [data.relaciones.length]);
+
+  // Infinite scroll handling with useCallback for better performance
   useEffect(() => {
     const handleScroll = () => {
       if (tableContainerRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = tableContainerRef.current;
         
-        if (!loadingMore && hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
+        if (!ui.loadingMore && ui.hasMore && scrollTop + clientHeight >= scrollHeight - 100) {
           loadMoreData();
         }
       }
@@ -104,140 +409,68 @@ const EdicionRelaciones = () => {
         tableContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [loadingMore, hasMore, totalElements, relaciones.length]);
+  }, [ui.loadingMore, ui.hasMore, ui.totalElements, data.relaciones.length]);
 
-  const handleGlobalAjenoChange = (idAliasAmbitoAplanado, idAjenoSeccionGlobal) => {
-    // Actualizar el estado de selección
-    setGlobalAjenosSelected(prev => ({
-      ...prev,
-      [idAliasAmbitoAplanado]: idAjenoSeccionGlobal
-    }));
-    
-    // Actualizar las relaciones
-    const updatedRelaciones = relaciones.map(rel => {
-      if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
-        return {
-          ...rel,
-          idAjenoSeccionGlobal: idAjenoSeccionGlobal
-        };
-      }
-      return rel;
-    });
-    
-    setRelaciones(updatedRelaciones);
-    setFilteredRelaciones(updatedRelaciones);
-    setIsModified(true);
-  };
-
-  const loadMoreData = async () => {
-    if (!hasMore || loadingMore) return;
-    
-    if (relaciones.length >= totalElements) {
-      setHasMore(false);
-      return;
+  // Memoized function to filter alias - prevents unnecessary recalculations
+  const getFilteredAlias = useCallback(() => {
+    if (!Array.isArray(data.alias)) {
+      return [];
     }
     
-    setLoadingMore(true);
-    
     try {
-      const nextPage = currentPage + 1;
-      
-      let aliasToUse = [];
-      
-      if (idsAliasSelected.length > 0) {
-        if (selectedAlias.length > 0) {
-          aliasToUse = selectedAlias.filter(id => idsAliasSelected.includes(id));
-        } else {
-          aliasToUse = [...idsAliasSelected];
-        }
-      } else {
-        aliasToUse = selectedAlias;
-      }
-      
-      const filter = {
-        idIdioma: languageId,
-        idsMercado: selectedMercados.length > 0 ? selectedMercados : undefined,
-        idsCadena: selectedCadenas.length > 0 ? selectedCadenas : undefined,
-        idsUnidadComprasGestora: selectedUnidadesCompra.length > 0 ? selectedUnidadesCompra : undefined,
-        idsLocalizacion: selectedLocalizaciones.length > 0 ? selectedLocalizaciones : undefined
-      };
-      
-      const payload = {
-        filter,
-        idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
-        processAllAlias: false,
-        aliasTableOriginalFilter: originalFilters,
-        page: {
-          number: nextPage,
-          size: pageSize
-        }
-      };
-      
-      console.log('Cargando más datos, página:', nextPage);
-      
-      const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
-      
-      if (response.data) {
-        const newRelaciones = response.data.relaciones || [];
-        const newTotalElements = response.data.page?.total || 0;
-        
-        if (newTotalElements !== totalElements) {
-          setTotalElements(newTotalElements);
-        }
-        
-        if (response.data.ajenos) {
-          const newAjenos = response.data.ajenos || [];
-          const combinedAjenos = [...ajenos];
-          
-          newAjenos.forEach(newAjeno => {
-            const existingIndex = combinedAjenos.findIndex(a => a.idAlias === newAjeno.idAlias);
-            if (existingIndex >= 0) {
-              const existingDataAjenos = combinedAjenos[existingIndex].dataAjenos || [];
-              const newDataAjenos = newAjeno.dataAjenos || [];
-              
-              const combinedDataAjenos = [...existingDataAjenos];
-              
-              newDataAjenos.forEach(dataAjeno => {
-                if (!combinedDataAjenos.some(da => da.idAjeno === dataAjeno.idAjeno)) {
-                  combinedDataAjenos.push(dataAjeno);
-                }
-              });
-              
-              combinedAjenos[existingIndex].dataAjenos = combinedDataAjenos;
-            } else {
-              combinedAjenos.push(newAjeno);
-            }
-          });
-          
-          setAjenos(combinedAjenos);
-        }
-        
-        if (newRelaciones.length > 0) {
-          const updatedRelaciones = [...relaciones, ...newRelaciones];
-          setRelaciones(updatedRelaciones);
-          setFilteredRelaciones(updatedRelaciones);
-          setCurrentPage(nextPage);
-          
-          if (updatedRelaciones.length >= newTotalElements) {
-            setHasMore(false);
+      if (ui.aliasSearchText) {
+        return data.alias.filter(a => {
+          if (a && typeof a === 'object') {
+            const idStr = a.id?.toString() || '';
+            const descStr = a.descripcion?.toLowerCase() || '';
+            return idStr.includes(ui.aliasSearchText) || descStr.includes(ui.aliasSearchText.toLowerCase());
           }
-        } else {
-          setHasMore(false);
-        }
-      } else {
-        setHasMore(false);
+          return false;
+        });
       }
+      
+      return data.alias;
     } catch (error) {
-      console.error('Error al cargar más datos:', error);
-      setError(t('Error al cargar más datos'));
-      setHasMore(false);
-    } finally {
-      setLoadingMore(false);
+      console.error('Error al filtrar alias:', error);
+      return []; 
     }
-  };
+  }, [data.alias, ui.aliasSearchText]);
 
-  const fetchFilterOptions = async () => {
+  // Memoized filtered data for dropdowns
+  const filteredAlias = useMemo(() => getFilteredAlias(), [getFilteredAlias]);
+  
+  const filteredMercados = useMemo(() => {
+    return ui.mercadoSearchText
+      ? (Array.isArray(data.mercados) ? data.mercados.filter(mercado => 
+          mercado.id?.toString().includes(ui.mercadoSearchText) || 
+          (mercado.descripcion || '').toLowerCase().includes(ui.mercadoSearchText.toLowerCase())
+        ) : [])
+      : data.mercados || [];
+  }, [data.mercados, ui.mercadoSearchText]);
+
+  const filteredCadenas = useMemo(() => {
+    return ui.cadenaSearchText
+      ? data.cadenas.filter(cadena => 
+          cadena.id.toString().includes(ui.cadenaSearchText) || 
+          cadena.descripcion.toLowerCase().includes(ui.cadenaSearchText.toLowerCase())
+        )
+      : data.cadenas;
+  }, [data.cadenas, ui.cadenaSearchText]);
+
+  const filteredUnidadesCompra = useMemo(() => {
+    return ui.unidadCompraSearchText
+      ? data.relacionesUnidades.filter(unidad => 
+          unidad.id.toString().includes(ui.unidadCompraSearchText) || 
+          unidad.descripcion.toLowerCase().includes(ui.unidadCompraSearchText.toLowerCase())
+        )
+      : data.relacionesUnidades;
+  }, [data.relacionesUnidades, ui.unidadCompraSearchText]);
+
+  // API calls with useCallback to prevent unnecessary recreations
+  const fetchFilterOptions = useCallback(async () => {
     try {
+      setUi(prev => ({ ...prev, loading: true }));
+      
       const [mercadosRes, cadenasRes, aliasRes, unidadesCompraRes, relacionesUnidadesRes] = await Promise.all([
         axios.get(`${BASE_URL}/relaciones/mercados?idIdioma=${languageId}`),
         axios.get(`${BASE_URL}/relaciones/cadenas`),
@@ -246,54 +479,854 @@ const EdicionRelaciones = () => {
         axios.get(`${BASE_URL}/relaciones/unidades-compra`)
       ]);
       
-      setMercados(Array.isArray(mercadosRes.data) ? mercadosRes.data : []);
-      setCadenas(Array.isArray(cadenasRes.data) ? cadenasRes.data : []);
+      // Process alias data safely
+      let processedAlias = [];
       if (aliasRes.data && aliasRes.data.content && Array.isArray(aliasRes.data.content)) {
-        console.log('Datos de alias recibidos correctamente:', aliasRes.data.content.length);
-        const processedAlias = aliasRes.data.content.map(item => ({
+        processedAlias = aliasRes.data.content.map(item => ({
           id: item.id,
           descripcion: item.descripcion || item.nombreAlias
         }));
-        setAlias(processedAlias);
       } else if (Array.isArray(aliasRes.data)) {
-        console.log('Datos de alias recibidos en formato array:', aliasRes.data.length);
-        setAlias(aliasRes.data);
-      } else {
-        console.error('Error: datos de alias no válidos:', aliasRes.data);
-        setAlias([]);
+        processedAlias = aliasRes.data;
       }
-
-      setUnidadesCompra(Array.isArray(unidadesCompraRes.data) ? unidadesCompraRes.data : []);
-      setRelacionesUnidades(Array.isArray(relacionesUnidadesRes.data) ? relacionesUnidadesRes.data : []);
-    
+      
+      setData(prev => ({
+        ...prev,
+        mercados: Array.isArray(mercadosRes.data) ? mercadosRes.data : [],
+        cadenas: Array.isArray(cadenasRes.data) ? cadenasRes.data : [],
+        alias: processedAlias,
+        unidadesCompra: Array.isArray(unidadesCompraRes.data) ? unidadesCompraRes.data : [],
+        relacionesUnidades: Array.isArray(relacionesUnidadesRes.data) ? relacionesUnidadesRes.data : []
+      }));
     } catch (error) {
       console.error('Error al cargar opciones de filtro:', error);
-      setMercados([]);
-      setCadenas([]);
-      setAlias([]);
-      setUnidadesCompra([]);
-      setRelacionesUnidades([]);
-      setError(t('Error al cargar opciones de filtro'));
+      setUi(prev => ({ 
+        ...prev, 
+        error: t('Error al cargar opciones de filtro') 
+      }));
+      
+      // Reset all data to empty arrays on error
+      setData(prev => ({
+        ...prev,
+        mercados: [],
+        cadenas: [],
+        alias: [],
+        unidadesCompra: [],
+        relacionesUnidades: []
+      }));
+    } finally {
+      setUi(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [languageId, t]);
 
-  const normalizeText = (text) => {
+  // Prepare filter payload - extracted as a separate function to reduce duplication
+  const prepareFilterPayload = useCallback((page = 0) => {
+    // Process alias selection
+    let aliasToUse = [];      
+    if (idsAliasSelected.length > 0) {
+      if (filters.selectedAlias.length > 0) {
+        aliasToUse = filters.selectedAlias.filter(id => idsAliasSelected.includes(id));
+      } else {
+        aliasToUse = [...idsAliasSelected];
+      }
+    } else {
+      aliasToUse = filters.selectedAlias;
+    }
+    
+    // Process localization IDs
+    let localizacionIds = [];
+    if (ui.localizacionSearchText.trim()) {
+      localizacionIds = ui.localizacionSearchText
+        .trim()
+        .split(/\s+/)
+        .filter(id => id.length > 0 && !isNaN(id))
+        .map(id => parseInt(id));
+    }
+    
+    // Build filter object
+    const filter = {
+      idIdioma: languageId,
+      idsMercado: filters.selectedMercados.length > 0 ? filters.selectedMercados : undefined,
+      idsCadena: filters.selectedCadenas.length > 0 ? filters.selectedCadenas : undefined,
+      idsUnidadComprasGestora: filters.selectedUnidadesCompra.length > 0 ? filters.selectedUnidadesCompra : undefined,
+      idsLocalizacion: localizacionIds.length > 0 ? localizacionIds : 
+                        (filters.selectedLocalizaciones.length > 0 ? filters.selectedLocalizaciones : undefined)
+    };
+    
+    // Complete payload
+    return {
+      filter,
+      idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
+      processAllAlias: false,
+      aliasTableOriginalFilter: originalFilters,
+      page: {
+        number: page,
+        size: ui.pageSize
+      }
+    };
+  }, [
+    languageId, 
+    idsAliasSelected, 
+    filters.selectedAlias,
+    filters.selectedMercados,
+    filters.selectedCadenas, 
+    filters.selectedUnidadesCompra,
+    filters.selectedLocalizaciones,
+    ui.localizacionSearchText,
+    ui.pageSize,
+    originalFilters
+  ]);
+
+  const fetchRelaciones = useCallback(async () => {
+    setUi(prev => ({ 
+      ...prev, 
+      loading: true, 
+      error: null, 
+      hasMore: true, 
+      currentPage: 0,
+      selectedItems: [],
+      selectAll: false
+    }));
+    
+    try {
+      const payload = prepareFilterPayload(0);
+      const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
+      
+      if (response.data) {
+        const initialRelaciones = response.data.relaciones || [];
+        const totalCount = response.data.page?.total || 0;
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: initialRelaciones,
+          filteredRelaciones: initialRelaciones,
+          ajenos: response.data.ajenos || [],
+          allRelaciones: response.data.allRelaciones || []
+        }));
+        
+        setUi(prev => ({
+          ...prev,
+          totalElements: totalCount,
+          hasMore: initialRelaciones.length < totalCount
+        }));
+      } else {
+        // Reset all data if response is empty
+        setData(prev => ({
+          ...prev,
+          relaciones: [],
+          filteredRelaciones: [],
+          allRelaciones: [],
+          ajenos: []
+        }));
+        
+        setUi(prev => ({
+          ...prev,
+          totalElements: 0,
+          hasMore: false
+        }));
+      }
+    } catch (error) {
+      console.error('Error al cargar relaciones:', error);
+      setUi(prev => ({ 
+        ...prev, 
+        error: t('Error al cargar relaciones')
+      }));
+      
+      setData(prev => ({
+        ...prev,
+        ajenos: []
+      }));
+    } finally {
+      setUi(prev => ({ ...prev, loading: false }));
+    }
+  }, [prepareFilterPayload, t]);
+
+  const loadMoreData = useCallback(async () => {
+    if (!ui.hasMore || ui.loadingMore) return;
+    
+    if (data.relaciones.length >= ui.totalElements) {
+      setUi(prev => ({ ...prev, hasMore: false }));
+      return;
+    }
+    
+    setUi(prev => ({ ...prev, loadingMore: true }));
+    
+    try {
+      const nextPage = ui.currentPage + 1;
+      const payload = prepareFilterPayload(nextPage);
+      
+      const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
+      
+      if (response.data) {
+        const newRelaciones = response.data.relaciones || [];
+        const newTotalElements = response.data.page?.total || 0;
+        
+        if (newTotalElements !== ui.totalElements) {
+          setUi(prev => ({ ...prev, totalElements: newTotalElements }));
+        }
+        
+        // Process ajenos data efficiently
+        if (response.data.ajenos) {
+          const newAjenos = response.data.ajenos || [];
+          const combinedAjenos = [...data.ajenos];
+          
+          // Using a Map for faster lookups instead of repeated array finds
+          const ajenosMap = new Map();
+          combinedAjenos.forEach((ajeno, index) => {
+            ajenosMap.set(ajeno.idAlias, index);
+          });
+          
+          newAjenos.forEach(newAjeno => {
+            const existingIndex = ajenosMap.get(newAjeno.idAlias);
+            
+            if (existingIndex !== undefined) {
+              const existingDataAjenos = combinedAjenos[existingIndex].dataAjenos || [];
+              const newDataAjenos = newAjeno.dataAjenos || [];
+              
+              // Create a Set of existing IDs for faster lookups
+              const existingIds = new Set(existingDataAjenos.map(da => da.idAjeno));
+              
+              const newItems = newDataAjenos.filter(da => !existingIds.has(da.idAjeno));
+              
+              if (newItems.length > 0) {
+                combinedAjenos[existingIndex].dataAjenos = [...existingDataAjenos, ...newItems];
+              }
+            } else {
+              combinedAjenos.push(newAjeno);
+            }
+          });
+          
+          setData(prev => ({ ...prev, ajenos: combinedAjenos }));
+        }
+        
+        if (newRelaciones.length > 0) {
+          const updatedRelaciones = [...data.relaciones, ...newRelaciones];
+          
+          setData(prev => ({
+            ...prev,
+            relaciones: updatedRelaciones,
+            filteredRelaciones: updatedRelaciones
+          }));
+          
+          setUi(prev => ({ 
+            ...prev, 
+            currentPage: nextPage,
+            hasMore: updatedRelaciones.length < newTotalElements
+          }));
+        } else {
+          setUi(prev => ({ ...prev, hasMore: false }));
+        }
+      } else {
+        setUi(prev => ({ ...prev, hasMore: false }));
+      }
+    } catch (error) {
+      console.error('Error al cargar más datos:', error);
+      setUi(prev => ({ 
+        ...prev, 
+        error: t('Error al cargar más datos'),
+        hasMore: false
+      }));
+    } finally {
+      setUi(prev => ({ ...prev, loadingMore: false }));
+    }
+  }, [
+    data.ajenos, 
+    data.relaciones, 
+    ui.currentPage, 
+    ui.hasMore, 
+    ui.loadingMore, 
+    ui.totalElements, 
+    prepareFilterPayload,
+    t
+  ]);
+
+  // Event handlers using useCallback for better performance
+  const toggleFilter = useCallback((filterName) => {
+    setUi(prev => ({
+      ...prev,
+      openFilter: prev.openFilter === filterName ? null : filterName
+    }));
+  }, []);
+
+  const handleFilterSelect = useCallback((filterType, value) => {
+    switch (filterType) {
+      case 'mercado':
+        setFilters(prev => ({
+          ...prev,
+          selectedMercados: prev.selectedMercados.includes(value) 
+            ? prev.selectedMercados.filter(item => item !== value) 
+            : [...prev.selectedMercados, value]
+        }));
+        break;
+      case 'cadena':
+        setFilters(prev => ({
+          ...prev,
+          selectedCadenas: prev.selectedCadenas.includes(value) 
+            ? prev.selectedCadenas.filter(item => item !== value) 
+            : [...prev.selectedCadenas, value]
+        }));
+        break;
+      case 'alias':
+        if (idsAliasSelected.length > 0) {
+          if (idsAliasSelected.includes(value)) {
+            setFilters(prev => ({
+              ...prev,
+              selectedAlias: prev.selectedAlias.includes(value) 
+                ? prev.selectedAlias.filter(item => item !== value) 
+                : [...prev.selectedAlias, value]
+            }));
+          }
+        } else {
+          setFilters(prev => ({
+            ...prev,
+            selectedAlias: prev.selectedAlias.includes(value) 
+              ? prev.selectedAlias.filter(item => item !== value) 
+              : [...prev.selectedAlias, value]
+          }));
+        }
+        break;
+      case 'unidadCompra':
+        setFilters(prev => ({
+          ...prev,
+          selectedUnidadesCompra: prev.selectedUnidadesCompra.includes(value) 
+            ? prev.selectedUnidadesCompra.filter(item => item !== value) 
+            : [...prev.selectedUnidadesCompra, value]
+        }));
+        break;
+      case 'localizacion':
+        const localizacionId = parseInt(value);
+        if (!isNaN(localizacionId)) {
+          setFilters(prev => ({
+            ...prev,
+            selectedLocalizaciones: prev.selectedLocalizaciones.includes(localizacionId) 
+              ? prev.selectedLocalizaciones.filter(item => item !== localizacionId) 
+              : [...prev.selectedLocalizaciones, localizacionId]
+          }));
+        }
+        break;
+      default:
+        break;
+    }
+  }, [idsAliasSelected]);
+
+  const handleSearch = useCallback(() => {
+    setUi(prev => ({ 
+      ...prev, 
+      currentPage: 0,
+      selectedItems: [],
+      selectAll: false
+    }));
+    fetchRelaciones();
+  }, [fetchRelaciones]);
+
+  
+  // Optimización de selección de items para evitar re-renders innecesarios
+  const handleSelectItem = useCallback((id) => {
+    setUi(prev => {
+      // Crear un nuevo Set a partir del array actual para busquedas O(1)
+      const selectedItemsSet = new Set(prev.selectedItems);
+      
+      if (selectedItemsSet.has(id)) {
+        selectedItemsSet.delete(id);
+      } else {
+        selectedItemsSet.add(id);
+      }
+      
+      // Convertir de nuevo a array
+      return {
+        ...prev,
+        selectedItems: Array.from(selectedItemsSet)
+      };
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(async () => {
+    setUi(prev => ({ ...prev, loadingAllItems: true }));
+    
+    try {
+      if (ui.selectAll) {
+        setUi(prev => ({
+          ...prev,
+          selectedItems: [],
+          selectAll: false
+        }));
+      } else {
+        if (data.allRelaciones && data.allRelaciones.length > 0) {
+          const allIds = data.allRelaciones.map(item => item.idAliasAmbitoAplanado);
+          setUi(prev => ({
+            ...prev,
+            selectedItems: allIds,
+            selectAll: true
+          }));
+        } else {
+          const visibleIds = data.filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
+          setUi(prev => ({
+            ...prev,
+            selectedItems: visibleIds,
+            selectAll: true
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error en handleSelectAll:', error);
+      const visibleIds = data.filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
+      setUi(prev => ({
+        ...prev,
+        selectedItems: visibleIds,
+        selectAll: true
+      }));
+    } finally {
+      setUi(prev => ({ ...prev, loadingAllItems: false }));
+    }
+  }, [ui.selectAll, data.allRelaciones, data.filteredRelaciones]);
+
+  const handleActivateRelations = useCallback(async () => {
+    if (ui.selectedItems.length === 0) return;
+    
+    setModal(prev => ({ ...prev, activateLoading: true }));
+    
+    try {
+      const selectedRelations = data.relaciones.filter(r => 
+        ui.selectedItems.includes(r.idAliasAmbitoAplanado)
+      );
+      
+      const response = await axios.put(`${BASE_URL}/relaciones/activate`, {
+        relaciones: selectedRelations,
+        usuario: 'WEBAPP'
+      });
+      
+      if (response.data.success) {
+        const updatedRelaciones = data.relaciones.map(rel => {
+          if (ui.selectedItems.includes(rel.idAliasAmbitoAplanado)) {
+            return {
+              ...rel,
+              idTipoEstadoLocalizacionRam: 1,
+              descripcionTipoEstadoLocalizacionRam: 'ACTIVO',
+              fechaHoraFinPausa: null
+            };
+          }
+          return rel;
+        });
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: updatedRelaciones,
+          filteredRelaciones: updatedRelaciones
+        }));
+        
+        // Limpiar selección después de activar
+        setUi(prev => ({
+          ...prev,
+          selectedItems: [],
+          selectAll: false
+        }));
+        
+        alert(t(`${response.data.updatedCount} relaciones activadas correctamente`));
+      }
+    } catch (error) {
+      console.error('Error al activar relaciones:', error);
+      setUi(prev => ({ ...prev, error: t('Error al activar relaciones') }));
+    } finally {
+      setModal(prev => ({ ...prev, activateLoading: false }));
+    }
+  }, [data.relaciones, ui.selectedItems, t]);
+
+  const handlePauseRelations = useCallback(async () => {
+    if (ui.selectedItems.length === 0) return;
+    
+    setModal(prev => ({ ...prev, pauseLoading: true }));
+    
+    try {
+      const selectedRelations = data.relaciones.filter(r => 
+        ui.selectedItems.includes(r.idAliasAmbitoAplanado)
+      );
+      
+      const response = await axios.put(`${BASE_URL}/relaciones/pause`, {
+        relaciones: selectedRelations,
+        fechaHoraFinPausa: null,
+        usuario: 'WEBAPP'
+      });
+      
+      if (response.data.success) {
+        const updatedRelaciones = data.relaciones.map(rel => {
+          if (ui.selectedItems.includes(rel.idAliasAmbitoAplanado)) {
+            return {
+              ...rel,
+              idTipoEstadoLocalizacionRam: 2,
+              descripcionTipoEstadoLocalizacionRam: 'PAUSADA',
+              fechaHoraFinPausa: null
+            };
+          }
+          return rel;
+        });
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: updatedRelaciones,
+          filteredRelaciones: updatedRelaciones
+        }));
+        
+        // Limpiar selección después de pausar
+        setUi(prev => ({
+          ...prev,
+          selectedItems: [],
+          selectAll: false
+        }));
+        
+        alert(t(`${response.data.updatedCount} relaciones pausadas correctamente`));
+      }
+    } catch (error) {
+      console.error('Error al pausar relaciones:', error);
+      setUi(prev => ({ ...prev, error: t('Error al pausar relaciones') }));
+    } finally {
+      setModal(prev => ({ ...prev, pauseLoading: false }));
+    }
+  }, [data.relaciones, ui.selectedItems, t]);
+
+  const handleOpenPauseModal = useCallback(() => {
+    if (ui.selectedItems.length === 0) return;
+    
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+    
+    setModal(prev => ({
+      ...prev,
+      pauseUntilDate: defaultDate,
+      pauseModalOpen: true
+    }));
+  }, [ui.selectedItems]);
+
+  const handlePauseModalConfirm = useCallback(async () => {
+    if (ui.selectedItems.length === 0) return;
+    
+    setModal(prev => ({ ...prev, pauseLoading: true }));
+    
+    try {
+      const selectedRelations = data.relaciones.filter(r => 
+        ui.selectedItems.includes(r.idAliasAmbitoAplanado)
+      );
+      
+      // Formatear la fecha para que sea compatible con MySQL
+      const formattedDate = modal.pauseUntilDate.toISOString().slice(0, 19).replace('T', ' ');
+      
+      const response = await axios.put(`${BASE_URL}/relaciones/pause`, {
+        relaciones: selectedRelations,
+        fechaHoraFinPausa: formattedDate,
+        usuario: 'WEBAPP'
+      });
+      
+      if (response.data.success) {
+        // Actualizar las relaciones localmente
+        const updatedRelaciones = data.relaciones.map(rel => {
+          if (ui.selectedItems.includes(rel.idAliasAmbitoAplanado)) {
+            return {
+              ...rel,
+              idTipoEstadoLocalizacionRam: 2,
+              descripcionTipoEstadoLocalizacionRam: 'PAUSADA',
+              fechaHoraFinPausa: modal.pauseUntilDate.toISOString()
+            };
+          }
+          return rel;
+        });
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: updatedRelaciones,
+          filteredRelaciones: updatedRelaciones
+        }));
+        
+        // Limpiar selección después de pausar con fecha
+        setUi(prev => ({
+          ...prev,
+          selectedItems: [],
+          selectAll: false
+        }));
+        
+        setModal(prev => ({ ...prev, pauseModalOpen: false }));
+        
+        alert(t(`${response.data.updatedCount} relaciones pausadas correctamente`));
+      }
+    } catch (error) {
+      console.error('Error al pausar relaciones:', error);
+      setUi(prev => ({ ...prev, error: t('Error al pausar relaciones') }));
+    } finally {
+      setModal(prev => ({ ...prev, pauseLoading: false }));
+    }
+  }, [data.relaciones, ui.selectedItems, modal.pauseUntilDate, t]);
+
+  // Modificación al método handleGlobalAjenoChange
+  const handleGlobalAjenoChange = useCallback((idAliasAmbitoAplanado, idAjenoSeccionGlobal) => {
+    setData(prev => {
+      // Obtener el valor original para comparar si hay cambio
+      const relation = prev.relaciones.find(rel => rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado);
+      
+      // Si no existe este campo, guardamos el valor actual como original
+      if (relation && !relation.hasOwnProperty('originalAjenoSeccionGlobal')) {
+        relation.originalAjenoSeccionGlobal = relation.idAjenoSeccionGlobal || 0;
+      }
+
+      return {
+        ...prev,
+        globalAjenosSelected: {
+          ...prev.globalAjenosSelected,
+          [idAliasAmbitoAplanado]: idAjenoSeccionGlobal
+        },
+        relaciones: prev.relaciones.map(rel => {
+          if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
+            return {
+              ...rel,
+              // No actualizamos idAjenoSeccionGlobal todavía, solo cuando guardemos
+              // Solo actualizar originalAjenoSeccionGlobal si no existe aún
+              originalAjenoSeccionGlobal: rel.hasOwnProperty('originalAjenoSeccionGlobal') 
+                ? rel.originalAjenoSeccionGlobal 
+                : (rel.idAjenoSeccionGlobal || 0)
+            };
+          }
+          return rel;
+        }),
+        filteredRelaciones: prev.filteredRelaciones.map(rel => {
+          if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
+            return {
+              ...rel,
+              // No actualizamos idAjenoSeccionGlobal todavía, solo cuando guardemos
+              // Solo actualizar originalAjenoSeccionGlobal si no existe aún
+              originalAjenoSeccionGlobal: rel.hasOwnProperty('originalAjenoSeccionGlobal') 
+                ? rel.originalAjenoSeccionGlobal 
+                : (rel.idAjenoSeccionGlobal || 0)
+            };
+          }
+          return rel;
+        })
+      };
+    });
+
+    // Comprueba si hay cambios
+    setUi(prev => {
+      const relacionActual = data.relaciones.find(
+        rel => rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado
+      );
+      
+      const originalValue = relacionActual && relacionActual.hasOwnProperty('originalAjenoSeccionGlobal')
+        ? relacionActual.originalAjenoSeccionGlobal
+        : (relacionActual?.idAjenoSeccionGlobal || 0);
+        
+      // Si hay cambio, marcar isModified
+      if (originalValue !== idAjenoSeccionGlobal) {
+        return { ...prev, isModified: true };
+      }
+      
+      // Si no hay cambio en este, verificar si hay otros cambios
+      const hayOtrosCambios = data.relaciones.some(rel => {
+        const original = rel.originalAjenoSeccionGlobal !== undefined 
+          ? rel.originalAjenoSeccionGlobal 
+          : (rel.idAjenoSeccionGlobal || 0);
+        
+        const actual = data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0;
+        
+        return original !== actual;
+      });
+      
+      return { ...prev, isModified: hayOtrosCambios };
+    });
+  }, [data.relaciones, data.globalAjenosSelected]);
+
+  const updateUnidadCompra = useCallback((idAliasAmbitoAplanado, idUnidadComprasGestora) => {
+    setData(prev => {
+      // Find the unidad name for improved performance
+      const unidadName = prev.unidadesCompra.find(u => u.id === idUnidadComprasGestora)?.descripcion || null;
+      
+      return {
+        ...prev,
+        relaciones: prev.relaciones.map(rel => {
+          if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
+            return {
+              ...rel,
+              idUnidadComprasGestora,
+              nombreUnidadComprasGestora: unidadName
+            };
+          }
+          return rel;
+        }),
+        filteredRelaciones: prev.filteredRelaciones.map(rel => {
+          if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
+            return {
+              ...rel,
+              idUnidadComprasGestora,
+              nombreUnidadComprasGestora: unidadName
+            };
+          }
+          return rel;
+        })
+      };
+    });
+    
+    setUi(prev => ({ ...prev, isModified: true }));
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    try {
+      // Mapear y guardar los valores originales cuando se carga por primera vez
+      if (!data.relaciones.some(rel => rel.hasOwnProperty('originalAjenoSeccionGlobal'))) {
+        // Primera vez - guardar estado original
+        const relationsWithOriginals = data.relaciones.map(rel => ({
+          ...rel,
+          originalAjenoSeccionGlobal: rel.idAjenoSeccionGlobal || 0,
+          originalUnidadComprasGestora: rel.idUnidadComprasGestora || 0
+        }));
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: relationsWithOriginals,
+          filteredRelaciones: relationsWithOriginals
+        }));
+        
+        // No continuar el guardado, solo inicializar los valores originales
+        return;
+      }
+      
+      // Prepare data - only send modified fields for each relation
+      const updatedRelaciones = data.relaciones
+        .filter(rel => {
+          // Check if any field was modified
+          const originalGlobalAjeno = rel.originalAjenoSeccionGlobal !== undefined 
+            ? rel.originalAjenoSeccionGlobal 
+            : (rel.idAjenoSeccionGlobal || 0);
+          
+          const currentGlobalAjeno = data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0;
+          
+          const originalUnidadCompra = rel.originalUnidadComprasGestora !== undefined
+            ? rel.originalUnidadComprasGestora
+            : (rel.idUnidadComprasGestora || 0);
+            
+          // Debuggear la comparación
+          console.log(`Relación ${rel.idAliasAmbitoAplanado}:`, {
+            original: originalGlobalAjeno,
+            current: currentGlobalAjeno,
+            changed: currentGlobalAjeno !== originalGlobalAjeno
+          });
+            
+          return currentGlobalAjeno !== originalGlobalAjeno || 
+                 rel.idUnidadComprasGestora !== originalUnidadCompra;
+        })
+        .map(rel => {
+          // Only include changed fields
+          const updatedRel = {
+            idAliasAmbitoAplanado: rel.idAliasAmbitoAplanado,
+            esSolicitable: rel.esSolicitable
+          };
+          
+          // Only include global ajeno if it changed
+          const originalGlobalAjeno = rel.originalAjenoSeccionGlobal !== undefined 
+            ? rel.originalAjenoSeccionGlobal 
+            : (rel.idAjenoSeccionGlobal || 0);
+          
+          const currentGlobalAjeno = data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0;
+          
+          if (currentGlobalAjeno !== originalGlobalAjeno) {
+            updatedRel.idAjenoSeccionGlobal = currentGlobalAjeno;
+          }
+          
+          // Only include unidad compra if it changed
+          const originalUnidadCompra = rel.originalUnidadComprasGestora !== undefined
+            ? rel.originalUnidadComprasGestora
+            : (rel.idUnidadComprasGestora || 0);
+            
+          if (rel.idUnidadComprasGestora !== originalUnidadCompra) {
+            updatedRel.idUnidadComprasGestora = rel.idUnidadComprasGestora || 0;
+          }
+          
+          return updatedRel;
+        });
+      
+      console.log('Relaciones a actualizar:', updatedRelaciones);
+      
+      if (updatedRelaciones.length === 0) {
+        alert(t('No hay cambios para guardar'));
+        return;
+      }
+      
+      // Use PATCH instead of PUT
+      const response = await axios.patch(`${BASE_URL}/relaciones/update`, {
+        relaciones: updatedRelaciones,
+        usuario: 'WEBAPP'
+      });
+      
+      if (response.data.success) {
+        // Store current values as original values to track future changes
+        const relationsWithOriginals = data.relaciones.map(rel => ({
+          ...rel,
+          originalAjenoSeccionGlobal: data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0,
+          originalUnidadComprasGestora: rel.idUnidadComprasGestora || 0,
+          idAjenoSeccionGlobal: data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0
+        }));
+        
+        setData(prev => ({
+          ...prev,
+          relaciones: relationsWithOriginals,
+          filteredRelaciones: relationsWithOriginals
+        }));
+        
+        setUi(prev => ({ ...prev, isModified: false }));
+        alert(t(`${response.data.updatedCount} relaciones actualizadas correctamente`));
+      } else {
+        throw new Error(response.data.message || 'Error desconocido al guardar');
+      }
+    } catch (error) {
+      console.error('Error al guardar relaciones:', error);
+      setUi(prev => ({ 
+        ...prev, 
+        error: t('Error al guardar relaciones: ') + (error.message || error) 
+      }));
+    }
+  }, [data.relaciones, data.globalAjenosSelected, t]);
+
+  const handleCancel = useCallback(() => {
+    if (ui.isModified && !window.confirm(t('¿Está seguro que desea salir sin guardar los cambios?'))) {
+      return;
+    }
+    navigate(-1);
+  }, [ui.isModified, navigate, t]);
+
+  const shouldDisableActivateButton = useCallback(() => {
+    if (ui.selectedItems.length === 0) return true;
+    
+    // Usar mapa para consulta O(1) en lugar de .find() O(n)
+    return !ui.selectedItems.some(id => {
+      const status = relacionesStatusMap.get(id);
+      return status === 2; // PAUSADO
+    });
+  }, [ui.selectedItems, relacionesStatusMap]);
+
+  const shouldDisablePauseButton = useCallback(() => {
+    if (ui.selectedItems.length === 0) return true;
+    
+    // Usar mapa para consulta O(1) en lugar de .find() O(n)
+    return !ui.selectedItems.some(id => {
+      const status = relacionesStatusMap.get(id);
+      return status === 1; // ACTIVO
+    });
+  }, [ui.selectedItems, relacionesStatusMap]);
+
+  // Text normalization utility function
+  const normalizeText = useCallback((text) => {
     if (!text) return '';
 
     let normalizedText = text;
 
+    // Reemplazos específicos
     normalizedText = normalizedText
-    .replace(/ESPA.?.'A/g, 'ESPAÑA')
-    .replace(/ESPA.?.A/g, 'ESPAÑA')
-    .replace(/ADMINISTRACI[Ã]["]N/g, 'ADMINISTRACIÓN')
-    .replace(/ADMINISTRACI.?.N/g, 'ADMINISTRACIÓN')
-    .replace(/ALMAC.?.N/g, 'ALMACÉN')
-    .replace(/M.?.XICO/g, 'MÉXICO')
-    .replace(/PREVENCI.?.N/g, 'PREVENCIÓN')
-    .replace(/P.?.RDIDAS/g, 'PÉRDIDAS')
-    .replace(/GESTI.?.N/g, 'GESTIÓN')
-    .replace(/DECORACI.?.N/g, 'DECORACIÓN');
+      .replace(/ESPA.?.'A/g, 'ESPAÑA')
+      .replace(/ESPA.?.A/g, 'ESPAÑA')
+      .replace(/ADMINISTRACI[Ã]["]N/g, 'ADMINISTRACIÓN')
+      .replace(/ADMINISTRACI.?.N/g, 'ADMINISTRACIÓN')
+      .replace(/ALMAC.?.N/g, 'ALMACÉN')
+      .replace(/M.?.XICO/g, 'MÉXICO')
+      .replace(/PREVENCI.?.N/g, 'PREVENCIÓN')
+      .replace(/P.?.RDIDAS/g, 'PÉRDIDAS')
+      .replace(/GESTI.?.N/g, 'GESTIÓN')
+      .replace(/DECORACI.?.N/g, 'DECORACIÓN');
 
+    // Reemplazos generales de caracteres codificados - using a more efficient approach
     const replacements = {
       'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
       'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
@@ -310,420 +1343,101 @@ const EdicionRelaciones = () => {
       'Â¡': '¡', 'Â¿': '¿'
     };
 
-    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+    // Faster replacement approach for multiple patterns
+    for (const [badChar, goodChar] of Object.entries(replacements)) {
       normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
-    });
+    }
 
     return normalizedText;
-  };
+  }, []);
 
-  const getFilteredAlias = () => {
-    if (!Array.isArray(alias)) {
-      console.error('Error: "alias" no es un array:', alias);
-      return [];
-    }
-    
-    try {
-      if (aliasSearchText) {
-        return alias.filter(a => {
-          if (a && typeof a === 'object') {
-            const idStr = a.id?.toString() || '';
-            const descStr = a.descripcion?.toLowerCase() || '';
-            return idStr.includes(aliasSearchText) || descStr.includes(aliasSearchText.toLowerCase());
-          }
-          return false;
-        });
-      }
-      
-      return alias;
-    } catch (error) {
-      console.error('Error al filtrar alias:', error);
-      return []; 
-    }
-  };
-
-  const filteredAlias = getFilteredAlias();
-
-  const fetchRelaciones = async () => {
-    setLoading(true);
-    setError(null);
-    setHasMore(true);
-    setCurrentPage(0);
-    
-    try {
-      let aliasToUse = [];      
-      if (idsAliasSelected.length > 0) {
-        if (selectedAlias.length > 0) {
-          aliasToUse = selectedAlias.filter(id => idsAliasSelected.includes(id));
-        } else {
-          aliasToUse = [...idsAliasSelected];
-        }
-      } else {
-        aliasToUse = selectedAlias;
-      }
-      
-      const filter = {
-        idIdioma: languageId,
-        idsMercado: selectedMercados.length > 0 ? selectedMercados : undefined,
-        idsCadena: selectedCadenas.length > 0 ? selectedCadenas : undefined,
-        idsUnidadComprasGestora: selectedUnidadesCompra.length > 0 ? selectedUnidadesCompra : undefined,
-        idsLocalizacion: selectedLocalizaciones.length > 0 ? selectedLocalizaciones : undefined
-      };
-      
-      const payload = {
-        filter,
-        idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
-        processAllAlias: false,
-        aliasTableOriginalFilter: originalFilters,
-        page: {
-          number: currentPage,
-          size: pageSize
-        }
-      };
-      
-      const response = await axios.post(`${BASE_URL}/relaciones/filter`, payload);
-      
-      if (response.data) {
-        const initialRelaciones = response.data.relaciones || [];
-        const totalCount = response.data.page?.total || 0;
-        
-        setRelaciones(initialRelaciones);
-        setFilteredRelaciones(initialRelaciones);
-        setTotalElements(totalCount);
-        
-        if (response.data.ajenos) {
-          setAjenos(response.data.ajenos || []);
-        } else {
-          setAjenos([]);
-        }
-        
-        setHasMore(initialRelaciones.length < totalCount);
-        
-        if (response.data.allRelaciones) {
-          setAllRelaciones(response.data.allRelaciones || []);
-        }
-      } else {
-        setRelaciones([]);
-        setFilteredRelaciones([]);
-        setAllRelaciones([]);
-        setTotalElements(0);
-        setHasMore(false);
-        setAjenos([]);
-      }
-    } catch (error) {
-      console.error('Error al cargar relaciones:', error);
-      setError(t('Error al cargar relaciones'));
-      setAjenos([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = () => {
-    setCurrentPage(0);
-    fetchRelaciones();
-  };
-
-  const toggleFilter = (filterName) => {
-    setOpenFilter(openFilter === filterName ? null : filterName);
-  };
-
-  const handleFilterSelect = (filterType, value) => {
-    switch (filterType) {
-      case 'mercado':
-        setSelectedMercados(prev => 
-          prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-        );
-        break;
-      case 'cadena':
-        setSelectedCadenas(prev => 
-          prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-        );
-        break;
-      case 'alias':
-        if (idsAliasSelected.length > 0) {
-          if (idsAliasSelected.includes(value)) {
-            setSelectedAlias(prev => 
-              prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-            );
-          }
-        } else {
-          setSelectedAlias(prev => 
-            prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-          );
-        }
-        break;
-      case 'unidadCompra':
-        setSelectedUnidadesCompra(prev => 
-          prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-        );
-        break;
-      case 'localizacion':
-        setSelectedLocalizaciones(prev => 
-          prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
-        );
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleSearchTextChange = (e, setterFunction) => {
-    setterFunction(e.target.value);
-  };
-
-  const handleSelectItem = (id) => {
-    setSelectedItems(prevSelected => {
-      return prevSelected.includes(id)
-        ? prevSelected.filter(item => item !== id)
-        : [...prevSelected, id];
+  // Memoized current time for render optimization
+  const currentTime = useMemo(() => {
+    return new Date().toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
-  };
+  }, []);
 
-  const handleSelectAll = async () => {
-    setLoadingAllItems(true);
-    
-    try {
-      if (selectAll) {
-        setSelectedItems([]);
-        setSelectAll(false);
-      } else {
-        if (allRelaciones && allRelaciones.length > 0) {
-          const allIds = allRelaciones.map(item => item.idAliasAmbitoAplanado);
-          setSelectedItems(allIds);
-        } else {
-          const visibleIds = filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
-          setSelectedItems(visibleIds);
-        }
-        setSelectAll(true);
-      }
-    } catch (error) {
-      console.error('Error en handleSelectAll:', error);
-      const visibleIds = filteredRelaciones.map(item => item.idAliasAmbitoAplanado);
-      setSelectedItems(visibleIds);
-      setSelectAll(true);
-    } finally {
-      setLoadingAllItems(false);
-    }
-  };
-
-  const filteredMercados = mercadoSearchText
-    ? (Array.isArray(mercados) ? mercados.filter(mercado => 
-        mercado.id?.toString().includes(mercadoSearchText) || 
-        (mercado.descripcion || '').toLowerCase().includes(mercadoSearchText.toLowerCase())
-      ) : [])
-    : mercados || [];
-
-  const filteredCadenas = cadenaSearchText
-    ? cadenas.filter(cadena => 
-        cadena.id.toString().includes(cadenaSearchText) || 
-        cadena.descripcion.toLowerCase().includes(cadenaSearchText.toLowerCase())
-      )
-    : cadenas;
-
-  const filteredUnidadesCompra = unidadCompraSearchText
-    ? relacionesUnidades.filter(unidad => 
-        unidad.id.toString().includes(unidadCompraSearchText) || 
-        unidad.descripcion.toLowerCase().includes(unidadCompraSearchText.toLowerCase())
-      )
-    : relacionesUnidades;
-
-  const currentTime = new Date().toLocaleTimeString('es-ES', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  const handleActivateRelations = async () => {
-    if (selectedItems.length === 0) return;
-    
-    try {
-      let selectedRelations = [];
-      
-      if (allRelaciones && allRelaciones.length > 0) {
-        selectedRelations = allRelaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
-      } else {
-        selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
-      }
-      
-      const response = await axios.put(`${BASE_URL}/relaciones/activate`, {
-        relaciones: selectedRelations,
-        usuario: 'WEBAPP'
-      });
-      
-      if (response.data.success) {
-        const updatedRelaciones = relaciones.map(rel => {
-          if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
-            return {
-              ...rel,
-              idTipoEstadoLocalizacionRam: 1,
-              descripcionTipoEstadoLocalizacionRam: 'Active',
-              fechaHoraFinPausa: null
-            };
-          }
-          return rel;
-        });
-        
-        setRelaciones(updatedRelaciones);
-        setFilteredRelaciones(updatedRelaciones);
-        
-        if (allRelaciones.length > 0) {
-          const updatedAllRelaciones = allRelaciones.map(rel => {
-            if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
-              return {
-                ...rel,
-                idTipoEstadoLocalizacionRam: 1,
-                descripcionTipoEstadoLocalizacionRam: 'Active',
-                fechaHoraFinPausa: null
-              };
-            }
-            return rel;
-          });
-          setAllRelaciones(updatedAllRelaciones);
-        }
-        
-        setSelectedItems([]);
-        setSelectAll(false);
-        
-        alert(t(`${response.data.updatedCount} relaciones activadas correctamente`));
-      }
-    } catch (error) {
-      console.error('Error al activar relaciones:', error);
-      setError(t('Error al activar relaciones'));
-    }
-  };
-
-  const handlePauseRelations = async () => {
-    if (selectedItems.length === 0) return;
-    
-    const fechaHoraFinPausa = new Date();
-    fechaHoraFinPausa.setDate(fechaHoraFinPausa.getDate() + 30);
-    
-    try {
-      let selectedRelations = [];
-      
-      if (allRelaciones && allRelaciones.length > 0) {
-        selectedRelations = allRelaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
-      } else {
-        selectedRelations = relaciones.filter(r => selectedItems.includes(r.idAliasAmbitoAplanado));
-      }
-      
-      const response = await axios.put(`${BASE_URL}/relaciones/pause`, {
-        relaciones: selectedRelations,
-        fechaHoraFinPausa: fechaHoraFinPausa.toISOString(),
-        usuario: 'WEBAPP'
-      });
-      
-      if (response.data.success) {
-        const updatedRelaciones = relaciones.map(rel => {
-          if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
-            return {
-              ...rel,
-              idTipoEstadoLocalizacionRam: 2,
-              descripcionTipoEstadoLocalizacionRam: 'Pausado',
-              fechaHoraFinPausa: fechaHoraFinPausa.toISOString()
-            };
-          }
-          return rel;
-        });
-        
-        setRelaciones(updatedRelaciones);
-        setFilteredRelaciones(updatedRelaciones);
-        
-        if (allRelaciones.length > 0) {
-          const updatedAllRelaciones = allRelaciones.map(rel => {
-            if (selectedItems.includes(rel.idAliasAmbitoAplanado)) {
-              return {
-                ...rel,
-                idTipoEstadoLocalizacionRam: 2,
-                descripcionTipoEstadoLocalizacionRam: 'Pausado',
-                fechaHoraFinPausa: fechaHoraFinPausa.toISOString()
-              };
-            }
-            return rel;
-          });
-          setAllRelaciones(updatedAllRelaciones);
-        }
-        
-        setSelectedItems([]);
-        setSelectAll(false);
-        
-        alert(t(`${response.data.updatedCount} relaciones pausadas correctamente`));
-      }
-    } catch (error) {
-      console.error('Error al pausar relaciones:', error);
-      setError(t('Error al pausar relaciones'));
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      const updatedRelaciones = relaciones.map(rel => ({
-        ...rel,
-        idAjenoSeccionGlobal: globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0
+  // Memoized handlers for select all functionality in filter dropdowns
+  const handleSelectAllMercados = useCallback(() => {
+    if (filters.selectedMercados.length === data.mercados.length) {
+      setFilters(prev => ({ ...prev, selectedMercados: [] }));
+    } else {
+      setFilters(prev => ({ 
+        ...prev, 
+        selectedMercados: data.mercados.map(m => m.id) 
       }));
-      
-      const response = await axios.put(`${BASE_URL}/relaciones/update`, {
-        relaciones: updatedRelaciones,
-        usuario: 'WEBAPP'
-      });
-      
-      if (response.data.success) {
-        setIsModified(false);
-        alert(t('Relaciones actualizadas correctamente'));
-      }
-    } catch (error) {
-      console.error('Error al guardar relaciones:', error);
-      setError(t('Error al guardar relaciones'));
     }
-  };
+  }, [filters.selectedMercados.length, data.mercados]);
 
-  const handleCancel = () => {
-    if (isModified && !window.confirm(t('¿Está seguro que desea salir sin guardar los cambios?'))) {
-      return;
+  const handleSelectAllCadenas = useCallback(() => {
+    if (filters.selectedCadenas.length === data.cadenas.length) {
+      setFilters(prev => ({ ...prev, selectedCadenas: [] }));
+    } else {
+      setFilters(prev => ({ 
+        ...prev, 
+        selectedCadenas: data.cadenas.map(c => c.id) 
+      }));
     }
-    navigate(-1);
-  };
+  }, [filters.selectedCadenas.length, data.cadenas]);
 
-  const updateUnidadCompra = (idAliasAmbitoAplanado, idUnidadComprasGestora) => {
-    const updatedRelaciones = relaciones.map(rel => {
-      if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
-        return {
-          ...rel,
-          idUnidadComprasGestora,
-          nombreUnidadComprasGestora: unidadesCompra.find(u => u.id === idUnidadComprasGestora)?.descripcion || null
-        };
+  const handleSelectAllAlias = useCallback(() => {
+    if (idsAliasSelected.length > 0) {
+      if (filters.selectedAlias.length === idsAliasSelected.length) {
+        setFilters(prev => ({ ...prev, selectedAlias: [] }));
+      } else {
+        setFilters(prev => ({ ...prev, selectedAlias: [...idsAliasSelected] }));
       }
-      return rel;
-    });
-    
-    setRelaciones(updatedRelaciones);
-    setFilteredRelaciones(updatedRelaciones);
-    setIsModified(true);
-  };
+    } else {
+      if (filters.selectedAlias.length === data.alias.length) {
+        setFilters(prev => ({ ...prev, selectedAlias: [] }));
+      } else {
+        setFilters(prev => ({ ...prev, selectedAlias: data.alias.map(a => a.id) }));
+      }
+    }
+  }, [filters.selectedAlias.length, data.alias, idsAliasSelected]);
 
-  const estadoClassName = (estado) => {
-    if (estado === 'Active' || estado === 'ACTIVA') return 'estado-tag ACTIVA';
-    if (estado === 'Pausado' || estado === 'PAUSADO') return 'estado-tag PAUSADO';
-    return 'estado-tag';
-  };
+  const handleSelectAllUnidadesCompra = useCallback(() => {
+    if (filters.selectedUnidadesCompra.length === data.relacionesUnidades.length + 1) {
+      setFilters(prev => ({ ...prev, selectedUnidadesCompra: [] }));
+    } else {
+      setFilters(prev => ({ 
+        ...prev, 
+        selectedUnidadesCompra: [0, ...data.relacionesUnidades.map(u => u.id)] 
+      }));
+    }
+  }, [filters.selectedUnidadesCompra.length, data.relacionesUnidades]);
 
-  const shouldDisableActivarButton = () => {
-    if (selectedItems.length === 0) return true;
-    
-    return selectedItems.every(id => {
-      const relacion = relaciones.find(r => r.idAliasAmbitoAplanado === id);
-      return relacion && relacion.idTipoEstadoLocalizacionRam === 1;
-    });
-  };
-  
-  const shouldDisablePausarButton = () => {
-    if (selectedItems.length === 0) return true;
-    
-    return selectedItems.every(id => {
-      const relacion = relaciones.find(r => r.idAliasAmbitoAplanado === id);
-      return relacion && relacion.idTipoEstadoLocalizacionRam === 2;
-    });
-  };
+  // Memoized handlers for filter search text updates
+  const updateMercadoSearchText = useCallback((text) => {
+    setUi(prev => ({ ...prev, mercadoSearchText: text }));
+  }, []);
+
+  const updateCadenaSearchText = useCallback((text) => {
+    setUi(prev => ({ ...prev, cadenaSearchText: text }));
+  }, []);
+
+  const updateAliasSearchText = useCallback((text) => {
+    setUi(prev => ({ ...prev, aliasSearchText: text }));
+  }, []);
+
+  const updateUnidadCompraSearchText = useCallback((text) => {
+    setUi(prev => ({ ...prev, unidadCompraSearchText: text }));
+  }, []);
+
+  const updateLocalizacionSearchText = useCallback((text) => {
+    setUi(prev => ({ ...prev, localizacionSearchText: text }));
+  }, []);
+
+  const toggleShowFilters = useCallback(() => {
+    setUi(prev => ({ ...prev, showFilters: !prev.showFilters }));
+  }, []);
+
+  // Memoized check for alias item disabled state
+  const isAliasDisabled = useCallback((item) => {
+    return idsAliasSelected.length > 0 && !idsAliasSelected.includes(item.id);
+  }, [idsAliasSelected]);
 
   return (
     <div className="edicion-relaciones-container">
@@ -740,14 +1454,14 @@ const EdicionRelaciones = () => {
         <div className="header-buttons">
           <button 
             className="filter-toggle-button"
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={toggleShowFilters}
           >
-            <span>{showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}</span>
+            <span>{ui.showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}</span>
           </button>
         </div>
       </div>
 
-      {idsAliasSelected && idsAliasSelected.length > 0 && (
+      {idsAliasSelected.length > 0 && (
         <div className="info-message">
           <FaInfoCircle className="info-icon" />
           <span>
@@ -758,353 +1472,98 @@ const EdicionRelaciones = () => {
         </div>
       )}
 
-      {showFilters && (
+      {ui.showFilters && (
         <div className="filters-section">
           <div className="filters-row">
-          <div className="filter-item">
-            <div 
-              className="filter-dropdown"
-              onClick={() => toggleFilter('alias')}
-            >
-              <span className="filter-label">Id o Nombre de Alias</span>
-              <div className="filter-value">
-                <span className="filter-placeholder">
-                  {selectedAlias.length > 0 
-                    ? `${selectedAlias.length} seleccionados` 
-                    : 'Seleccionar'}
-                </span>
-                <FaChevronDown className="dropdown-arrow" />
-              </div>
-              {openFilter === 'alias' && (
-                <div className="filter-dropdown-content">
-                  <div className="dropdown-search">
-                    <input 
-                      type="text" 
-                      placeholder="Buscar alias..." 
-                      value={aliasSearchText}
-                      onChange={(e) => handleSearchTextChange(e, setAliasSearchText)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  <div className="dropdown-items-container">
-                    <div className="dropdown-items">
-                      {filteredAlias.map((item) => {
-                        const isSelectable = !idsAliasSelected.length || idsAliasSelected.includes(item.id);
-                        
-                        return (
-                          <div 
-                            key={item.id} 
-                            className={`dropdown-item ${!isSelectable ? 'disabled-item' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isSelectable) {
-                                handleFilterSelect('alias', item.id);
-                              }
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={selectedAlias.includes(item.id)}
-                              readOnly
-                              disabled={!isSelectable}
-                            />
-                            <span>{item.id} - {item.descripcion}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    
-                    {idsAliasSelected.length > 0 ? (
-                      <div 
-                        className="dropdown-item select-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (selectedAlias.length === idsAliasSelected.length) {
-                            setSelectedAlias([]);
-                          } else {
-                            setSelectedAlias([...idsAliasSelected]);
-                          }
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedAlias.length === idsAliasSelected.length && idsAliasSelected.length > 0}
-                          readOnly
-                        />
-                        <span>Seleccionar todos los preseleccionados</span>
-                      </div>
-                    ) : (
-                      <div 
-                        className="dropdown-item select-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (selectedAlias.length === alias.length) {
-                            setSelectedAlias([]);
-                          } else {
-                            setSelectedAlias(alias.map(a => a.id));
-                          }
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedAlias.length === alias.length && alias.length > 0}
-                          readOnly
-                        />
-                        <span>Seleccionar todo</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            {/* Filter de Alias */}
+            <FilterDropdown
+              label="Id o Nombre de Alias"
+              placeholder="Seleccionar"
+              isOpen={ui.openFilter === 'alias'}
+              toggleFilter={toggleFilter}
+              searchText={ui.aliasSearchText}
+              setSearchText={updateAliasSearchText}
+              filteredItems={filteredAlias}
+              selectedItems={filters.selectedAlias}
+              handleFilterSelect={handleFilterSelect}
+              handleSelectAll={handleSelectAllAlias}
+              allItems={idsAliasSelected.length > 0 ? idsAliasSelected : data.alias}
+              isDisabled={isAliasDisabled}
+              filterName="alias"
+            />
             
-            <div className="filter-item">
-              <div 
-                className="filter-dropdown"
-                onClick={() => toggleFilter('mercado')}
-              >
-                <span className="filter-label">Id o Mercado</span>
-                <div className="filter-value">
-                  <span className="filter-placeholder">
-                    {selectedMercados.length > 0 
-                      ? `${selectedMercados.length} seleccionados` 
-                      : 'Seleccionar'}
-                  </span>
-                  <FaChevronDown className="dropdown-arrow" />
-                </div>
-                {openFilter === 'mercado' && (
-                  <div className="filter-dropdown-content">
-                    <div className="dropdown-search">
-                      <input 
-                        type="text" 
-                        placeholder="Buscar mercado..." 
-                        value={mercadoSearchText}
-                        onChange={(e) => handleSearchTextChange(e, setMercadoSearchText)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {filteredMercados.map((mercado) => (
-                          <div 
-                            key={mercado.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFilterSelect('mercado', mercado.id);
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={selectedMercados.includes(mercado.id)}
-                              readOnly
-                            />
-                            <span>{mercado.id} - {mercado.descripcion}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div 
-                        className="dropdown-item select-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (selectedMercados.length === mercados.length) {
-                            setSelectedMercados([]);
-                          } else {
-                            setSelectedMercados(mercados.map(m => m.id));
-                          }
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedMercados.length === mercados.length && mercados.length > 0}
-                          readOnly
-                        />
-                        <span>Seleccionar todo</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Filter de Mercado */}
+            <FilterDropdown
+              label="Id o Mercado"
+              placeholder="Seleccionar"
+              isOpen={ui.openFilter === 'mercado'}
+              toggleFilter={toggleFilter}
+              searchText={ui.mercadoSearchText}
+              setSearchText={updateMercadoSearchText}
+              filteredItems={filteredMercados}
+              selectedItems={filters.selectedMercados}
+              handleFilterSelect={handleFilterSelect}
+              handleSelectAll={handleSelectAllMercados}
+              allItems={data.mercados}
+              filterName="mercado"
+            />
             
-            <div className="filter-item">
-              <div 
-                className="filter-dropdown"
-                onClick={() => toggleFilter('cadena')}
-              >
-                <span className="filter-label">Id o Cadena</span>
-                <div className="filter-value">
-                  <span className="filter-placeholder">
-                    {selectedCadenas.length > 0 
-                      ? `${selectedCadenas.length} seleccionados` 
-                      : 'Seleccionar'}
-                  </span>
-                  <FaChevronDown className="dropdown-arrow" />
-                </div>
-                {openFilter === 'cadena' && (
-                  <div className="filter-dropdown-content">
-                    <div className="dropdown-search">
-                      <input 
-                        type="text" 
-                        placeholder="Buscar cadena..." 
-                        value={cadenaSearchText}
-                        onChange={(e) => handleSearchTextChange(e, setCadenaSearchText)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {filteredCadenas.map((cadena) => (
-                          <div 
-                            key={cadena.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFilterSelect('cadena', cadena.id);
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={selectedCadenas.includes(cadena.id)}
-                              readOnly
-                            />
-                            <span>{cadena.id} - {cadena.descripcion}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div 
-                        className="dropdown-item select-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (selectedCadenas.length === cadenas.length) {
-                            setSelectedCadenas([]);
-                          } else {
-                            setSelectedCadenas(cadenas.map(c => c.id));
-                          }
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedCadenas.length === cadenas.length && cadenas.length > 0}
-                          readOnly
-                        />
-                        <span>Seleccionar todo</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Filter de Cadena */}
+            <FilterDropdown
+              label="Id o Cadena"
+              placeholder="Seleccionar"
+              isOpen={ui.openFilter === 'cadena'}
+              toggleFilter={toggleFilter}
+              searchText={ui.cadenaSearchText}
+              setSearchText={updateCadenaSearchText}
+              filteredItems={filteredCadenas}
+              selectedItems={filters.selectedCadenas}
+              handleFilterSelect={handleFilterSelect}
+              handleSelectAll={handleSelectAllCadenas}
+              allItems={data.cadenas}
+              filterName="cadena"
+            />
             
+            {/* Filter de Localización */}
             <div className="filter-item">
               <div className="filter-input">
                 <span className="filter-label">Id Localización</span>
                 <input 
                   type="text" 
                   placeholder="Escribe ID localización"
-                  value={localizacionSearchText}
-                  onChange={(e) => setLocalizacionSearchText(e.target.value)}
+                  value={ui.localizacionSearchText}
+                  onChange={(e) => updateLocalizacionSearchText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      if (localizacionSearchText.trim()) {
-                        handleFilterSelect('localizacion', parseInt(localizacionSearchText));
-                        setLocalizacionSearchText('');
-                      }
+                      handleSearch();
                     }
                   }}
                 />
               </div>
             </div>
             
-            <div className="filter-item">
-              <div 
-                className="filter-dropdown"
-                onClick={() => toggleFilter('unidadCompra')}
-              >
-                <span className="filter-label">Id o Nombre de Unidad Compras Gestora</span>
-                <div className="filter-value">
-                  <span className="filter-placeholder">
-                    {selectedUnidadesCompra.length > 0 
-                      ? `${selectedUnidadesCompra.length} seleccionados` 
-                      : 'Seleccionar'}
-                  </span>
-                  <FaChevronDown className="dropdown-arrow" />
-                </div>
-                {openFilter === 'unidadCompra' && (
-                  <div className="filter-dropdown-content">
-                    <div className="dropdown-search">
-                      <input 
-                        type="text" 
-                        placeholder="Buscar unidad de compra..." 
-                        value={unidadCompraSearchText}
-                        onChange={(e) => handleSearchTextChange(e, setUnidadCompraSearchText)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        <div 
-                          className="dropdown-item"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFilterSelect('unidadCompra', 0);
-                          }}
-                        >
-                          <input 
-                            type="checkbox" 
-                            checked={selectedUnidadesCompra.includes(0)}
-                            readOnly
-                          />
-                          <span>0 - Sin unidad de compra</span>
-                        </div>
-                        {filteredUnidadesCompra.map((unidad) => (
-                          <div 
-                            key={unidad.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFilterSelect('unidadCompra', unidad.id);
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              checked={selectedUnidadesCompra.includes(unidad.id)}
-                              readOnly
-                            />
-                            <span>{unidad.id} - {unidad.descripcion}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div 
-                        className="dropdown-item select-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (selectedUnidadesCompra.length === relacionesUnidades.length + 1) {
-                            setSelectedUnidadesCompra([]);
-                          } else {
-                            setSelectedUnidadesCompra([0, ...relacionesUnidades.map(u => u.id)]);
-                          }
-                        }}
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedUnidadesCompra.length === relacionesUnidades.length + 1 && relacionesUnidades.length > 0}
-                          readOnly
-                        />
-                        <span>Seleccionar todo</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Filter de Unidad de Compra */}
+            <FilterDropdown
+              label="Id o Nombre de Unidad Compras Gestora"
+              placeholder="Seleccionar"
+              isOpen={ui.openFilter === 'unidadCompra'}
+              toggleFilter={toggleFilter}
+              searchText={ui.unidadCompraSearchText}
+              setSearchText={updateUnidadCompraSearchText}
+              filteredItems={[{id: 0, descripcion: 'Sin unidad de compra'}, ...filteredUnidadesCompra]}
+              selectedItems={filters.selectedUnidadesCompra}
+              handleFilterSelect={handleFilterSelect}
+              handleSelectAll={handleSelectAllUnidadesCompra}
+              allItems={[{id: 0, descripcion: 'Sin unidad de compra'}, ...data.relacionesUnidades]}
+              filterName="unidadCompra"
+            />
             
+            {/* Botón de Búsqueda */}
             <div className="search-button-container">
               <button 
                 className="search-button"
                 onClick={handleSearch}
-                disabled={loading}
+                disabled={ui.loading}
               >
                 <FaSearch className="search-icon" />
                 <span>{t('BUSCAR')}</span>
@@ -1114,12 +1573,13 @@ const EdicionRelaciones = () => {
         </div>
       )}
 
+      {/* Información de resultados */}
       <div className="results-info">
         <span className="results-count">
-          {loading ? t('Cargando...') : 
+          {ui.loading ? t('Cargando...') : 
             t('Cargados {{count}} resultados de {{total}} encontrados', {
-              count: relaciones.length,
-              total: totalElements
+              count: data.relaciones.length,
+              total: ui.totalElements
             })}
           {' '}
           <FaSyncAlt className="sync-icon" />
@@ -1129,38 +1589,48 @@ const EdicionRelaciones = () => {
         </span>
       </div>
       
-      {selectedItems.length > 0 && (
+      {/* Barra de herramientas para selección */}
+      {ui.selectedItems.length > 0 && (
         <div className="selection-toolbar">
           <div className="selection-info">
             <span>
-              {`Seleccionados ${selectedItems.length} resultados de ${totalElements} encontrados`}
+              {`${t('Seleccionados')} ${ui.selectedItems.length} ${t('resultados de')} ${ui.totalElements} ${t('encontrados')}`}
             </span>
           </div>
           <div className="selection-actions">
             <button 
               className="action-button activate-button" 
               onClick={handleActivateRelations}
-              disabled={shouldDisableActivarButton()}
+              disabled={shouldDisableActivateButton() || modal.activateLoading}
             >
-              <span className="action-icon">⚡</span> {t('ACTIVAR')}
+              <span className="action-icon">⚡</span> {modal.activateLoading ? t('ACTIVANDO...') : t('ACTIVAR LÍNEA')}
             </button>
             <button 
               className="action-button pause-button" 
               onClick={handlePauseRelations}
-              disabled={shouldDisablePausarButton()}
+              disabled={shouldDisablePauseButton() || modal.pauseLoading}
             >
-              <span className="action-icon">⏸️</span> {t('PAUSAR')}
+              <span className="action-icon">⏸️</span> {t('PAUSAR LÍNEA')}
+            </button>
+            <button 
+              className="action-button pause-until-button" 
+              onClick={handleOpenPauseModal}
+              disabled={shouldDisablePauseButton() || modal.pauseLoading}
+            >
+              <span className="action-icon">🗓️</span> {t('PAUSAR LÍNEA HASTA')}
             </button>
           </div>
         </div>
       )}
       
-      {error && (
+      {/* Mensajes de error */}
+      {ui.error && (
         <div className="error-message">
-          {error}
+          {ui.error}
         </div>
       )}
 
+      {/* Tabla de datos */}
       <div className="table-container" ref={tableContainerRef}>
         <table className="alias-table">
           <thead>
@@ -1168,9 +1638,9 @@ const EdicionRelaciones = () => {
               <th className="checkbox-column">
                 <input 
                   type="checkbox" 
-                  checked={selectAll} 
+                  checked={ui.selectAll} 
                   onChange={handleSelectAll} 
-                  disabled={relaciones.length === 0 || loading || loadingAllItems}
+                  disabled={data.relaciones.length === 0 || ui.loading || ui.loadingAllItems}
                 />
               </th>
               <th>{t('ID ALIAS')}</th>
@@ -1185,103 +1655,49 @@ const EdicionRelaciones = () => {
             </tr>
           </thead>
           <tbody>
-            {loading || loadingAllItems ? (
+            {ui.loading || ui.loadingAllItems ? (
               <tr>
-                <td colSpan="14" className="loading-cell">
-                  {loadingAllItems ? t('Seleccionando todas las relaciones...') : t('Cargando datos...')}
+                <td colSpan="10" className="loading-cell">
+                  {ui.loadingAllItems ? t('Seleccionando todas las relaciones...') : t('Cargando datos...')}
                 </td>
               </tr>
-            ) : relaciones.length > 0 ? (
-              <>
-                {relaciones.map((relacion) => (
-                  <tr key={relacion.idAliasAmbitoAplanado} className={selectedItems.includes(relacion.idAliasAmbitoAplanado) ? 'selected-row' : ''}>
-                    <td className="checkbox-column">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedItems.includes(relacion.idAliasAmbitoAplanado)} 
-                        onChange={() => handleSelectItem(relacion.idAliasAmbitoAplanado)} 
-                      />
-                    </td>
-                    <td>{relacion.idAlias}</td>
-                    <td>{relacion.idLocalizacionCompra}</td>
-                    <td>{normalizeText(relacion.descripcionLocalizacionCompra)}</td>
-                    <td>{relacion.descripcionCortaCadena}</td>
-                    <td>
-                      <div className="mercado-cell">
-                        <img 
-                          src={`/images/flags/${relacion.codigoIsoMercado?.toLowerCase()}.png`} 
-                          alt={normalizeText(relacion.descripcionMercado)}
-                          className="flag-icon"
-                          onError={(e) => { e.target.style.display = 'none' }}
-                        />
-                        <span>{normalizeText(relacion.descripcionMercado)}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className={estadoClassName(relacion.descripcionTipoEstadoLocalizacionRam)}>
-                        {relacion.descripcionTipoEstadoLocalizacionRam}
-                      </span>
-                    </td>
-                    <td>
-                      {relacion.fechaHoraFinPausa ? 
-                        new Date(relacion.fechaHoraFinPausa).toLocaleDateString() : 
-                        '-'
-                      }
-                    </td>
-                    <td>
-                      <select 
-                        value={relacion.idUnidadComprasGestora}
-                        onChange={(e) => updateUnidadCompra(
-                          relacion.idAliasAmbitoAplanado, 
-                          parseInt(e.target.value)
-                        )}
-                        className="unidad-compra-select"
-                      >
-                        <option value={0}>Ninguna unidad de compra gestora</option>
-                        {unidadesCompra.map(unidad => (
-                          <option key={unidad.id} value={unidad.id}>
-                            {unidad.id} - {normalizeText(unidad.descripcion)}
-                          </option>
-                        ))}
-                      </select>
-                    </td>                    
-                    <td className="global-column">
-                      <select 
-                        value={globalAjenosSelected[relacion.idAliasAmbitoAplanado] || 0}
-                        onChange={(e) => handleGlobalAjenoChange(relacion.idAliasAmbitoAplanado, parseInt(e.target.value))}
-                        className="global-ajeno-select"
-                      >
-                        <option value={0}>Ningún global asignado</option>
-                        {/* Buscar los ajenos para el idAlias actual */}
-                        {ajenos && ajenos.length > 0 && 
-                          ajenos
-                            .filter(ajeno => ajeno.idAlias === relacion.idAlias)
-                            .flatMap(ajeno => 
-                              ajeno.dataAjenos && ajeno.dataAjenos.length > 0 
-                                ? ajeno.dataAjenos.map(dataAjeno => (
-                                    <option key={dataAjeno.idAjeno} value={dataAjeno.idAjeno}>
-                                      {dataAjeno.idAjeno}
-                                    </option>
-                                  ))
-                                : []
-                            )
-                        }
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </>
+            ) : data.relaciones.length > 0 ? (
+              data.relaciones.map((relacion) => (
+                <TableRow
+                  key={relacion.idAliasAmbitoAplanado}
+                  relacion={relacion}
+                  selectedItems={ui.selectedItems}
+                  handleSelectItem={handleSelectItem}
+                  normalizeText={normalizeText}
+                  unidadesCompra={data.unidadesCompra}
+                  updateUnidadCompra={updateUnidadCompra}
+                  globalAjenosSelected={data.globalAjenosSelected}
+                  handleGlobalAjenoChange={handleGlobalAjenoChange}
+                  ajenos={data.ajenos}
+                />
+              ))
             ) : (
               <tr>
-                <td colSpan="14" className="empty-table-message">
+                <td colSpan="10" className="empty-table-message">
                   {t('No hay datos disponibles')}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        
+        {/* Indicador de carga para scroll infinito */}
+        {ui.loadingMore && (
+          <div className="load-more-indicator">
+            {t('Cargando más datos...')}
+          </div>
+        )}
+        
+        {/* Elemento invisible de referencia para scroll infinito */}
+        <div ref={tableEndRef}></div>
       </div>
 
+      {/* Botones de acción en el pie de página */}
       <div className="footer-buttons">
         <button 
           className="cancel-button"
@@ -1292,11 +1708,21 @@ const EdicionRelaciones = () => {
         <button 
           className="save-button"
           onClick={handleSave}
-          disabled={!isModified}
+          disabled={!ui.isModified}
         >
           {t('GUARDAR')}
         </button>
       </div>
+      
+      {/* Modal para pausar relaciones */}
+      <PauseModal 
+        isOpen={modal.pauseModalOpen}
+        onClose={() => setModal(prev => ({ ...prev, pauseModalOpen: false }))}
+        onConfirm={handlePauseModalConfirm}
+        pauseDate={modal.pauseUntilDate}
+        setPauseDate={(date) => setModal(prev => ({ ...prev, pauseUntilDate: date }))}
+        loading={modal.pauseLoading}
+      />
     </div>
   );
 };

@@ -10,5 +10,9 @@ router.get('/unidades-compra', aliasRelacionesController.getRelacionesUnidadesCo
 router.get('/cadenas', aliasController.getCadenas);
 router.get('/mercados', aliasController.getMercados);
 router.get('/lista-alias', aliasController.getAliasFilter);
+router.put('/activate', aliasRelacionesController.activateRelaciones);
+router.put('/pause', aliasRelacionesController.pauseRelaciones);
+router.get('/checkPausedRelations', aliasRelacionesController.checkPausedRelations);
+router.patch('/update', aliasRelacionesController.updateRelaciones);
 
 module.exports = router;
