@@ -782,6 +782,55 @@
   background: #a0a0a0;
 }
 
+.tareas-actions .dropdown {
+  position: relative;
+  z-index: 1500;
+}
+
+.tareas-actions .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: auto;
+  min-width: 300px;
+  width: auto;
+  white-space: nowrap;
+  transform: none;
+  max-width: 350px;
+}
+
+.tareas-actions .dropdown-item {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
+  padding: 12px 15px;
+}
+
+@media (max-width: 400px) {
+  .tareas-actions .dropdown-menu {
+    right: -20px; /* Ajuste para pantallas pequeñas */
+    left: auto; /* Anular el left:0 anterior */
+  }
+}
+
+/* Solo para dispositivos realmente pequeños */
+@media (max-width: 320px) {
+  .tareas-actions .dropdown-menu {
+    right: -30px;
+    width: 280px;
+  }
+}
+
+/* Asegurar que el menú esté contenido dentro de la pantalla */
+@media screen and (max-width: 767px) {
+  .tareas-actions .dropdown-menu {
+    left: auto; /* Anular el left:0 anterior */
+    right: 0;   /* Mantener alineado a la derecha */
+    transform: translateX(0); /* Evitar cualquier transformación */
+  }
+}
+
 @media (max-width: 1200px) {
   .filter-row {
     flex-wrap: wrap;

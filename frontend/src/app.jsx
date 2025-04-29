@@ -18,6 +18,8 @@ import EdicionAlias from './components/edicionAlias';
 import Tareas from './components/tareas';
 import NuevoAlias from './components/nuevoAlias';
 import EdicionRelaciones from './components/edicionRelaciones';
+import NuevaTareaDistribucion from './components/nuevaTareaDistribucion';
+import NuevaTareaRecuento from './components/nuevaTareaRecuento';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -91,6 +93,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <ChangePassword />
+                </PrivateRoute>
+              }
+            />
+            <Route 
+              path="/crear-tarea/distribucion"
+              element={
+                <PrivateRoute>
+                  <NuevaTareaDistribucion />
+                </PrivateRoute>
+              }
+            />
+            <Route 
+              path="/crear-tarea/recuento"
+              element={
+                <PrivateRoute>
+                  <NuevaTareaRecuento />
                 </PrivateRoute>
               }
             />

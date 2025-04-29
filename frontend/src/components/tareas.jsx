@@ -22,7 +22,8 @@ const Tareas = () => {
   const [tamañoPagina] = useState(50);
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
   const [hasMore, setHasMore] = useState(true);
-  
+  const [showNewTaskMenu, setShowNewTaskMenu] = useState(false);
+
   const tableContainerRef = useRef();
   const dropdownRef = useRef(null);
   const [openFilter, setOpenFilter] = useState(null);
@@ -436,7 +437,17 @@ const Tareas = () => {
   };
   
   const handleNuevaTarea = () => {
-    navigate('/crear-tarea');
+    setShowNewTaskMenu(!showNewTaskMenu);
+  };
+
+  const handleNuevaTareaDistribucion = () => {
+    setShowNewTaskMenu(false);
+    navigate('/crear-tarea/distribucion');
+  };
+  
+  const handleNuevaTareaRecuento = () => {
+    setShowNewTaskMenu(false);
+    navigate('/crear-tarea/recuento');
   };
 
   const handleToggleFilters = () => {
@@ -606,6 +617,16 @@ const Tareas = () => {
             <button className="btn-nueva-tarea" onClick={handleNuevaTarea}>
               {t('NUEVA TAREA')} <FaChevronDown />
             </button>
+            {showNewTaskMenu && (
+              <div className="dropdown-menu">
+                <div className="dropdown-item" onClick={handleNuevaTareaDistribucion}>
+                  Alta de nueva tarea de distribución
+                </div>
+                <div className="dropdown-item" onClick={handleNuevaTareaRecuento}>
+                  Alta de nueva tarea de recuento
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1588,6 +1588,26 @@ const EdicionRelaciones = () => {
           </span>
         </span>
       </div>
+
+      <div className="refresh-actions">
+        <button 
+          className="refresh-button"
+          onClick={async () => {
+            try {
+              const response = await axios.get(`${BASE_URL}/relaciones/checkPausedRelations`);
+              if (response.data.success) {
+                alert(`Relaciones actualizadas: ${response.data.updatedCount}`);
+                fetchRelaciones(); // Recargar datos
+              }
+            } catch (error) {
+              console.error('Error al verificar relaciones pausadas:', error);
+            }
+          }}
+        >
+          <FaSyncAlt className="sync-icon" />
+          <span>Verificar Pausas Expiradas</span>
+        </button>
+      </div>
       
       {/* Barra de herramientas para selección */}
       {ui.selectedItems.length > 0 && (

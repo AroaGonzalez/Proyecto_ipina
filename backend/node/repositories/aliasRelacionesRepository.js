@@ -394,6 +394,7 @@ exports.pauseRelaciones = async (relaciones, fechaHoraFinPausa, usuario) => {
 
 exports.activateExpiredPauses = async () => {
   try {
+    // Usamos DATE() para comparar solo las fechas sin la hora
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 1,
@@ -402,7 +403,7 @@ exports.activateExpiredPauses = async () => {
         FECHA_HORA_FIN_PAUSA = NULL
       WHERE ID_TIPO_ESTADO_LOCALIZACION_RAM = 2
         AND FECHA_HORA_FIN_PAUSA IS NOT NULL
-        AND FECHA_HORA_FIN_PAUSA <= CURRENT_TIMESTAMP
+        AND DATE(FECHA_HORA_FIN_PAUSA) <= CURRENT_DATE()
         AND FECHA_BAJA IS NULL
     `;
     
