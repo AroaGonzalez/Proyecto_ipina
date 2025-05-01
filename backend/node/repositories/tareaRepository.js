@@ -541,3 +541,531 @@ function formatResults(results) {
     codigoIsoMercado: result.codigoIsoMercado
   }));
 }
+
+exports.createTarea = async (nombreTarea, descripcion, idTipoTarea, idTipoEstadoTarea, usuarioAlta, fechaAlta) => {
+  try {
+    // Primero obtener el siguiente ID
+    const maxIdQuery = `
+      SELECT MAX(ID_TAREA_RAM) as maxId 
+      FROM AJENOS.TAREA_RAM
+    `;
+    
+    const maxIdResult = await sequelizeAjenos.query(maxIdQuery, {
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    const idTarea = (maxIdResult[0]?.maxId || 0) + 1;
+    
+    const query = `
+      INSERT INTO AJENOS.TAREA_RAM (
+        ID_TAREA_RAM,
+        NOMBRE, 
+        DESCRIPCION, 
+        ID_TIPO_TAREA, 
+        ID_TIPO_ESTADO_TAREA_RAM, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        :idTarea,
+        :nombreTarea, 
+        :descripcion, 
+        :idTipoTarea, 
+        :idTipoEstadoTarea, 
+        :usuarioAlta, 
+        :fechaAlta
+      )
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: {
+        idTarea,
+        nombreTarea,
+        descripcion,
+        idTipoTarea,
+        idTipoEstadoTarea,
+        usuarioAlta,
+        fechaAlta
+      },
+      type: sequelizeAjenos.QueryTypes.INSERT
+    });
+    
+    return idTarea;
+  } catch (error) {
+    console.error('Error al crear tarea:', error);
+    throw error;
+  }
+};
+
+exports.createTareaAlias = async (idTarea, aliasesTarea, usuarioAlta, fechaAlta) => {
+  try {
+    const valores = aliasesTarea.map(alias => `(
+      ${alias.idAlias}, 
+      ${idTarea}, 
+      ${alias.idTipoAlias}, 
+      ${alias.idTipoConexionOrigenDatoAlias ? alias.idTipoConexionOrigenDatoAlias : 'NULL'}, 
+      '${usuarioAlta}', 
+      '${fechaAlta.toISOString().slice(0, 19).replace('T', ' ')}'
+    )`).join(', ');
+    
+    if (!valores) {
+      return;
+    }
+    
+    const query = `
+      INSERT INTO AJENOS.ALIAS_TAREA (
+        ID_ALIAS, 
+        ID_TAREA_RAM, 
+        ID_TIPO_ALIAS, 
+        ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES ${valores}
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      type: sequelizeAjenos.QueryTypes.INSERT
+    });
+  } catch (error) {
+    console.error(`Error al crear alias de tarea para la tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
+exports.createTareaAliasAcople = async (idTarea, aliasesTarea, usuarioAlta, fechaAlta) => {
+  try {
+    const acoples = aliasesTarea
+      .filter(alias => alias.acoples && alias.acoples.length > 0)
+      .flatMap(alias => alias.acoples.map(acople => ({
+        idAlias: acople.idAlias,
+        idAliasAcople: acople.idAliasAcople,
+        idTipoOrigenDatoAlias: 1 // Equivalente a TipoOrigenDatoAliasEnum.ZARA
+      })));
+    
+    if (acoples.length === 0) {
+      return;
+    }
+    
+    const valores = acoples.map(acople => `(
+      ${acople.idAlias}, 
+      ${acople.idAliasAcople}, 
+      ${idTarea}, 
+      ${acople.idTipoOrigenDatoAlias}, 
+      '${usuarioAlta}', 
+      '${fechaAlta.toISOString().slice(0, 19).replace('T', ' ')}'
+    )`).join(', ');
+    
+    const query = `
+      INSERT INTO AJENOS.ALIAS_ACOPLE_TAREA (
+        ID_ALIAS, 
+        ID_ALIAS_ACOPLE, 
+        ID_TAREA_RAM, 
+        ID_TIPO_ORIGEN_DATO_ALIAS, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES ${valores}
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      type: sequelizeAjenos.QueryTypes.INSERT
+    });
+  } catch (error) {
+    console.error(`Error al crear acoples de alias para la tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
+exports.createTareaAmbito = async (idTarea, idTipoReglaAmbito, usuarioAlta, fechaAlta) => {
+  try {
+    // Obtener el siguiente ID
+    const maxIdQuery = `
+      SELECT MAX(ID_TAREA_AMBITO) as maxId 
+      FROM AJENOS.TAREA_AMBITO
+    `;
+    
+    const maxIdResult = await sequelizeAjenos.query(maxIdQuery, {
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    const idTareaAmbito = (maxIdResult[0]?.maxId || 0) + 1;
+    
+    const query = `
+      INSERT INTO AJENOS.TAREA_AMBITO (
+        ID_TAREA_AMBITO,
+        ID_TAREA_RAM, 
+        ID_TIPO_REGLA_AMBITO, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES (
+        :idTareaAmbito,
+        :idTarea, 
+        :idTipoReglaAmbito, 
+        :usuarioAlta, 
+        :fechaAlta
+      )
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: {
+        idTareaAmbito,
+        idTarea,
+        idTipoReglaAmbito,
+        usuarioAlta,
+        fechaAlta
+      },
+      type: sequelizeAjenos.QueryTypes.INSERT
+    });
+    
+    return idTareaAmbito;
+  } catch (error) {
+    console.error(`Error al crear ámbito para la tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
+exports.findTareaAmbitoAplanadoDistribution = async (ambitoAplanados, idTareaAmbito) => {
+  try {
+    // Obtener localizaciones únicas
+    const idsLocalizacionCompra = [...new Set(ambitoAplanados.map(item => item.idLocalizacionCompra))];
+    
+    if (idsLocalizacionCompra.length === 0) {
+      return [];
+    }
+    
+    // Obtener principales (sin alias acople)
+    const principalesQuery = `
+      SELECT DISTINCT 
+        aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
+        aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM as idTipoEstadoLocalizacionRam,
+        1 as idTipoEstadoLocalizacionTarea,
+        a.ID_TIPO_ALIAS as idTipoAlias,
+        a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        a.ID_ALIAS as idAlias,
+        NULL as idAliasAcople
+      FROM AJENOS.ALIAS_AMBITO aa
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = aa.ID_ALIAS
+      LEFT JOIN AJENOS.ALIAS_ACOPLE ac ON ac.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_TAREA ata ON ata.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = ata.ID_TAREA_RAM
+      INNER JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
+      WHERE aaa.ID_LOCALIZACION_COMPRA IN (:idsLocalizacionCompra)
+      AND ta.ID_TAREA_AMBITO = :idTareaAmbito
+      AND aa.FECHA_BAJA IS NULL 
+      AND a.FECHA_BAJA IS NULL 
+      AND aaa.FECHA_BAJA IS NULL
+    `;
+    
+    const principales = await sequelizeAjenos.query(principalesQuery, {
+      replacements: { 
+        idTareaAmbito,
+        idsLocalizacionCompra
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    const compartidosQuery = `
+      SELECT DISTINCT 
+        aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
+        aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM as idTipoEstadoLocalizacionRam,
+        1 as idTipoEstadoLocalizacionTarea,
+        a.ID_TIPO_ALIAS as idTipoAlias,
+        a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        a.ID_ALIAS as idAlias,
+        ac.ID_ALIAS_ACOPLE as idAliasAcople
+      FROM AJENOS.ALIAS_AMBITO aa
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = aa.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_ACOPLE ac ON ac.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_TAREA ata ON ata.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = ata.ID_TAREA_RAM
+      INNER JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
+      WHERE aaa.ID_LOCALIZACION_COMPRA IN (:idsLocalizacionCompra)
+      AND ta.ID_TAREA_AMBITO = :idTareaAmbito
+      AND aa.FECHA_BAJA IS NULL 
+      AND a.FECHA_BAJA IS NULL 
+      AND aaa.FECHA_BAJA IS NULL
+      AND EXISTS (
+          SELECT 1
+          FROM AJENOS.ALIAS_AMBITO aa2
+          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa2 ON aa2.ID_ALIAS_AMBITO = aaa2.ID_ALIAS_AMBITO
+          WHERE aa2.ID_ALIAS = ac.ID_ALIAS_ACOPLE
+          AND aaa2.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA
+          AND aaa2.FECHA_BAJA IS NULL 
+          AND aa2.FECHA_BAJA IS NULL
+      )
+    `;
+    
+    const compartidos = await sequelizeAjenos.query(compartidosQuery, {
+      replacements: { 
+        idTareaAmbito,
+        idsLocalizacionCompra
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return [...principales, ...compartidos];
+  } catch (error) {
+    console.error('Error al obtener datos de ámbito aplanado para distribución:', error);
+    throw error;
+  }
+};
+
+exports.findTareaAmbitoAplanadoCount = async (ambitoAplanados, idTareaAmbito) => {
+  try {
+    // Obtener localizaciones únicas
+    const idsLocalizacionCompra = [...new Set(ambitoAplanados.map(item => item.idLocalizacionCompra))];
+    
+    if (idsLocalizacionCompra.length === 0) {
+      return [];
+    }
+    
+    // Obtener principales
+    const principalesQuery = `
+      SELECT DISTINCT 
+        a.ID_ALIAS as idAlias,
+        aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
+        aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM as idTipoEstadoLocalizacionRam,
+        1 as idTipoEstadoLocalizacionTarea,
+        a.ID_TIPO_ALIAS as idTipoAlias,
+        a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        NULL as idAliasAcople
+      FROM AJENOS.ALIAS a
+      INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.ALIAS_TAREA ata ON ata.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = ata.ID_TAREA_RAM
+      INNER JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
+      WHERE aaa.FECHA_BAJA IS NULL
+      AND aa.FECHA_BAJA IS NULL
+      AND a.FECHA_BAJA IS NULL
+      AND aaa.ID_LOCALIZACION_COMPRA IN (:idsLocalizacionCompra)
+      AND ta.ID_TAREA_AMBITO = :idTareaAmbito
+    `;
+    
+    const principales = await sequelizeAjenos.query(principalesQuery, {
+      replacements: { 
+        idTareaAmbito,
+        idsLocalizacionCompra
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    // Obtener acoples
+    const acoplesQuery = `
+      SELECT DISTINCT 
+        aAcople.ID_ALIAS as idAlias,
+        aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
+        aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM as idTipoEstadoLocalizacionRam,
+        1 as idTipoEstadoLocalizacionTarea,
+        aAcople.ID_TIPO_ALIAS as idTipoAlias,
+        aAcople.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        NULL as idAliasAcople
+      FROM AJENOS.ALIAS_ACOPLE ac
+      INNER JOIN AJENOS.ALIAS aAcople ON aAcople.ID_ALIAS = ac.ID_ALIAS_ACOPLE
+      INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = ac.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = aAcople.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.ALIAS_TAREA ata ON ata.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = ata.ID_TAREA_RAM
+      INNER JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
+      WHERE aaa.FECHA_BAJA IS NULL
+      AND aa.FECHA_BAJA IS NULL
+      AND a.FECHA_BAJA IS NULL
+      AND aAcople.FECHA_BAJA IS NULL
+      AND aaa.ID_LOCALIZACION_COMPRA IN (:idsLocalizacionCompra)
+      AND ta.ID_TAREA_AMBITO = :idTareaAmbito
+    `;
+    
+    const acoples = await sequelizeAjenos.query(acoplesQuery, {
+      replacements: { 
+        idTareaAmbito,
+        idsLocalizacionCompra
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return [...principales, ...acoples];
+  } catch (error) {
+    console.error('Error al obtener datos de ámbito aplanado para conteo:', error);
+    throw error;
+  }
+};
+
+exports.createTareaAmbitoAplanado = async (idTareaAmbito, tareaAmbitoAplanados, usuarioAlta, fechaAlta) => {
+  try {
+    if (!tareaAmbitoAplanados || tareaAmbitoAplanados.length === 0) {
+      return;
+    }
+    
+    // Obtener el máximo ID actual
+    const maxIdQuery = `
+      SELECT MAX(ID_TAREA_AMBITO_APLANADO) as maxId 
+      FROM AJENOS.TAREA_AMBITO_APLANADO
+    `;
+    
+    const maxIdResult = await sequelizeAjenos.query(maxIdQuery, {
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    let nextId = (maxIdResult[0]?.maxId || 0) + 1;
+    
+    // Construir los valores para la inserción con IDs incrementales
+    const valores = tareaAmbitoAplanados.map((item, index) => {
+      const itemId = nextId + index;
+      return `(
+        ${itemId},
+        ${idTareaAmbito}, 
+        ${item.idLocalizacionCompra}, 
+        ${item.idTipoEstadoLocalizacionRam}, 
+        ${item.idTipoEstadoLocalizacionTarea || 1}, 
+        ${item.idTipoAlias}, 
+        ${item.idTipoConexionOrigenDatoAlias ? item.idTipoConexionOrigenDatoAlias : 'NULL'}, 
+        ${item.idAlias}, 
+        ${item.idAliasAcople ? item.idAliasAcople : 'NULL'}, 
+        '${usuarioAlta}', 
+        '${fechaAlta.toISOString().slice(0, 19).replace('T', ' ')}'
+      )`;
+    }).join(', ');
+    
+    const query = `
+      INSERT INTO AJENOS.TAREA_AMBITO_APLANADO (
+        ID_TAREA_AMBITO_APLANADO,
+        ID_TAREA_AMBITO, 
+        ID_LOCALIZACION_COMPRA, 
+        ID_TIPO_ESTADO_LOCALIZACION_RAM, 
+        ID_TIPO_ESTADO_LOCALIZACION_TAREA, 
+        ID_TIPO_ALIAS, 
+        ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS, 
+        ID_ALIAS, 
+        ID_ALIAS_ACOPLE, 
+        USUARIO_ALTA, 
+        FECHA_ALTA
+      ) VALUES ${valores}
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      type: sequelizeAjenos.QueryTypes.INSERT
+    });
+  } catch (error) {
+    console.error('Error al crear ámbito aplanado de tarea:', error);
+    throw error;
+  }
+};
+
+// Añadir al repositorio tareaRepository.js
+
+exports.findAliasByIdTarea = async (idTarea) => {
+  try {
+    const query = `
+      SELECT a.ID_ALIAS as idAlias, a.ID_TIPO_ALIAS as idTipoAlias
+      FROM AJENOS.ALIAS a
+      INNER JOIN AJENOS.ALIAS_TAREA at ON at.ID_ALIAS = a.ID_ALIAS
+      WHERE at.ID_TAREA_RAM = :idTarea AND at.FECHA_BAJA IS NULL
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idTarea },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result;
+  } catch (error) {
+    console.error(`Error al buscar alias para tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
+exports.deleteTareas = async (idsTarea, usuarioBaja, fechaBaja) => {
+  try {
+    const query = `
+      UPDATE AJENOS.TAREA_RAM 
+      SET USUARIO_BAJA = :usuarioBaja, 
+          FECHA_BAJA = :fechaBaja, 
+          ID_TIPO_ESTADO_TAREA_RAM = 3
+      WHERE ID_TAREA_RAM IN (:idsTarea)
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: { 
+        idsTarea,
+        usuarioBaja,
+        fechaBaja
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    return true;
+  } catch (error) {
+    console.error(`Error al eliminar tareas:`, error);
+    throw error;
+  }
+};
+
+exports.findEventosByIdTarea = async (idTarea) => {
+  try {
+    const query = `
+      SELECT etr.ID_EVENTO_RAM as idEvento
+      FROM AJENOS.TAREA_RAM tr
+      LEFT JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_TAREA_RAM = tr.ID_TAREA_RAM
+      WHERE etr.ID_TAREA_RAM = :idTarea
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idTarea },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result.map(item => item.idEvento);
+  } catch (error) {
+    console.error(`Error al buscar eventos para tarea ${idTarea}:`, error);
+    throw error;
+  }
+};
+
+exports.findTareasByIdEvento = async (idEvento) => {
+  try {
+    const query = `
+      SELECT tr.ID_TAREA_RAM as idTarea, tr.ID_TIPO_ESTADO_TAREA_RAM as idTipoEstadoTarea
+      FROM AJENOS.EVENTO_RAM er
+      LEFT JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_EVENTO_RAM = er.ID_EVENTO_RAM
+      LEFT JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
+      WHERE etr.ID_EVENTO_RAM = :idEvento
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idEvento },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result;
+  } catch (error) {
+    console.error(`Error al buscar tareas para evento ${idEvento}:`, error);
+    throw error;
+  }
+};
+
+exports.updateEvento = async (idEvento, usuarioBaja, fechaBaja) => {
+  try {
+    const query = `
+      UPDATE AJENOS.EVENTO_RAM 
+      SET USUARIO_MODIFICACION = :usuarioBaja, 
+          FECHA_MODIFICACION = :fechaBaja, 
+          ID_TIPO_ESTADO_EVENTO_RAM = 1
+      WHERE ID_EVENTO_RAM = :idEvento
+    `;
+    
+    await sequelizeAjenos.query(query, {
+      replacements: { 
+        idEvento,
+        usuarioBaja,
+        fechaBaja
+      },
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    return true;
+  } catch (error) {
+    console.error(`Error al actualizar evento ${idEvento}:`, error);
+    throw error;
+  }
+};

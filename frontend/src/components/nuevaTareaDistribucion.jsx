@@ -27,7 +27,8 @@ const NuevaTareaDistribucion = () => {
   const [showDeleteAction, setShowDeleteAction] = useState(false);
   const [showAmbitoModal, setShowAmbitoModal] = useState(false);
   const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
-  
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+
   useEffect(() => {
     loadAliases();
     
@@ -47,6 +48,45 @@ const NuevaTareaDistribucion = () => {
   useEffect(() => {
     setShowDeleteAction(selectedRowsForDelete.length > 0);
   }, [selectedRowsForDelete]);
+
+  const normalizeText = (text) => {
+    if (!text) return '';
+
+    let normalizedText = text;
+
+    normalizedText = normalizedText
+    .replace(/ESPA.?.'A/g, 'ESPAÑA')
+    .replace(/ESPA.?.A/g, 'ESPAÑA')
+    .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+    .replace(/PEQUE.?.OS/g, 'PEQUEÑOS')
+
+
+    const replacements = {
+    'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+    'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+    'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+    'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+    'Âº': 'º', 'Âª': 'ª',
+    'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+    'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+    'â‚¬': '€',
+    'â€"': '–', 'â€"': '—',
+    'â€œ': '"', 'â€': '"',
+    'â€¢': '•',
+    'â€¦': '…',
+    'Â¡': '¡', 'Â¿': '¿'
+    };
+
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+    normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+
+    return normalizedText;
+  };
+
+  const confirmDeleteTareas = () => {
+    setShowConfirmDelete(true);
+  };
 
   const loadAliases = async () => {
     try {
@@ -131,6 +171,24 @@ const NuevaTareaDistribucion = () => {
       setSelectedAliases([...selectedAliases, alias]);
     }
   };
+
+  const handleDeleteTareas = async (idsTarea) => {
+    try {
+      await axios.post(`${BASE_URL}/api/tareas/delete-tarea`, {
+        idsTarea
+      });
+      
+      // Recargar la lista de tareas después de eliminar
+      fetchTareas();
+      
+      // Si tienes algún estado de selección, resetéalo
+      setSelectedTareas([]);
+      
+    } catch (error) {
+      console.error('Error al eliminar tareas:', error);
+      // Mostrar mensaje de error si es necesario
+    }
+  };
   
   const handleToggleSelectForDelete = (aliasId) => {
     if (selectedRowsForDelete.includes(aliasId)) {
@@ -181,16 +239,59 @@ const NuevaTareaDistribucion = () => {
   
   const handleSubmit = async () => {
     try {
+      const createTareaAlias = selectedAliases.map(alias => ({
+        idAlias: alias.id,
+        idTipoAlias: alias.tipo || 1,
+        idTipoEstadoAlias: alias.estadoId || 2,
+        idTipoConexionOrigenDatoAlias: null,
+        acoples: (alias.acoples || []).map(acople => ({
+          idAliasAcople: acople.id,
+          idTipoConexionOrigenDatoAlias: acople.tipo || 2,
+          idAlias: alias.id
+        }))
+      }));
+  
+      const createTareaAmbitoAplanado = [];
+      selectedLocalizaciones.forEach(loc => {
+        selectedAliases.forEach(alias => {
+          createTareaAmbitoAplanado.push({
+            idAlias: alias.id,
+            idAliasAcople: null,
+            idLocalizacionCompra: loc.idLocalizacion,
+            idTipoEstadoLocalizacionRam: loc.idEstadoLocalizacionRam || 1,
+            idTipoEstadoLocalizacionTarea: 1,
+            idTipoAlias: alias.tipo || 1,
+            idTipoConexionOrigenDatoAlias: null
+          });
+  
+          (alias.acoples || []).forEach(acople => {
+            createTareaAmbitoAplanado.push({
+              idAlias: alias.id,
+              idAliasAcople: acople.id,
+              idLocalizacionCompra: loc.idLocalizacion,
+              idTipoEstadoLocalizacionRam: loc.idEstadoLocalizacionRam || 1,
+              idTipoEstadoLocalizacionTarea: 1,
+              idTipoAlias: alias.tipo || 1,
+              idTipoConexionOrigenDatoAlias: null
+            });
+          });
+        });
+      });
+  
       const tareaData = {
         nombreTarea,
-        descripcionTarea,
+        descripcion: descripcionTarea,
         idTipoTarea: 1,
-        idIdioma: languageId,
-        aliases: selectedAliases.map(alias => alias.id)
+        idTipoEstadoTarea: 1,
+        createTareaAlias,
+        createTareaAmbito: {
+          createTareaAmbitoAplanado,
+          idTipoReglaAmbito: 3
+        }
       };
       
-      await axios.post(`${BASE_URL}/api/tareas`, tareaData);
-      
+      console.log('Enviando payload:', tareaData);
+      await axios.post(`${BASE_URL}/api/tareas/create-tarea`, tareaData);
       navigate('/tareas');
       
     } catch (error) {
@@ -284,7 +385,7 @@ const NuevaTareaDistribucion = () => {
                     />
                     <div className="alias-option-content">
                       <div className="alias-info">
-                        <span className="alias-id">{alias.id} - {alias.nombre} </span>
+                        <span className="alias-id">{alias.id} - {normalizeText(alias.nombre)} </span>
                       </div>
                     </div>
                   </div>
@@ -319,14 +420,35 @@ const NuevaTareaDistribucion = () => {
                   </span>
                 </div>
                 <button 
-                  className="articulos-action-btn delete-btn"
-                  onClick={handleDeleteSelectedItems}
+                  className="delete-button"
+                  onClick={() => handleDeleteTareas(selectedTareas)}
+                  disabled={selectedTareas.length === 0}
                 >
                   <FaTrash className="action-icon" />
                   Eliminar
                 </button>
               </div>
             )}
+            {showConfirmDelete && (
+                <div className="confirm-dialog-overlay">
+                  <div className="confirm-dialog">
+                    <h3>Confirmar eliminación</h3>
+                    <p>¿Estás seguro de que deseas eliminar {selectedTareas.length} tarea(s)?</p>
+                    <div className="dialog-buttons">
+                      <button onClick={() => setShowConfirmDelete(false)}>Cancelar</button>
+                      <button 
+                        className="delete-button"
+                        onClick={() => {
+                          handleDeleteTareas(selectedTareas);
+                          setShowConfirmDelete(false);
+                        }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             
             <table className="alias-table">
               <thead>
@@ -373,7 +495,7 @@ const NuevaTareaDistribucion = () => {
                         />
                       </td>
                       <td>{alias.id}</td>
-                      <td>{alias.nombre}</td>
+                      <td>{normalizeText(alias.nombre)}</td>
                       <td>{alias.tipoDesc}</td>
                       <td className="estado-column">
                         {alias.estadoAlias}
@@ -385,7 +507,7 @@ const NuevaTareaDistribucion = () => {
                       <tr key={`${alias.id}-${acople.id}`} className="acople-row">
                         <td className="acople-cell"></td>
                         <td>{acople.id}</td>
-                        <td>{acople.nombre}</td>
+                        <td>{normalizeText(acople.nombre)}</td>
                         <td>{acople.tipo}</td>
                         <td className="estado-column">
                           {acople.estadoAlias}
@@ -448,9 +570,9 @@ const NuevaTareaDistribucion = () => {
                   <tbody>
                     {selectedLocalizaciones.map(loc => (
                       <tr key={loc.id}>
-                        <td>{loc.idGrupoCadena} - {loc.grupoCadena}</td>
-                        <td>{loc.idCadena} - {loc.cadena}</td>
-                        <td>{loc.mercado}</td>
+                        <td>{loc.idGrupoCadena} - {normalizeText(loc.grupoCadena)}</td>
+                        <td>{loc.idCadena} - {normalizeText(loc.cadena)}</td>
+                        <td>{normalizeText(loc.mercado)}</td>
                         <td>{loc.idLocalizacion}</td>
                         <td>
                           <span className="estado-tag" style={{backgroundColor: '#00A19B', color: 'white', padding: '2px 6px', borderRadius: '2px'}}>

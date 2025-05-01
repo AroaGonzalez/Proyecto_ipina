@@ -35,7 +35,44 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
   const cadenaDropdownRef = useRef(null);
   const mercadoDropdownRef = useRef(null);
 
-  // Fetch initial data when component mounts
+  const normalizeText = (text) => {
+    // Check if text is a string
+    if (!text || typeof text !== 'string') return String(text || '');
+  
+    try {
+      let normalizedText = String(text);
+  
+      normalizedText = normalizedText
+        .replace(/ESPA.?.'A/g, 'ESPAÑA')
+        .replace(/ESPA.?.A/g, 'ESPAÑA');
+  
+      const replacements = {
+        'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+        'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+        'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+        'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+        'Âº': 'º', 'Âª': 'ª',
+        'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+        'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+        'â‚¬': '€',
+        'â€"': '–', 'â€"': '—',
+        'â€œ': '"', 'â€': '"',
+        'â€¢': '•',
+        'â€¦': '…',
+        'Â¡': '¡', 'Â¿': '¿'
+      };
+  
+      Object.entries(replacements).forEach(([badChar, goodChar]) => {
+        normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+      });
+  
+      return normalizedText;
+    } catch (error) {
+      console.error('Error in normalizeText:', error);
+      return String(text || '');
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchInitialData();
@@ -281,7 +318,7 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
       const filtered = mercados.filter(
         mercado => 
             mercado.id?.toString().toLowerCase().includes(searchValue) || 
-        mercado.descripcion?.toLowerCase().includes(searchValue)
+            mercado.descripcion?.toLowerCase().includes(searchValue)
     );
     setFilteredMercados(filtered);
   } else {
@@ -358,10 +395,14 @@ const handleMercadoSelect = (mercado) => {
 };
 
 const handleSave = () => {
-  if (onSave) {
-    onSave(selectedLocalizaciones);
-  }
-  onClose();
+    if (onSave) {
+      const selectedLocalizacionesData = filteredLocalizaciones.filter(loc => 
+        selectedLocalizaciones.includes(loc.id)
+      );
+      
+      onSave(selectedLocalizacionesData);
+    }
+    onClose();
 };
 
 const toggleShowSeleccionadas = () => {
@@ -452,7 +493,7 @@ return (
                           {isSelected && <FaCheck className="checkbox-icon" />}
                         </div>
                         <span className="ambito-dropdown-item-text">
-                          {grupo.id} - {grupo.descripcion}
+                          {grupo.id} - {normalizeText(grupo.descripcion)}
                         </span>
                       </div>
                     );
@@ -534,7 +575,7 @@ return (
                           {isSelected && <FaCheck className="checkbox-icon" />}
                         </div>
                         <span className="ambito-dropdown-item-text">
-                          {cadena.id} - {cadena.descripcion}
+                          {cadena.id} - {normalizeText(cadena.descripcion)}
                         </span>
                       </div>
                     );
@@ -570,7 +611,7 @@ return (
                 {selectedMercados.length === 0 
                   ? 'Id o Mercado' 
                   : selectedMercados.length === 1 
-                    ? `${selectedMercados[0]} - ${mercados.find(m => m.id === selectedMercados[0])?.descripcion || ''}` 
+                    ? `${selectedMercados[0]} - ${normalizeText(mercados.find(m => m.id === selectedMercados[0])?.descripcion || '')}` 
                     : `${selectedMercados.length} seleccionados`}
               </span>
               <FaChevronDown className="dropdown-arrow" />
@@ -610,7 +651,7 @@ return (
                           {isSelected && <FaCheck className="checkbox-icon" />}
                         </div>
                         <span className="ambito-dropdown-item-text">
-                          {mercado.id} - {mercado.descripcion}
+                          {mercado.id} - {normalizeText(mercado.descripcion)}
                         </span>
                       </div>
                     );
@@ -715,9 +756,9 @@ return (
                       />
                     </td>
                     <td>{loc.idGrupoCadena} - {loc.grupoCadena}</td>
-                    <td>{loc.idCadena} - {loc.cadena}</td>
-                    <td>{loc.mercado}</td>
-                    <td>{loc.idLocalizacion}</td>
+                    <td>{loc.idCadena} - {normalizeText(loc.cadena)}</td>
+                    <td>{normalizeText(loc.mercado)}</td>
+                    <td>{normalizeText(loc.idLocalizacion)}</td>
                     <td>{loc.estadoTiendaRam}</td>
                     <td>{loc.estadoTiendaTarea}</td>
                   </tr>

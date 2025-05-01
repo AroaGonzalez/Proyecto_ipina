@@ -17,5 +17,7 @@ router.get('/grupos-cadena', aliasController.getGruposCadena);
 router.put('/:id/estado', tareaController.updateEstadoTarea);
 router.get('/alias-and-acoples', tareaController.getAliasAndAcoples);
 router.post('/tareas-ambito-multiselect', tareaController.calculateTareaAmbitoMultiselect);
+router.post('/create-tarea', tareaController.createTarea);
+router.post('/delete-tarea', tareaController.deleteTareas);
 
 module.exports = router;

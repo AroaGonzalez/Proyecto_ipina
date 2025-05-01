@@ -140,8 +140,6 @@ exports.updateEstadoTarea = async (req, res) => {
         
     await tareaRepository.updateEstadoTarea(parseInt(id), parseInt(idTipoEstadoTarea));
     
-    tareaRepository.invalidateCache('tareas_');
-    
     const tiposEstado = await tareaRepository.getTiposEstadoTarea(parseInt(idIdioma));
     const estadoActualizado = tiposEstado.find(estado => estado.id === parseInt(idTipoEstadoTarea));
     
@@ -163,7 +161,6 @@ exports.getAliasAndAcoples = async (req, res) => {
   try {
     const { idIdioma = 1, idTipoTarea } = req.query;
     
-    // Validar que idTipoTarea exista
     if (!idTipoTarea) {
       return res.status(400).json({ message: 'El parámetro idTipoTarea es requerido' });
     }
@@ -192,10 +189,8 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
       });
     }
     
-    // Get the required values from the request
     const { idsGrupoCadena, idsCadena, idsMercado, idTipoTarea, alias } = requestData;
     
-    // Extract alias IDs and create acoples map
     const idsAlias = [];
     const acoplesMap = new Map();
     
@@ -212,11 +207,9 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
       }
     });
     
-    // Add acoples to the list of alias IDs
     const allAliasIds = [...idsAlias, ...Array.from(acoplesMap.keys())];
     
-    // Get the ID for the "ACTIVA" status
-    const idTipoEstadoLocalizacionTarea = 1; // This is the equivalent of TipoEstadoLocalizacionTareaEnum.ACTIVA
+    const idTipoEstadoLocalizacionTarea = 1;
     
     const result = [];
     
@@ -254,6 +247,134 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
     console.error('Error en calculateTareaAmbitoMultiselect:', error);
     res.status(500).json({ 
       message: 'Error del servidor al calcular el ámbito de tarea', 
+      error: error.message 
+    });
+  }
+};
+
+exports.createTarea = async (req, res) => {
+  try {
+    const request = req.body;
+    const usuarioAlta = req.user ? req.user.username : 'sistema';
+    const fechaAlta = new Date();
+    
+    if (!request.nombreTarea || !request.idTipoTarea || !request.idTipoEstadoTarea) {
+      return res.status(400).json({ message: 'Datos incompletos. Se requiere nombreTarea, idTipoTarea e idTipoEstadoTarea' });
+    }
+    
+    const idTarea = await tareaRepository.createTarea(
+      request.nombreTarea,
+      request.descripcion,
+      request.idTipoTarea,
+      request.idTipoEstadoTarea,
+      usuarioAlta,
+      fechaAlta
+    );
+    
+    if (request.createTareaAlias && request.createTareaAlias.length > 0) {
+      await tareaRepository.createTareaAlias(
+        idTarea,
+        request.createTareaAlias,
+        usuarioAlta,
+        fechaAlta
+      );
+      
+      const tieneAcoples = request.createTareaAlias.some(alias => 
+        alias.acoples && alias.acoples.length > 0
+      );
+      
+      if (tieneAcoples) {
+        await tareaRepository.createTareaAliasAcople(
+          idTarea,
+          request.createTareaAlias,
+          usuarioAlta,
+          fechaAlta
+        );
+      }
+    }
+    
+    const idTareaAmbito = await tareaRepository.createTareaAmbito(
+      idTarea,
+      request.createTareaAmbito ? request.createTareaAmbito.idTipoReglaAmbito : 3,
+      usuarioAlta,
+      fechaAlta
+    );
+    
+    let tareaAmbitoAplanados = [];
+    
+    if (request.idTipoTarea === 1) { // DISTRIBUTION
+      tareaAmbitoAplanados = await tareaRepository.findTareaAmbitoAplanadoDistribution(
+        request.createTareaAmbito.createTareaAmbitoAplanado,
+        idTareaAmbito
+      );
+    } else if (request.idTipoTarea === 2) { // COUNT
+      tareaAmbitoAplanados = await tareaRepository.findTareaAmbitoAplanadoCount(
+        request.createTareaAmbito.createTareaAmbitoAplanado,
+        idTareaAmbito
+      );
+    }
+    
+    if (tareaAmbitoAplanados.length > 0) {
+      await tareaRepository.createTareaAmbitoAplanado(
+        idTareaAmbito,
+        tareaAmbitoAplanados,
+        usuarioAlta,
+        fechaAlta
+      );
+    }
+    
+    res.status(201).json({ 
+      success: true,
+      message: 'Tarea creada correctamente',
+      idTarea
+    });
+    
+  } catch (error) {
+    console.error('Error en createTarea:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al crear la tarea', 
+      error: error.message 
+    });
+  }
+};
+
+exports.deleteTareas = async (req, res) => {
+  try {
+    const { idsTarea } = req.body;
+    
+    if (!idsTarea || !Array.isArray(idsTarea) || idsTarea.length === 0) {
+      return res.status(400).json({ 
+        message: 'Se requiere un arreglo de IDs de tareas' 
+      });
+    }
+    
+    const usuarioBaja = req.user?.username || 'sistema';
+    const fechaBaja = new Date();
+    
+    await tareaRepository.deleteTareas(idsTarea, usuarioBaja, fechaBaja);
+    
+    for (const idTarea of idsTarea) {
+      const eventos = await tareaRepository.findEventosByIdTarea(idTarea);
+      
+      for (const idEvento of eventos) {
+        const tareas = await tareaRepository.findTareasByIdEvento(idEvento);
+        
+        if (tareas.every(t => t.idTipoEstadoTarea === 3)) {
+          await tareaRepository.updateEvento(idEvento, usuarioBaja, fechaBaja);
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Tareas eliminadas correctamente'
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar tareas:', error);
+    res.status(500).json({ 
+      message: 'Error del servidor al eliminar tareas', 
       error: error.message 
     });
   }
