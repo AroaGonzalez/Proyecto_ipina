@@ -1,36 +1,42 @@
 /* Estilos para los componentes de nueva tarea */
 .nueva-tarea-container {
-padding: 20px;
-max-width: 1200px;
-margin: 0 auto;
 font-family: Arial, sans-serif;
+color: #000;
+background-color: #fff;
+padding: 20px;
+max-width: 100%;
+overflow-y: auto;
 }
 
 .nueva-tarea-title {
-font-size: 24px;
-font-weight: normal;
-margin-bottom: 30px;
+font-size: 1.5rem;
+font-weight: 500;
+color: #000;
+margin: 0 0 20px 0;
 text-transform: uppercase;
-text-align: center;
+text-align: left;
 }
 
 .paso-title {
-font-size: 16px;
-margin-bottom: 20px;
+font-size: 1rem;
+font-weight: 500;
+margin-bottom: 15px;
 display: flex;
 align-items: center;
-font-weight: normal;
+background-color: #fff;
 text-transform: uppercase;
+color: #000;
 }
 
 .paso-number {
-font-weight: normal;
+font-weight: bold;
 margin-right: 5px;
 }
 
 .input-container {
 margin-bottom: 30px;
 position: relative;
+max-width: 460px;
 }
 
 .tarea-input, .tarea-textarea {
@@ -55,9 +61,12 @@ font-size: 12px;
 color: #888;
 }
 
+/* Dropdown de alias */
 .alias-select-container {
+position: relative;
 margin-bottom: 20px;
-max-width: 320px;
+max-width: 300px;
+z-index: 1000;
 }
 
 .alias-select {
@@ -66,11 +75,100 @@ padding: 10px;
 border: 1px solid #ccc;
 border-radius: 0;
 font-size: 16px;
-appearance: none;
-background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-background-repeat: no-repeat;
-background-position: right 10px center;
-background-size: 20px;
+cursor: pointer;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.dropdown-arrow {
+font-size: 12px;
+}
+
+.alias-dropdown {
+position: absolute;
+top: 100%;
+left: 0;
+width: 100%;
+max-height: 300px;
+background: white;
+border: 1px solid #ccc;
+border-top: none;
+z-index: 1000;
+box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+.alias-search-container {
+position: relative;
+padding: 10px;
+border-bottom: 1px solid #eee;
+width: 100%;
+}
+
+.alias-search-input {
+width: 100%;
+padding: 8px 30px 8px 10px;
+border: none;
+border-bottom: 1px solid #ccc;
+border-radius: 0;
+font-size: 14px;
+outline: none;
+}
+
+.search-icon {
+position: absolute;
+right: 20px;
+top: 50%;
+transform: translateY(-50%);
+color: #888;
+}
+
+.alias-options-container {
+overflow-y: auto;
+max-height: 250px;
+}
+
+.alias-option {
+padding: 10px;
+cursor: pointer;
+border-bottom: 1px solid #eee;
+display: flex;
+align-items: center;
+}
+
+.alias-option:hover {
+background-color: #f5f5f5;
+}
+
+.alias-checkbox {
+margin-right: 10px;
+}
+
+.alias-option-content {
+flex: 1;
+display: flex;
+flex-direction: column;
+}
+
+.alias-info {
+display: flex;
+margin-bottom: 3px;
+}
+
+.alias-id {
+font-weight: bold;
+margin-right: 5px;
+}
+
+.select-all {
+position: sticky;
+bottom: 0;
+background-color: #f9f9f9;
+border-top: 1px solid #ddd;
+font-weight: bold;
 }
 
 .selected-aliases-container {
@@ -84,6 +182,7 @@ flex-direction: column;
 justify-content: center;
 align-items: center;
 text-align: center;
+max-width: 600px;
 }
 
 .no-aliases-message {
@@ -92,10 +191,6 @@ flex-direction: column;
 align-items: center;
 justify-content: center;
 color: #999;
-}
-
-.search-icon {
-margin-bottom: 15px;
 }
 
 .no-aliases-text {
@@ -109,27 +204,121 @@ font-size: 12px;
 text-transform: uppercase;
 }
 
-.alias-tags {
-display: flex;
-flex-wrap: wrap;
-gap: 10px;
+/* Tabla de alias */
+.alias-table-container {
 width: 100%;
+margin-bottom: 30px;
 }
 
-.alias-tag {
+.alias-count {
+font-size: 14px;
+margin-bottom: 10px;
+text-align: left;
+color: #555;
+}
+
+.alias-table {
+width: 100%;
+border-collapse: collapse;
+border: 1px solid #ddd;
+}
+
+.alias-table th, 
+.alias-table td {
+border: 1px solid #ddd;
+padding: 8px;
+text-align: left;
+}
+
+.alias-table th {
+background-color: #f8f8f8;
+font-size: 12px;
+font-weight: bold;
+text-transform: uppercase;
+}
+
+.alias-row:hover {
+background-color: #f5f5f5;
+}
+
+/* Expandable rows */
+.expand-cell {
 display: flex;
 align-items: center;
-background-color: #f0f0f0;
-border-radius: 0;
-padding: 5px 10px;
 }
 
-.remove-alias-btn {
+.expand-button {
 background: none;
 border: none;
-font-size: 18px;
+padding: 0;
+margin-right: 5px;
 cursor: pointer;
-margin-left: 5px;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 18px;
+height: 18px;
+}
+
+.expand-icon {
+font-size: 12px;
+color: #555;
+}
+
+.expand-placeholder {
+width: 18px;
+margin-right: 5px;
+}
+
+.acople-row {
+background-color: #f9f9f9;
+}
+
+.acople-row td {
+padding-left: 20px;
+}
+
+.acople-cell {
+padding-left: 28px !important;
+}
+
+.alias-row.expanded {
+background-color: #f0f7ff;
+}
+
+/* Estado tags */
+.estado-column {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.estado-tag {
+padding: 2px 5px;
+font-size: 12px;
+color: white;
+}
+
+.estado-produccion {
+background-color: #3498db;
+}
+
+.estado-pausado {
+background-color: #f39c12;
+}
+
+.estado-borrador {
+background-color: #e74c3c;
+}
+
+.ratio-column {
+text-align: center;
+}
+
+.description-text {
+font-size: 14px;
+color: #555;
+margin-top: 10px;
 }
 
 .buttons-container {
@@ -137,15 +326,16 @@ display: flex;
 justify-content: flex-end;
 gap: 10px;
 margin-top: 20px;
+max-width: 600px;
 }
 
 .cancel-button, .create-button {
 padding: 10px 20px;
 border-radius: 0;
-font-weight: normal;
+font-weight: bold;
 cursor: pointer;
 text-transform: uppercase;
-min-width: 100px;
+min-width: 120px;
 }
 
 .cancel-button {
@@ -158,4 +348,9 @@ color: #000;
 background-color: #000;
 color: white;
 border: none;
+}
+
+.create-button:disabled {
+background-color: #ccc;
+cursor: not-allowed;
 }

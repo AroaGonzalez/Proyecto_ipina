@@ -302,6 +302,242 @@ exports.updateEstadoTarea = async (idTarea, idTipoEstadoTarea) => {
   }
 };
 
-exports.invalidateCache = (pattern = null) => {
-  cache.clear(pattern);
+exports.findAliasWithAcoples = async (idIdioma = 1, idTipoTarea) => {
+  try {
+    const idTipoAlias = [parseInt(idTipoTarea)];
+    
+    const sqlQuery = `
+      SELECT a.ID_ALIAS as idAlias, ai.NOMBRE as nombre, a.ID_TIPO_ALIAS as idTipoAlias, 
+        tai.DESCRIPCION as descripcionTipoAlias, a.ID_TIPO_ESTADO_ALIAS as idTipoEstadoAlias, 
+        teai.DESCRIPCION as descripcionTipoEstadoAlias, a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        aa.ID_ALIAS_ACOPLE as idAliasAcople, aa.RATIO_ACOPLE as ratioAcople, ai_acople.NOMBRE as nombreAcople,
+        acople.ID_TIPO_ALIAS as idTipoAliasAcople, acople.ID_TIPO_ESTADO_ALIAS as idTipoEstadoAliasAcople,
+        teai_acople.DESCRIPCION as descripcionTipoEstadoAliasAcople, acople.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAliasAcople
+      FROM AJENOS.ALIAS a
+      INNER JOIN AJENOS.ALIAS_IDIOMA ai ON ai.ID_ALIAS = a.ID_ALIAS AND ai.ID_IDIOMA = :idIdioma
+      INNER JOIN AJENOS.TIPO_ALIAS_IDIOMA tai ON tai.ID_TIPO_ALIAS = a.ID_TIPO_ALIAS AND tai.ID_IDIOMA = :idIdioma
+      INNER JOIN AJENOS.TIPO_ESTADO_ALIAS_IDIOMA teai ON teai.ID_TIPO_ESTADO_ALIAS = a.ID_TIPO_ESTADO_ALIAS AND teai.ID_IDIOMA = :idIdioma
+      LEFT JOIN AJENOS.ALIAS_ACOPLE aa ON aa.ID_ALIAS = a.ID_ALIAS AND aa.FECHA_BAJA IS NULL
+      LEFT JOIN AJENOS.ALIAS acople ON acople.ID_ALIAS = aa.ID_ALIAS_ACOPLE
+      LEFT JOIN AJENOS.ALIAS_IDIOMA ai_acople ON ai_acople.ID_ALIAS = acople.ID_ALIAS AND ai_acople.ID_IDIOMA = :idIdioma
+      LEFT JOIN AJENOS.TIPO_ALIAS_IDIOMA tai_acople ON tai_acople.ID_TIPO_ALIAS = acople.ID_TIPO_ALIAS AND tai_acople.ID_IDIOMA = :idIdioma
+      LEFT JOIN AJENOS.TIPO_ESTADO_ALIAS_IDIOMA teai_acople ON teai_acople.ID_TIPO_ESTADO_ALIAS = acople.ID_TIPO_ESTADO_ALIAS AND teai_acople.ID_IDIOMA = :idIdioma
+      WHERE UPPER(teai.DESCRIPCION) NOT IN ('ELIMINADO', 'DELETED')
+      AND (teai_acople.DESCRIPCION IS NULL OR UPPER(teai_acople.DESCRIPCION) NOT IN ('ELIMINADO', 'DELETED'))
+      AND (a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS = 1 OR a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS IS NULL)
+      AND a.FECHA_BAJA IS NULL
+      AND a.ID_TIPO_ALIAS IN (:idTipoAlias)
+      ORDER BY a.ID_ALIAS ASC
+    `;
+    
+    const result = await sequelizeAjenos.query(sqlQuery, {
+      replacements: { 
+        idIdioma,
+        idTipoAlias
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return createAliasWithAcoples(result);
+  } catch (error) {
+    console.error('Error en findAliasWithAcoples:', error);
+    throw error;
+  }
 };
+
+function createAliasWithAcoples(results) {
+  const aliasMap = {};
+  
+  for (const result of results) {
+    const idAlias = result.idAlias;
+    
+    if (!aliasMap[idAlias]) {
+      aliasMap[idAlias] = {
+        idAlias,
+        nombre: fixEncoding(result.nombre),
+        idTipoAlias: result.idTipoAlias,
+        descripcionTipoAlias: fixEncoding(result.descripcionTipoAlias),
+        idTipoEstadoAlias: result.idTipoEstadoAlias,
+        descripcionTipoEstadoAlias: fixEncoding(result.descripcionTipoEstadoAlias),
+        idTipoConexionOrigenDatoAlias: result.idTipoConexionOrigenDatoAlias,
+        acoples: []
+      };
+    }
+    
+    if (result.idAliasAcople) {
+      const acople = {
+        idAliasAcople: result.idAliasAcople,
+        ratioAcople: result.ratioAcople,
+        nombreAcople: fixEncoding(result.nombreAcople),
+        idTipoAliasAcople: result.idTipoAliasAcople,
+        idTipoEstadoAliasAcople: result.idTipoEstadoAliasAcople,
+        descripcionTipoEstadoAliasAcople: fixEncoding(result.descripcionTipoEstadoAliasAcople),
+        idTipoConexionOrigenDatoAliasAcople: result.idTipoConexionOrigenDatoAliasAcople
+      };
+      
+      const acopleExists = aliasMap[idAlias].acoples.some(a => a.idAliasAcople === acople.idAliasAcople);
+      
+      if (!acopleExists) {
+        aliasMap[idAlias].acoples.push(acople);
+      }
+    }
+  }
+  
+  return Object.values(aliasMap);
+}
+
+exports.findTareaAmbitoAplanadoByIdAlias = async function(idIdioma, idsAlias, idsPais, idsGrupoCadena, idsCadena, idTipoEstadoLocalizacionTarea) {
+  try {
+    const { sequelizeAjenos } = require('../utils/database');
+    
+    const query = `
+      SELECT 
+        GC.ID_GRUPO_CADENA as idGrupoCadena,
+        GC.DESCRIPCION as descripcionGrupoCadena,
+        C.ID_CADENA as idCadena,
+        C.NOMBRE as descripcionCadena,
+        LC.ID_PAIS as idMercado,
+        P.DESCRIPCION as descripcionMercado,
+        LC.ID_LOCALIZACION as idLocalizacionCompra,
+        LC.DESCRIPCION as descripcionLocalizacionCompra,
+        TELR.ID_TIPO_ESTADO_LOCALIZACION as idEstadoLocalizacionRam,
+        COALESCE(TELRI.DESCRIPCION, TELR.DESCRIPCION) as descripcionEstadoLocalizacionRam,
+        TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA as idEstadoLocalizacionTarea,
+        COALESCE(TELTCI.DESCRIPCION, TELTC.DESCRIPCION) as descripcionEstadoLocalizacionTarea,
+        P.PAIS_ISO as codigoIsoMercado
+      FROM AJENOS.ALIAS_AMBITO AA
+      INNER JOIN AJENOS.ALIAS A ON A.ID_ALIAS = AA.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO AAA ON AA.ID_ALIAS_AMBITO = AAA.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA LC ON AAA.ID_LOCALIZACION_COMPRA = LC.ID_LOCALIZACION_COMPRA
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA_RAM LCR ON LC.ID_LOCALIZACION_COMPRA = LCR.ID_LOCALIZACION_COMPRA
+      INNER JOIN MAESTROS.PAIS P ON LC.ID_PAIS = P.ID_PAIS
+      INNER JOIN MAESTROS.GRUPO_CADENA_CADENA GCC ON LC.ID_CADENA = GCC.ID_CADENA
+      INNER JOIN MAESTROS.GRUPO_CADENA GC ON GCC.ID_GRUPO_CADENA = GC.ID_GRUPO_CADENA
+      INNER JOIN MAESTROS.CADENA C ON C.ID_CADENA = GCC.ID_CADENA
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM TELR ON LCR.ID_TIPO_ESTADO_LOCALIZACION_RAM = TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA TELRI ON TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM = TELRI.ID_TIPO_ESTADO_LOCALIZACION_RAM
+      AND TELRI.ID_IDIOMA = :idIdioma
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_TAREA TELTC ON TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA = :idTipoEstadoLocalizacionTarea
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_TAREA_IDIOMA TELTCI ON TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA = TELTCI.ID_TIPO_ESTADO_LOCALIZACION_TAREA
+      AND TELTCI.ID_IDIOMA = :idIdioma
+      WHERE AA.ID_ALIAS IN (:idsAlias)
+      AND LC.ID_PAIS IN (:idsPais)
+      AND GC.ID_GRUPO_CADENA IN (:idsGrupoCadena)
+      AND C.ID_CADENA IN (:idsCadena)
+      AND AA.FECHA_BAJA IS NULL
+      AND AAA.FECHA_BAJA IS NULL
+      AND LC.FECHA_BAJA IS NULL
+      GROUP BY GC.ID_GRUPO_CADENA, GC.DESCRIPCION,
+      C.ID_CADENA, C.NOMBRE, LC.ID_PAIS, P.DESCRIPCION, LC.ID_LOCALIZACION, LC.DESCRIPCION, TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM,
+      COALESCE(TELRI.DESCRIPCION, TELR.DESCRIPCION), TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA, COALESCE(TELTCI.DESCRIPCION, TELTC.DESCRIPCION),
+      P.PAIS_ISO
+      ORDER BY LC.ID_LOCALIZACION
+    `;
+    
+    const results = await sequelizeAjenos.query(query, {
+      replacements: {
+        idIdioma,
+        idsAlias,
+        idsPais,
+        idsGrupoCadena,
+        idsCadena,
+        idTipoEstadoLocalizacionTarea
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return formatResults(results);
+  } catch (error) {
+    console.error('Error en findTareaAmbitoAplanadoByIdAlias:', error);
+    throw error;
+  }
+};
+
+exports.findTareaAmbitoAplanadoByIdAliasConAcople = async function(idIdioma, idsAlias, idsPais, idsGrupoCadena, idsCadena, idTipoEstadoLocalizacionTarea) {
+  try {
+    const { sequelizeAjenos } = require('../utils/database');
+    
+    const query = `
+      SELECT 
+        GC.ID_GRUPO_CADENA as idGrupoCadena,
+        GC.DESCRIPCION as descripcionGrupoCadena,
+        C.ID_CADENA as idCadena, 
+        C.NOMBRE as descripcionCadena, 
+        LC.ID_PAIS as idMercado, 
+        P.DESCRIPCION as descripcionMercado,
+        LC.ID_LOCALIZACION as idLocalizacionCompra, 
+        LC.DESCRIPCION as descripcionLocalizacionCompra,
+        TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM as idEstadoLocalizacionRam, 
+        COALESCE(TELRI.DESCRIPCION, TELR.DESCRIPCION) as descripcionEstadoLocalizacionRam,
+        TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA as idEstadoLocalizacionTarea,
+        COALESCE(TELTCI.DESCRIPCION, TELTC.DESCRIPCION) as descripcionEstadoLocalizacionTarea, 
+        P.PAIS_ISO as codigoIsoMercado
+      FROM AJENOS.ALIAS_AMBITO as AA
+      INNER JOIN AJENOS.ALIAS A ON A.ID_ALIAS = AA.ID_ALIAS
+      LEFT JOIN AJENOS.ALIAS_ACOPLE AC ON A.ID_ALIAS = AC.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO AAA ON AA.ID_ALIAS_AMBITO = AAA.ID_ALIAS_AMBITO
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA LC ON AAA.ID_LOCALIZACION_COMPRA = LC.ID_LOCALIZACION_COMPRA
+      INNER JOIN AJENOS.LOCALIZACION_COMPRA_RAM LCR ON LC.ID_LOCALIZACION_COMPRA = LCR.ID_LOCALIZACION_COMPRA
+      INNER JOIN MAESTROS.PAIS P ON LC.ID_PAIS = P.ID_PAIS
+      INNER JOIN MAESTROS.GRUPO_CADENA_CADENA GCC ON LC.ID_CADENA = GCC.ID_CADENA
+      INNER JOIN MAESTROS.GRUPO_CADENA GC ON GCC.ID_GRUPO_CADENA = GC.ID_GRUPO_CADENA
+      INNER JOIN MAESTROS.CADENA C ON C.ID_CADENA = GCC.ID_CADENA
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM TELR ON LCR.ID_TIPO_ESTADO_LOCALIZACION_RAM = TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_RAM_IDIOMA TELRI ON TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM = TELRI.ID_TIPO_ESTADO_LOCALIZACION_RAM
+      AND TELRI.ID_IDIOMA = :idIdioma
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_TAREA TELTC ON TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA = :idTipoEstadoLocalizacionTarea
+      LEFT JOIN AJENOS.TIPO_ESTADO_LOCALIZACION_TAREA_IDIOMA TELTCI ON TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA = TELTCI.ID_TIPO_ESTADO_LOCALIZACION_TAREA
+      AND TELTCI.ID_IDIOMA = :idIdioma
+      WHERE AA.ID_ALIAS IN (:idsAlias) AND AAA.ID_LOCALIZACION_COMPRA IN (
+        SELECT AAAC.ID_LOCALIZACION_COMPRA
+        FROM AJENOS.ALIAS_AMBITO_APLANADO AAAC
+        INNER JOIN AJENOS.ALIAS_AMBITO as AAC ON AAC.ID_ALIAS_AMBITO = AAAC.ID_ALIAS_AMBITO
+        LEFT JOIN AJENOS.ALIAS_ACOPLE ACOPLE ON (AAC.ID_ALIAS = ACOPLE.ID_ALIAS_ACOPLE)
+        WHERE GC.ID_GRUPO_CADENA IN (:idsGrupoCadena) AND C.ID_CADENA IN (:idsCadena) 
+        AND P.ID_PAIS IN (:idsPais) AND AA.FECHA_BAJA IS NULL
+        AND AAA.FECHA_BAJA IS NULL AND LC.FECHA_BAJA IS NULL
+        AND (ACOPLE.ID_ALIAS IN (:idsAlias) OR ACOPLE.ID_ALIAS IS NULL)
+      )
+      GROUP BY GC.ID_GRUPO_CADENA, GC.DESCRIPCION,
+      C.ID_CADENA, C.NOMBRE, LC.ID_PAIS, P.DESCRIPCION, LC.ID_LOCALIZACION, LC.DESCRIPCION, TELR.ID_TIPO_ESTADO_LOCALIZACION_RAM,
+      COALESCE(TELRI.DESCRIPCION, TELR.DESCRIPCION), TELTC.ID_TIPO_ESTADO_LOCALIZACION_TAREA, COALESCE(TELTCI.DESCRIPCION, TELTC.DESCRIPCION),
+      P.PAIS_ISO
+      ORDER BY LC.ID_LOCALIZACION
+    `;
+    
+    const results = await sequelizeAjenos.query(query, {
+      replacements: {
+        idIdioma,
+        idsAlias,
+        idsPais,
+        idsGrupoCadena,
+        idsCadena,
+        idTipoEstadoLocalizacionTarea
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return formatResults(results);
+  } catch (error) {
+    console.error('Error en findTareaAmbitoAplanadoByIdAliasConAcople:', error);
+    throw error;
+  }
+};
+
+function formatResults(results) {
+  return results.map(result => ({
+    idGrupoCadena: result.idGrupoCadena,
+    descripcionGrupoCadena: fixEncoding(result.descripcionGrupoCadena),
+    idCadena: result.idCadena,
+    descripcionCadena: fixEncoding(result.descripcionCadena),
+    idMercado: result.idMercado,
+    descripcionMercado: fixEncoding(result.descripcionMercado),
+    idLocalizacionCompra: result.idLocalizacionCompra,
+    descripcionLocalizacionCompra: fixEncoding(result.descripcionLocalizacionCompra),
+    idEstadoLocalizacionRam: result.idEstadoLocalizacionRam,
+    descripcionEstadoLocalizacionRam: fixEncoding(result.descripcionEstadoLocalizacionRam),
+    idEstadoLocalizacionTarea: result.idEstadoLocalizacionTarea,
+    descripcionEstadoLocalizacionTarea: fixEncoding(result.descripcionEstadoLocalizacionTarea),
+    codigoIsoMercado: result.codigoIsoMercado
+  }));
+}

@@ -1,9 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaChevronRight, FaChevronDown, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
+import DefinirAmbitoModal from './definirAmbitoModal';
 import '../styles/nuevaTarea.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
@@ -12,6 +13,7 @@ const NuevaTareaDistribucion = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
+  const dropdownRef = useRef(null);
   
   const [nombreTarea, setNombreTarea] = useState('');
   const [descripcionTarea, setDescripcionTarea] = useState('');
@@ -19,63 +21,191 @@ const NuevaTareaDistribucion = () => {
   const [aliasOptions, setAliasOptions] = useState([]);
   const [aliasSearchTerm, setAliasSearchTerm] = useState('');
   const [showAliasDropdown, setShowAliasDropdown] = useState(false);
+  const [selectedAll, setSelectedAll] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
+  const [selectedRowsForDelete, setSelectedRowsForDelete] = useState([]);
+  const [showDeleteAction, setShowDeleteAction] = useState(false);
+  const [showAmbitoModal, setShowAmbitoModal] = useState(false);
+  const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
   
-  // Función para buscar alias
-  const handleAliasSearch = async () => {
+  useEffect(() => {
+    loadAliases();
+    
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowAliasDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    setShowDeleteAction(selectedRowsForDelete.length > 0);
+  }, [selectedRowsForDelete]);
+
+  const loadAliases = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/tareas/alias/search`, {
+      const response = await axios.get(`${BASE_URL}/api/tareas/alias-and-acoples`, {
         params: {
-          term: aliasSearchTerm,
-          idIdioma: languageId
+          idIdioma: languageId,
+          idTipoTarea: 1
         }
       });
       
-      setAliasOptions(response.data || []);
-      setShowAliasDropdown(true);
+      const formattedOptions = response.data.map(alias => ({
+        id: alias.idAlias,
+        nombre: alias.nombre,
+        tipo: alias.idTipoAlias, 
+        tipoDesc: alias.descripcionTipoAlias || 'TIPO I',
+        estadoId: alias.idTipoEstadoAlias,
+        estadoAlias: alias.descripcionTipoEstadoAlias || 'PRODUCCIÓN',
+        acoples: (alias.acoples || []).map(acople => ({
+          id: acople.idAliasAcople,
+          nombre: acople.nombreAcople,
+          ratio: acople.ratioAcople,
+          tipo: acople.idTipoAliasAcople,
+          estadoId: acople.idTipoEstadoAliasAcople,
+          estadoAlias: acople.descripcionTipoEstadoAliasAcople
+        }))
+      }));
+      
+      setAliasOptions(formattedOptions || []);
+    } catch (error) {
+      console.error('Error al cargar alias:', error);
+    }
+  };
+
+  const handleAliasSearch = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/tareas/alias-and-acoples`, {
+        params: {
+          term: aliasSearchTerm,
+          idIdioma: languageId,
+          idTipoTarea: 1
+        }
+      });
+      
+      const formattedOptions = response.data.map(alias => ({
+        id: alias.idAlias,
+        nombre: alias.nombre,
+        tipo: alias.idTipoAlias, 
+        tipoDesc: alias.descripcionTipoAlias,
+        estadoId: alias.idTipoEstadoAlias,
+        estadoAlias: alias.descripcionTipoEstadoAlias,
+        acoples: (alias.acoples || []).map(acople => ({
+          id: acople.idAliasAcople,
+          nombre: acople.nombreAcople,
+          ratio: acople.ratioAcople,
+          tipo: acople.idTipoAliasAcople,
+          estadoId: acople.idTipoEstadoAliasAcople,
+          estadoAlias: acople.descripcionTipoEstadoAliasAcople
+        }))
+      }));
+      
+      setAliasOptions(formattedOptions || []);
     } catch (error) {
       console.error('Error al buscar alias:', error);
     }
   };
+
+  const toggleAliasDropdown = () => {
+    setShowAliasDropdown(!showAliasDropdown);
+  };
   
-  // Función para seleccionar un alias
+  const handleSearchInputChange = (e) => {
+    setAliasSearchTerm(e.target.value);
+    handleAliasSearch();
+  };
+  
   const handleSelectAlias = (alias) => {
-    if (!selectedAliases.some(a => a.id === alias.id)) {
+    const isSelected = selectedAliases.some(a => a.id === alias.id);
+    
+    if (isSelected) {
+      setSelectedAliases(selectedAliases.filter(a => a.id !== alias.id));
+    } else {
       setSelectedAliases([...selectedAliases, alias]);
     }
-    setAliasSearchTerm('');
-    setShowAliasDropdown(false);
   };
   
-  // Función para eliminar un alias seleccionado
-  const handleRemoveAlias = (aliasId) => {
-    setSelectedAliases(selectedAliases.filter(alias => alias.id !== aliasId));
+  const handleToggleSelectForDelete = (aliasId) => {
+    if (selectedRowsForDelete.includes(aliasId)) {
+      setSelectedRowsForDelete(selectedRowsForDelete.filter(id => id !== aliasId));
+    } else {
+      setSelectedRowsForDelete([...selectedRowsForDelete, aliasId]);
+    }
+  };
+
+  const handleSelectAllForDelete = (event) => {
+    if (event.target.checked) {
+      setSelectedRowsForDelete(selectedAliases.map(alias => alias.id));
+    } else {
+      setSelectedRowsForDelete([]);
+    }
+  };
+
+  const handleDeleteSelectedItems = () => {
+    const updatedAliases = selectedAliases.filter(alias => !selectedRowsForDelete.includes(alias.id));
+    setSelectedAliases(updatedAliases);
+    
+    setSelectedRowsForDelete([]);
   };
   
-  // Función para crear la tarea
+  const handleSelectAll = () => {
+    if (selectedAll) {
+      setSelectedAliases([]);
+    } else {
+      setSelectedAliases([...aliasOptions]);
+    }
+    setSelectedAll(!selectedAll);
+  };
+  
+  const isAliasSelected = (aliasId) => {
+    return selectedAliases.some(alias => alias.id === aliasId);
+  };
+  
+  const toggleRowExpand = (aliasId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [aliasId]: !prev[aliasId]
+    }));
+  };
+  
+  const hasAcoples = (alias) => {
+    return alias.acoples && alias.acoples.length > 0;
+  };
+  
   const handleSubmit = async () => {
     try {
       const tareaData = {
         nombreTarea,
         descripcionTarea,
-        idTipoTarea: 1, // 1 para Distribución
+        idTipoTarea: 1,
         idIdioma: languageId,
         aliases: selectedAliases.map(alias => alias.id)
       };
       
       await axios.post(`${BASE_URL}/api/tareas`, tareaData);
       
-      // Navegar de vuelta a la lista de tareas
       navigate('/tareas');
       
     } catch (error) {
       console.error('Error al crear la tarea:', error);
-      // Aquí podrías mostrar un mensaje de error
     }
   };
   
   const handleCancel = () => {
     navigate('/tareas');
   };
+  
+  const filteredAliases = aliasOptions.filter(alias => 
+    alias.nombre.toLowerCase().includes(aliasSearchTerm.toLowerCase()) ||
+    alias.id.toString().includes(aliasSearchTerm.toLowerCase())
+  );
   
   return (
     <div className="nueva-tarea-container">
@@ -85,7 +215,7 @@ const NuevaTareaDistribucion = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 1 -</span>DATOS GENERALES DE LA TAREA
+          <span className="paso-number">PASO 1 -</span> DATOS GENERALES DE LA TAREA
         </div>
         
         <div className="input-container">
@@ -114,33 +244,240 @@ const NuevaTareaDistribucion = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 2 -</span>ALIAS Y ÁMBITO QUE INCUIRÁ ESTA TAREA
+          <span className="paso-number">PASO 2 -</span> ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA
         </div>
         
-        <div className="alias-select-container">
-          <select 
-            className="alias-select" 
-            value={aliasSearchTerm} 
-            onChange={(e) => setAliasSearchTerm(e.target.value)}
+        <div className="alias-select-container" ref={dropdownRef}>
+          <div 
+            className="alias-select"
+            onClick={toggleAliasDropdown}
           >
-            <option value="">Id o Nombre de Alias *</option>
-            {aliasOptions.map(alias => (
-              <option key={alias.id} value={alias.id}>
-                {alias.id} - {alias.nombre}
-              </option>
-            ))}
-          </select>
+            <span>{aliasSearchTerm || "Id o Nombre de Alias *"}</span>
+            <span className="dropdown-arrow">▼</span>
+          </div>
+          
+          {showAliasDropdown && (
+            <div className="alias-dropdown">
+              <div className="alias-search-container">
+                <input
+                  type="text"
+                  className="alias-search-input"
+                  placeholder="Buscar..."
+                  value={aliasSearchTerm}
+                  onChange={handleSearchInputChange}
+                />
+                <FaSearch className="search-icon" />
+              </div>
+              
+              <div className="alias-options-container">
+                {filteredAliases.map(alias => (
+                  <div 
+                    key={alias.id} 
+                    className="alias-option"
+                    onClick={() => handleSelectAlias(alias)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isAliasSelected(alias.id)}
+                      onChange={() => {}}
+                      className="alias-checkbox"
+                    />
+                    <div className="alias-option-content">
+                      <div className="alias-info">
+                        <span className="alias-id">{alias.id} - {alias.nombre} </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <div 
+                  className="alias-option select-all"
+                  onClick={handleSelectAll}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAll}
+                    onChange={() => {}}
+                    className="alias-checkbox"
+                  />
+                  <span>Seleccionar todo</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
-        <div className="selected-aliases-container">
-          <div className="no-aliases-message">
-            <div className="search-icon">
-              <FaSearch size={30} />
+        {selectedAliases.length > 0 ? (
+          <div className="alias-table-container">
+            <div className="alias-count">{selectedAliases.length} alias incluidos</div>
+            
+            {showDeleteAction && (
+              <div className="articulos-actions-bar">
+                <div className="articulos-selection-info">
+                  <span className="articulos-selected-count">
+                    {selectedRowsForDelete.length} alias seleccionados
+                  </span>
+                </div>
+                <button 
+                  className="articulos-action-btn delete-btn"
+                  onClick={handleDeleteSelectedItems}
+                >
+                  <FaTrash className="action-icon" />
+                  Eliminar
+                </button>
+              </div>
+            )}
+            
+            <table className="alias-table">
+              <thead>
+                <tr>
+                  <th className="checkbox-column">
+                    <input 
+                      type="checkbox" 
+                      onChange={handleSelectAllForDelete}
+                      checked={selectedRowsForDelete.length === selectedAliases.length && selectedAliases.length > 0}
+                    />
+                  </th>
+                  <th>ID ALIAS</th>
+                  <th>ALIAS</th>
+                  <th>ALIAS TIPO</th>
+                  <th>ESTADO ALIAS</th>
+                  <th>ALIAS PRINCIPAL ASOCIADO (RATIO)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedAliases.map(alias => (
+                  <React.Fragment key={alias.id}>
+                    <tr className={`alias-row ${expandedRows[alias.id] ? 'expanded' : ''}`}>
+                      <td className="expand-cell">
+                        {hasAcoples(alias) ? (
+                          <button 
+                            className="expand-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRowExpand(alias.id);
+                            }}
+                          >
+                            {expandedRows[alias.id] ? 
+                              <FaChevronDown className="expand-icon" /> : 
+                              <FaChevronRight className="expand-icon" />
+                            }
+                          </button>
+                        ) : (
+                          <span className="expand-placeholder"></span>
+                        )}
+                        <input
+                          type="checkbox"
+                          checked={selectedRowsForDelete.includes(alias.id)}
+                          onChange={() => handleToggleSelectForDelete(alias.id)}
+                        />
+                      </td>
+                      <td>{alias.id}</td>
+                      <td>{alias.nombre}</td>
+                      <td>{alias.tipoDesc}</td>
+                      <td className="estado-column">
+                        {alias.estadoAlias}
+                      </td>
+                      <td className="ratio-column">-</td>
+                    </tr>
+                    
+                    {expandedRows[alias.id] && alias.acoples && alias.acoples.map(acople => (
+                      <tr key={`${alias.id}-${acople.id}`} className="acople-row">
+                        <td className="acople-cell"></td>
+                        <td>{acople.id}</td>
+                        <td>{acople.nombre}</td>
+                        <td>{acople.tipo}</td>
+                        <td className="estado-column">
+                          {acople.estadoAlias}
+                        </td>
+                        <td className="ratio-column">{acople.ratio}</td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+            
+            <div className="description-text">
+              Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.
             </div>
-            <p className="no-aliases-text">NO HAY ALIAS SELECCIONADOS</p>
-            <p className="aliases-help-text">UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA</p>
+          
+            <button 
+              className="cancel-button" 
+              style={{ 
+                marginTop: '20px',
+                width: 'auto',
+                textTransform: 'uppercase',
+                fontSize: '0.9rem',
+                padding: '10px 25px',
+                fontWeight: 'bold',
+                display: 'inline-block'
+              }}
+              onClick={() => setShowAmbitoModal(true)}
+            >
+              DEFINIR ÁMBITO
+            </button>
+            
+            <DefinirAmbitoModal 
+              isOpen={showAmbitoModal} 
+              onClose={() => setShowAmbitoModal(false)}
+              onSave={(localizaciones) => {
+                console.log('Localizaciones seleccionadas:', localizaciones);
+                setSelectedLocalizaciones(localizaciones);
+                setShowAmbitoModal(false);
+              }}
+              selectedAliases={selectedAliases}
+            />
+
+            {selectedLocalizaciones.length > 0 && (
+              <div className="ambito-selected-table" style={{ marginTop: '20px' }}>
+                <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
+                  {selectedLocalizaciones.length} localizaciones en las que se distribuirá la tarea
+                </div>
+                <table className="alias-table">
+                  <thead>
+                    <tr>
+                      <th>ID/GRUPO CADENA</th>
+                      <th>ID/CADENA</th>
+                      <th>MERCADO</th>
+                      <th>ID/LOCALIZACIÓN</th>
+                      <th>ESTADO DE TIENDA RAM</th>
+                      <th>ESTADO DE LA TIENDA EN LA TAREA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedLocalizaciones.map(loc => (
+                      <tr key={loc.id}>
+                        <td>{loc.idGrupoCadena} - {loc.grupoCadena}</td>
+                        <td>{loc.idCadena} - {loc.cadena}</td>
+                        <td>{loc.mercado}</td>
+                        <td>{loc.idLocalizacion}</td>
+                        <td>
+                          <span className="estado-tag" style={{backgroundColor: '#00A19B', color: 'white', padding: '2px 6px', borderRadius: '2px'}}>
+                            {loc.estadoTiendaRam}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="estado-tag" style={{backgroundColor: '#00A19B', color: 'white', padding: '2px 6px', borderRadius: '2px'}}>
+                            {loc.estadoTiendaTarea}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
           </div>
-        </div>
+        ) : (
+          <div className="selected-aliases-container">
+            <div className="no-aliases-message">
+              <p className="no-aliases-text">NO HAY ALIAS SELECCIONADOS</p>
+              <p className="aliases-help-text">UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA</p>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="buttons-container">

@@ -158,3 +158,103 @@ exports.updateEstadoTarea = async (req, res) => {
     });
   }
 };
+
+exports.getAliasAndAcoples = async (req, res) => {
+  try {
+    const { idIdioma = 1, idTipoTarea } = req.query;
+    
+    // Validar que idTipoTarea exista
+    if (!idTipoTarea) {
+      return res.status(400).json({ message: 'El parámetro idTipoTarea es requerido' });
+    }
+    
+    const result = await tareaRepository.findAliasWithAcoples(parseInt(idIdioma), idTipoTarea);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getAliasAndAcoples:', error);
+    res.status(500).json({ 
+      message: 'Error del servidor al obtener alias y acoples', 
+      error: error.message 
+    });
+  }
+};
+
+exports.calculateTareaAmbitoMultiselect = async (req, res) => {
+  try {
+    const { idIdioma = 1 } = req.query;
+    const requestData = req.body;
+    
+    if (!requestData || !requestData.idsGrupoCadena || !requestData.idsCadena || 
+        !requestData.idsMercado || !requestData.alias || !requestData.idTipoTarea) {
+      return res.status(400).json({ 
+        message: 'Los parámetros idsGrupoCadena, idsCadena, idsMercado, idTipoTarea y alias son requeridos' 
+      });
+    }
+    
+    // Get the required values from the request
+    const { idsGrupoCadena, idsCadena, idsMercado, idTipoTarea, alias } = requestData;
+    
+    // Extract alias IDs and create acoples map
+    const idsAlias = [];
+    const acoplesMap = new Map();
+    
+    alias.forEach(aliasItem => {
+      idsAlias.push(aliasItem.idAlias);
+      
+      if (aliasItem.acoples && aliasItem.acoples.length > 0) {
+        aliasItem.acoples.forEach(acople => {
+          if (!acoplesMap.has(acople.idAliasAcople)) {
+            acoplesMap.set(acople.idAliasAcople, new Set());
+          }
+          acoplesMap.get(acople.idAliasAcople).add(aliasItem.idAlias);
+        });
+      }
+    });
+    
+    // Add acoples to the list of alias IDs
+    const allAliasIds = [...idsAlias, ...Array.from(acoplesMap.keys())];
+    
+    // Get the ID for the "ACTIVA" status
+    const idTipoEstadoLocalizacionTarea = 1; // This is the equivalent of TipoEstadoLocalizacionTareaEnum.ACTIVA
+    
+    const result = [];
+    
+    if (idTipoTarea === 2) { // COUNT type - equivalent to TipoTareaEnum.COUNT
+      const ambitoAplanadoAlias = await tareaRepository.findTareaAmbitoAplanadoByIdAlias(
+        parseInt(idIdioma),
+        allAliasIds,
+        idsMercado,
+        idsGrupoCadena,
+        idsCadena,
+        idTipoEstadoLocalizacionTarea
+      );
+      
+      result.push(...ambitoAplanadoAlias);
+    }
+    
+    if (idTipoTarea === 1) { // DISTRIBUTION type - equivalent to TipoTareaEnum.DISTRIBUTION
+      const ambitoAplanadoAlias = await tareaRepository.findTareaAmbitoAplanadoByIdAliasConAcople(
+        parseInt(idIdioma),
+        idsAlias,
+        idsMercado,
+        idsGrupoCadena,
+        idsCadena,
+        idTipoEstadoLocalizacionTarea
+      );
+      
+      result.push(...ambitoAplanadoAlias);
+    }
+    
+    // Sort by localization ID
+    result.sort((a, b) => a.idLocalizacionCompra - b.idLocalizacionCompra);
+    
+    return res.json(result);
+  } catch (error) {
+    console.error('Error en calculateTareaAmbitoMultiselect:', error);
+    res.status(500).json({ 
+      message: 'Error del servidor al calcular el ámbito de tarea', 
+      error: error.message 
+    });
+  }
+};
