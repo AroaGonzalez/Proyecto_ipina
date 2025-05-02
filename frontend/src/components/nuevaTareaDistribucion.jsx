@@ -27,7 +27,6 @@ const NuevaTareaDistribucion = () => {
   const [showDeleteAction, setShowDeleteAction] = useState(false);
   const [showAmbitoModal, setShowAmbitoModal] = useState(false);
   const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     loadAliases();
@@ -84,8 +83,16 @@ const NuevaTareaDistribucion = () => {
     return normalizedText;
   };
 
-  const confirmDeleteTareas = () => {
-    setShowConfirmDelete(true);
+  const handleDeleteSelectedRows = () => {
+    const updatedAliases = selectedAliases.filter(alias => !selectedRowsForDelete.includes(alias.id));
+    setSelectedAliases(updatedAliases);
+    setSelectedRowsForDelete([]);
+    
+    try {
+      handleDeleteTareas(selectedRowsForDelete);
+    } catch (error) {
+      console.error('Error during delete operation:', error);
+    }
   };
 
   const loadAliases = async () => {
@@ -101,9 +108,9 @@ const NuevaTareaDistribucion = () => {
         id: alias.idAlias,
         nombre: alias.nombre,
         tipo: alias.idTipoAlias, 
-        tipoDesc: alias.descripcionTipoAlias || 'TIPO I',
+        tipoDesc: alias.descripcionTipoAlias,
         estadoId: alias.idTipoEstadoAlias,
-        estadoAlias: alias.descripcionTipoEstadoAlias || 'PRODUCCIÓN',
+        estadoAlias: alias.descripcionTipoEstadoAlias,
         acoples: (alias.acoples || []).map(acople => ({
           id: acople.idAliasAcople,
           nombre: acople.nombreAcople,
@@ -178,15 +185,11 @@ const NuevaTareaDistribucion = () => {
         idsTarea
       });
       
-      // Recargar la lista de tareas después de eliminar
-      fetchTareas();
-      
-      // Si tienes algún estado de selección, resetéalo
       setSelectedTareas([]);
+      setSelectedRowsForDelete([]);
       
     } catch (error) {
       console.error('Error al eliminar tareas:', error);
-      // Mostrar mensaje de error si es necesario
     }
   };
   
@@ -204,13 +207,6 @@ const NuevaTareaDistribucion = () => {
     } else {
       setSelectedRowsForDelete([]);
     }
-  };
-
-  const handleDeleteSelectedItems = () => {
-    const updatedAliases = selectedAliases.filter(alias => !selectedRowsForDelete.includes(alias.id));
-    setSelectedAliases(updatedAliases);
-    
-    setSelectedRowsForDelete([]);
   };
   
   const handleSelectAll = () => {
@@ -367,7 +363,6 @@ const NuevaTareaDistribucion = () => {
                   value={aliasSearchTerm}
                   onChange={handleSearchInputChange}
                 />
-                <FaSearch className="search-icon" />
               </div>
               
               <div className="alias-options-container">
@@ -421,35 +416,14 @@ const NuevaTareaDistribucion = () => {
                 </div>
                 <button 
                   className="delete-button"
-                  onClick={() => handleDeleteTareas(selectedTareas)}
-                  disabled={selectedTareas.length === 0}
+                  onClick={handleDeleteSelectedRows}
+                  disabled={selectedRowsForDelete.length === 0}
                 >
                   <FaTrash className="action-icon" />
                   Eliminar
                 </button>
               </div>
-            )}
-            {showConfirmDelete && (
-                <div className="confirm-dialog-overlay">
-                  <div className="confirm-dialog">
-                    <h3>Confirmar eliminación</h3>
-                    <p>¿Estás seguro de que deseas eliminar {selectedTareas.length} tarea(s)?</p>
-                    <div className="dialog-buttons">
-                      <button onClick={() => setShowConfirmDelete(false)}>Cancelar</button>
-                      <button 
-                        className="delete-button"
-                        onClick={() => {
-                          handleDeleteTareas(selectedTareas);
-                          setShowConfirmDelete(false);
-                        }}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            
+            )}            
             <table className="alias-table">
               <thead>
                 <tr>
