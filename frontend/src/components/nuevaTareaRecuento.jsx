@@ -9,7 +9,7 @@ import '../styles/nuevaTarea.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
-const NuevaTareaDistribucion = () => {
+const NuevaTareaRecuento = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);

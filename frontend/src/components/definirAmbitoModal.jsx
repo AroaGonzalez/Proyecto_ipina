@@ -6,14 +6,14 @@ import '../styles/definirAmbitoModal.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
-const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) => {
+const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], initialSelections = {} }) => {
   const { languageId } = useContext(LanguageContext);
   const [gruposCadena, setGruposCadena] = useState([]);
   const [cadenas, setCadenas] = useState([]);
   const [mercados, setMercados] = useState([]);
-  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
-  const [selectedCadenas, setSelectedCadenas] = useState([]);
-  const [selectedMercados, setSelectedMercados] = useState([]);
+  const [selectedGruposCadena, setSelectedGruposCadena] = useState(initialSelections.gruposCadena || []);
+  const [selectedCadenas, setSelectedCadenas] = useState(initialSelections.cadenas || []);
+  const [selectedMercados, setSelectedMercados] = useState(initialSelections.mercados || []);
   const [selectedLocalizaciones, setSelectedLocalizaciones] = useState([]);
   const [localizaciones, setLocalizaciones] = useState([]);
   const [showSeleccionadas, setShowSeleccionadas] = useState(false);
@@ -34,6 +34,8 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
   const grupoCadenaDropdownRef = useRef(null);
   const cadenaDropdownRef = useRef(null);
   const mercadoDropdownRef = useRef(null);
+  
+  const [localizacionesInicializadas, setLocalizacionesInicializadas] = useState(false);
 
   const normalizeText = (text) => {
     // Check if text is a string
@@ -80,13 +82,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
   }, [isOpen, languageId]);
 
   useEffect(() => {
-    console.log('Estado de selecciones:', {
-      selectedGruposCadena,
-      selectedCadenas, 
-      selectedMercados,
-      aliasesCount: selectedAliases?.length || 0,
-      isOpen
-    });
     
     if (isOpen && 
         selectedGruposCadena.length > 0 && 
@@ -138,6 +133,38 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
     };
   }, []);
 
+  useEffect(() => {
+    if (localizaciones.length > 0 && !localizacionesInicializadas) {
+      // Extract the group, chain and market IDs from the existing locations
+      if (initialSelections.existingLocations && initialSelections.existingLocations.length > 0) {
+        // Get all unique group, chain and market IDs from the existing locations
+        const locationData = localizaciones.filter(loc => 
+          initialSelections.existingLocations.some(existingLoc => 
+            existingLoc.idLocalizacion === loc.idLocalizacion || 
+            existingLoc.idLocalizacion === parseInt(loc.id)
+          )
+        );
+        
+        // Update selected dropdowns based on existing locations
+        if (locationData.length > 0) {
+          const uniqueGrupoIds = [...new Set(locationData.map(loc => loc.idGrupoCadena))];
+          const uniqueCadenaIds = [...new Set(locationData.map(loc => loc.idCadena))];
+          const uniqueMercadoIds = [...new Set(locationData.map(loc => loc.idMercado))];
+          
+          setSelectedGruposCadena(uniqueGrupoIds);
+          setSelectedCadenas(uniqueCadenaIds);
+          setSelectedMercados(uniqueMercadoIds);
+        }
+        
+        // Pre-select the locations
+        const existingLocationIds = locationData.map(loc => loc.id);
+        setSelectedLocalizaciones(existingLocationIds);
+      }
+      
+      setLocalizacionesInicializadas(true);
+    }
+  }, [localizaciones, localizacionesInicializadas, initialSelections]);
+  
   const fetchInitialData = async () => {
     try {
       const [gruposCadenaRes, cadenasRes, mercadosRes] = await Promise.all([
@@ -152,7 +179,9 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [] }) =
       
       const cadenasData = cadenasRes.data || [];
       setCadenas(cadenasData);
-      setFilteredCadenas(cadenasData);
+      
+      // Actualizar las cadenas filtradas basado en los grupos seleccionados
+      updateCadenasBySelectedGrupos(selectedGruposCadena, cadenasData);
       
       const mercadosData = mercadosRes.data || [];
       setMercados(mercadosData);
@@ -355,13 +384,13 @@ const handleGrupoCadenaSelect = (grupo) => {
   updateCadenasBySelectedGrupos(newSelectedGrupos);
 };
 
-const updateCadenasBySelectedGrupos = (selectedGrupos) => {
+const updateCadenasBySelectedGrupos = (selectedGrupos, cadenasData = cadenas) => {
   if (selectedGrupos.length === 0) {
     setFilteredCadenas([]);
     return;
   }
   
-  const cadenasFiltradas = cadenas.filter(
+  const cadenasFiltradas = cadenasData.filter(
     cadena => selectedGrupos.includes(cadena.idGrupoCadena)
   );
   
@@ -427,6 +456,40 @@ const filteredLocalizaciones = localizaciones.filter(loc => {
   return true;
 });
 
+// Formatear texto para comboboxes
+const getSelectedGrupoCadenaText = () => {
+  if (selectedGruposCadena.length === 0) {
+    return 'Id o Grupo Cadena (16)';
+  } else if (selectedGruposCadena.length === 1) {
+    const grupo = gruposCadena.find(g => g.id === selectedGruposCadena[0]);
+    return `${selectedGruposCadena[0]} - ${grupo?.descripcion || 'Zara'}`;
+  } else {
+    return `${selectedGruposCadena.length} seleccionados`;
+  }
+};
+
+const getSelectedCadenaText = () => {
+  if (selectedCadenas.length === 0) {
+    return 'Id o Cadena';
+  } else if (selectedCadenas.length === 1) {
+    const cadena = cadenas.find(c => c.id === selectedCadenas[0]);
+    return `${selectedCadenas[0]} - ${cadena?.descripcion || 'Zara'}`;
+  } else {
+    return `${selectedCadenas.length} seleccionados`;
+  }
+};
+
+const getSelectedMercadoText = () => {
+  if (selectedMercados.length === 0) {
+    return 'Id o Mercado';
+  } else if (selectedMercados.length === 1) {
+    const mercado = mercados.find(m => m.id === selectedMercados[0]);
+    return `${selectedMercados[0]} - ${normalizeText(mercado?.descripcion || 'ESPAÑA')}`;
+  } else {
+    return `${selectedMercados.length} seleccionados`;
+  }
+};
+
 if (!isOpen) return null;
 
 return (
@@ -447,13 +510,7 @@ return (
         <div className="ambito-dropdowns-row">
           <div className="ambito-dropdown-container" ref={grupoCadenaDropdownRef}>
             <div className="ambito-dropdown-field" onClick={toggleGrupoCadenaDropdown}>
-              <span>
-                {selectedGruposCadena.length === 0 
-                  ? 'Id o Grupo Cadena (16)' 
-                  : selectedGruposCadena.length === 1 
-                    ? `${selectedGruposCadena[0]} - ${gruposCadena.find(g => g.id === selectedGruposCadena[0])?.descripcion || ''}` 
-                    : `${selectedGruposCadena.length} seleccionados`}
-              </span>
+              <span>{getSelectedGrupoCadenaText()}</span>
               <FaChevronDown className="dropdown-arrow" />
             </div>
             
@@ -529,13 +586,7 @@ return (
           
           <div className="ambito-dropdown-container" ref={cadenaDropdownRef}>
             <div className="ambito-dropdown-field" onClick={toggleCadenaDropdown}>
-              <span>
-                {selectedCadenas.length === 0 
-                  ? 'Id o Cadena' 
-                  : selectedCadenas.length === 1 
-                    ? `${selectedCadenas[0]} - ${cadenas.find(c => c.id === selectedCadenas[0])?.descripcion || ''}` 
-                    : `${selectedCadenas.length} seleccionados`}
-              </span>
+              <span>{getSelectedCadenaText()}</span>
               <FaChevronDown className="dropdown-arrow" />
             </div>
             
@@ -607,13 +658,7 @@ return (
           
           <div className="ambito-dropdown-container" ref={mercadoDropdownRef}>
             <div className="ambito-dropdown-field" onClick={toggleMercadoDropdown}>
-              <span>
-                {selectedMercados.length === 0 
-                  ? 'Id o Mercado' 
-                  : selectedMercados.length === 1 
-                    ? `${selectedMercados[0]} - ${normalizeText(mercados.find(m => m.id === selectedMercados[0])?.descripcion || '')}` 
-                    : `${selectedMercados.length} seleccionados`}
-              </span>
+              <span>{getSelectedMercadoText()}</span>
               <FaChevronDown className="dropdown-arrow" />
             </div>
             

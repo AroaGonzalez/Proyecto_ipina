@@ -1,0 +1,399 @@
+/* editarTarea.css */
+.nueva-tarea-container {
+  font-family: Arial, sans-serif;
+  color: #000;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 100%;
+  overflow-y: auto;
+}
+
+.nueva-tarea-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #000;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.paso-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.paso-number {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.input-container {
+  margin-bottom: 30px;
+  position: relative;
+  max-width: 460px;
+}
+
+.tarea-input, .tarea-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.tarea-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.counter {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Dropdown de alias */
+.alias-select-container {
+  position: relative;
+  margin-bottom: 20px;
+  max-width: 300px;
+  z-index: 1000;
+}
+
+.alias-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+}
+
+.alias-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.alias-search-container {
+  position: relative;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  width: 100%;
+}
+
+.alias-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 10px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.alias-options-container {
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+.alias-option {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.alias-option:hover {
+  background-color: #f5f5f5;
+}
+
+.alias-checkbox {
+  margin-right: 10px;
+}
+
+.alias-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.alias-info {
+  display: flex;
+  margin-bottom: 3px;
+}
+
+.alias-id {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.select-all {
+  position: sticky;
+  bottom: 0;
+  background-color: #f9f9f9;
+  border-top: 1px solid #ddd;
+  font-weight: bold;
+}
+
+.selected-aliases-container {
+  min-height: 150px;
+  border: 1px solid #eee;
+  border-radius: 0;
+  padding: 40px 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+}
+
+.no-aliases-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.no-aliases-text {
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.aliases-help-text {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Tabla de alias */
+.alias-table-container {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.alias-count {
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-align: left;
+  color: #555;
+}
+
+.alias-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+}
+
+.alias-table th, 
+.alias-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.alias-table th {
+  background-color: #f8f8f8;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.alias-row:hover {
+  background-color: #f5f5f5;
+}
+
+/* Expandable rows */
+.expand-cell {
+  display: flex;
+  align-items: center;
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-right: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.expand-icon {
+  font-size: 12px;
+  color: #555;
+}
+
+.expand-placeholder {
+  width: 18px;
+  margin-right: 5px;
+}
+
+.acople-row {
+  background-color: #f9f9f9;
+}
+
+.acople-row td {
+  padding-left: 20px;
+}
+
+.acople-cell {
+  padding-left: 28px !important;
+}
+
+.alias-row.expanded {
+  background-color: #f0f7ff;
+}
+
+/* Estado tags */
+.estado-column {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.estado-tag {
+  padding: 2px 5px;
+  font-size: 12px;
+  color: white;
+  background-color: #2ab356;
+}
+
+.estado-produccion {
+  background-color: #3498db;
+}
+
+.estado-pausado {
+  background-color: #f39c12;
+}
+
+.estado-borrador {
+  background-color: #e74c3c;
+}
+
+.ratio-column {
+  text-align: center;
+}
+
+.description-text {
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  max-width: 600px;
+}
+
+.cancel-button, .create-button {
+  padding: 10px 20px;
+  border-radius: 0;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  min-width: 120px;
+}
+
+.cancel-button {
+  background-color: white;
+  border: 1px solid #000;
+  color: #000;
+}
+
+.create-button {
+  background-color: #000;
+  color: white;
+  border: none;
+}
+
+.create-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilos para action bar */
+.articulos-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-bottom: none;
+}
+
+.delete-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  background-color: #f44336;
+  color: white;
+}
+
+.action-icon {
+  font-size: 14px;
+}
+
+.loading-indicator,
+.error-message {
+  padding: 50px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.error-message {
+  color: #d32f2f;
+}

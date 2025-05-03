@@ -20,6 +20,7 @@ import NuevoAlias from './components/nuevoAlias';
 import EdicionRelaciones from './components/edicionRelaciones';
 import NuevaTareaDistribucion from './components/nuevaTareaDistribucion';
 import NuevaTareaRecuento from './components/nuevaTareaRecuento';
+import EditarTarea from './components/editarTarea';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -69,6 +70,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <NuevoAlias />
+                </PrivateRoute>
+              }
+            />
+            <Route 
+              path="/editar-tarea/:id"
+              element={
+                <PrivateRoute>
+                  <EditarTarea />
                 </PrivateRoute>
               }
             />

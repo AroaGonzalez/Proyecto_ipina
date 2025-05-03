@@ -213,7 +213,7 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
     
     const result = [];
     
-    if (idTipoTarea === 2) { // COUNT type - equivalent to TipoTareaEnum.COUNT
+    if (idTipoTarea === 2) { // COUNT type 
       const ambitoAplanadoAlias = await tareaRepository.findTareaAmbitoAplanadoByIdAlias(
         parseInt(idIdioma),
         allAliasIds,
@@ -226,7 +226,7 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
       result.push(...ambitoAplanadoAlias);
     }
     
-    if (idTipoTarea === 1) { // DISTRIBUTION type - equivalent to TipoTareaEnum.DISTRIBUTION
+    if (idTipoTarea === 1) { // DISTRIBUTION type 
       const ambitoAplanadoAlias = await tareaRepository.findTareaAmbitoAplanadoByIdAliasConAcople(
         parseInt(idIdioma),
         idsAlias,
@@ -239,7 +239,6 @@ exports.calculateTareaAmbitoMultiselect = async (req, res) => {
       result.push(...ambitoAplanadoAlias);
     }
     
-    // Sort by localization ID
     result.sort((a, b) => a.idLocalizacionCompra - b.idLocalizacionCompra);
     
     return res.json(result);
@@ -375,6 +374,138 @@ exports.deleteTareas = async (req, res) => {
     console.error('Error al eliminar tareas:', error);
     res.status(500).json({ 
       message: 'Error del servidor al eliminar tareas', 
+      error: error.message 
+    });
+  }
+};
+exports.getTareaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { idIdioma = 1 } = req.query;
+    
+    console.log(`[CONTROLLER] Iniciando getTareaById - id: ${id}, idIdioma: ${idIdioma}`);
+    
+    // Limpiar caché para esta tarea específica
+    const { cache } = require('../repositories/tareaRepository');
+    console.log(`[CONTROLLER] Caché limpiada para tarea ${id}`);
+    
+    const tareaInfo = await tareaRepository.findTareaInfoUpdate(parseInt(id), parseInt(idIdioma));
+    
+    console.log(`[CONTROLLER] Resultado de findTareaInfoUpdate:`, JSON.stringify(tareaInfo, null, 2));
+    
+    if (!tareaInfo) {
+      console.log(`[CONTROLLER] No se encontró la tarea con id: ${id}`);
+      return res.status(404).json({ message: 'Tarea no encontrada' });
+    }
+    
+    const response = {
+      ...tareaInfo,
+      alias: tareaInfo.alias || [],
+      cadenas: tareaInfo.cadenas || [],
+      mercados: tareaInfo.mercados || [],
+      gruposCadena: tareaInfo.gruposCadena || [],
+      ambitos: tareaInfo.ambitos || []
+    };
+    
+    console.log(`[CONTROLLER] Respuesta final:`, JSON.stringify(response, null, 2));
+    
+    res.json(response);
+  } catch (error) {
+    console.error(`[CONTROLLER] Error en getTareaById para id ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
+};
+
+exports.updateTarea = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = req.body;
+    const usuarioModificacion = req.user ? req.user.username : 'sistema';
+    const fechaModificacion = new Date();
+    
+    console.log(`[CONTROLLER] Iniciando updateTarea - id: ${id}`);
+    
+    // Actualizar nombre de la tarea
+    await tareaRepository.updateNombreTarea(
+      parseInt(id), 
+      request.nombreTarea, 
+      usuarioModificacion, 
+      fechaModificacion
+    );
+    
+    // Actualizar descripción de la tarea
+    await tareaRepository.updateDescripcionTarea(
+      parseInt(id), 
+      request.descripcion, 
+      usuarioModificacion, 
+      fechaModificacion
+    );
+    
+    // Actualizar aliases de la tarea
+    await tareaRepository.updateTareaAlias(
+      parseInt(id), 
+      request.alias || request.createTareaAlias, 
+      usuarioModificacion, 
+      fechaModificacion
+    );
+    
+    // Obtener el ID del ámbito de la tarea
+    const idTareaAmbito = await tareaRepository.findTareaAmbitoByIdTarea(parseInt(id));
+    
+    if (!idTareaAmbito) {
+      return res.status(404).json({ 
+        message: 'No se encontró el ámbito de la tarea' 
+      });
+    }
+    
+    let tareaAmbitoAplanados = [];
+    
+    // Obtener IDs de localización
+    const idsLocalizacionCompra = request.idsLocalizacionCompra || 
+      (request.createTareaAmbito && request.createTareaAmbito.createTareaAmbitoAplanado 
+        ? [...new Set(request.createTareaAmbito.createTareaAmbitoAplanado.map(item => item.idLocalizacionCompra))] 
+        : []);
+    
+    if (idsLocalizacionCompra.length > 0) {
+      if (request.idTipoTarea === 1) { // DISTRIBUTION
+        tareaAmbitoAplanados = await tareaRepository.findTareaAmbitoAplanadoDistributionEdit(
+          idsLocalizacionCompra, 
+          idTareaAmbito
+        );
+      } else if (request.idTipoTarea === 2) { // COUNT
+        tareaAmbitoAplanados = await tareaRepository.findTareaAmbitoAplanadoCountEdit(
+          idsLocalizacionCompra, 
+          idTareaAmbito
+        );
+      }
+      
+      const createTareaAmbito = {
+        createTareaAmbitoAplanado: tareaAmbitoAplanados
+      };
+      
+      if (tareaAmbitoAplanados.length > 0) {
+        await tareaRepository.updateTareaAmbitoAplanado(
+          idTareaAmbito, 
+          parseInt(id), 
+          request.idTipoTarea, 
+          createTareaAmbito,
+          usuarioModificacion, 
+          fechaModificacion
+        );
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'Tarea actualizada correctamente',
+      idTarea: parseInt(id)
+    });
+    
+  } catch (error) {
+    console.error(`[CONTROLLER] Error en updateTarea para id ${req.params.id}:`, error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al actualizar la tarea', 
       error: error.message 
     });
   }

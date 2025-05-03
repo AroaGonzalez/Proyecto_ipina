@@ -19,5 +19,7 @@ router.get('/alias-and-acoples', tareaController.getAliasAndAcoples);
 router.post('/tareas-ambito-multiselect', tareaController.calculateTareaAmbitoMultiselect);
 router.post('/create-tarea', tareaController.createTarea);
 router.post('/delete-tarea', tareaController.deleteTareas);
+router.get('/:id', tareaController.getTareaById);
+router.put('/edicion-tarea/:id', tareaController.updateTarea);
 
 module.exports = router;
