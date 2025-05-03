@@ -21,6 +21,7 @@ import EdicionRelaciones from './components/edicionRelaciones';
 import NuevaTareaDistribucion from './components/nuevaTareaDistribucion';
 import NuevaTareaRecuento from './components/nuevaTareaRecuento';
 import EditarTarea from './components/editarTarea';
+import Eventos from './components/eventos';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -149,6 +150,13 @@ function App() {
               element={
                 <PrivateRoute>
                   <Tareas />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/eventos"
+              element={
+                <PrivateRoute>
+                  <Eventos />
                 </PrivateRoute>
               }
             />

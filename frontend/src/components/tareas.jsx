@@ -1336,7 +1336,7 @@ const Tareas = () => {
                   <td>{tarea.nombreTarea}</td>
                   <td>{renderTipoTarea(tarea.idTipoTarea, tarea.descripcionTipoTarea)}</td>
                   <td>{renderEstadoTarea(tarea.idTipoEstadoTarea, tarea.descripcionTipoEstadoTarea)}</td>
-                  <td>{tarea.alias && tarea.alias.length > 0 ? tarea.alias.join(', ') : t('Sin estado')}</td>
+                  <td>{tarea.alias}</td>
                   <td>{tarea.fechaAlta}</td>
                 </tr>
               ))
