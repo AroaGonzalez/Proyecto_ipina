@@ -49,7 +49,7 @@ const sequelizeMaestros = new Sequelize(
   commonOptions
 );
 
-const MAX_RETRIES = parseInt(process.env.DB_CONNECTION_RETRIES) || 30;
+const MAX_RETRIES = 30;
 const RETRY_INTERVAL = 10000;
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));

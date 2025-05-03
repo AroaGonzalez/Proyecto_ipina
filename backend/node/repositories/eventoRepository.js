@@ -1,5 +1,5 @@
 // backend/node/repositories/eventoRepository.js
-const { sequelizeAjenos, sequelizeMaestros } = require('../index');
+const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
 
 const CACHE_DURATION = 30 * 1000;
 
@@ -409,7 +409,96 @@ async function findNombreCadenasAndDescripcionMercadosByIdEvento(idsEvento, idId
   }
 }
 
+exports.findEventosByTarea = async (idsTarea) => {
+    try {
+      let query = `
+        SELECT DISTINCT er.ID_EVENTO_RAM as idEvento, er.NOMBRE as nombre
+        FROM AJENOS.EVENTO_RAM er
+        INNER JOIN AJENOS.EVENTO_TAREA_RAM etr ON er.ID_EVENTO_RAM = etr.ID_EVENTO_RAM
+        INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
+        WHERE er.FECHA_BAJA IS NULL
+        AND tr.ID_TIPO_TAREA <> 3
+      `;
+      
+      const replacements = {};
+      
+      if (idsTarea && idsTarea.length > 0) {
+        query += ` AND tr.ID_TAREA_RAM IN (:idsTarea)`;
+        replacements.idsTarea = idsTarea;
+      }
+      
+      query += ` ORDER BY er.ID_EVENTO_RAM DESC`;
+      
+      const result = await sequelizeAjenos.query(query, {
+        replacements,
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      return result.map(item => ({
+        idEvento: item.idEvento,
+        nombre: fixEncoding(item.nombre)
+      }));
+    } catch (error) {
+      console.error('Error en findEventosByTarea:', error);
+      throw error;
+    }
+};
+
+exports.getTiposEstadoEvento = async (idIdioma = 1) => {
+    try {
+      const query = `
+        SELECT tee.ID_TIPO_ESTADO_EVENTO_RAM as id, teei.DESCRIPCION as descripcion
+        FROM AJENOS.TIPO_ESTADO_EVENTO_RAM tee
+        LEFT JOIN AJENOS.TIPO_ESTADO_EVENTO_RAM_IDIOMA teei ON tee.ID_TIPO_ESTADO_EVENTO_RAM = teei.ID_TIPO_ESTADO_EVENTO_RAM
+        WHERE teei.ID_IDIOMA = :idIdioma 
+        AND UPPER(teei.DESCRIPCION) NOT IN ('BORRADO', 'DELETED')
+        ORDER BY teei.ID_TIPO_ESTADO_EVENTO_RAM
+      `;
+      
+      const result = await sequelizeAjenos.query(query, {
+        replacements: { idIdioma },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      return result.map(item => ({
+        id: item.id,
+        descripcion: fixEncoding(item.descripcion)
+      }));
+    } catch (error) {
+      console.error('Error al obtener tipos de estado de evento:', error);
+      return [];
+    }
+};
+
+exports.getTiposEvento = async (idIdioma = 1) => {
+    try {
+      const query = `
+        SELECT te.ID_TIPO_EVENTO_RAM as id, tei.DESCRIPCION as descripcion
+        FROM AJENOS.TIPO_EVENTO_RAM te
+        INNER JOIN AJENOS.TIPO_EVENTO_RAM_IDIOMA tei ON te.ID_TIPO_EVENTO_RAM = tei.ID_TIPO_EVENTO_RAM
+        WHERE tei.ID_IDIOMA = :idIdioma
+        ORDER BY te.ID_TIPO_EVENTO_RAM
+      `;
+      
+      const result = await sequelizeAjenos.query(query, {
+        replacements: { idIdioma },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      return result.map(item => ({
+        id: item.id,
+        descripcion: fixEncoding(item.descripcion)
+      }));
+    } catch (error) {
+      console.error('Error al obtener tipos de evento:', error);
+      return [];
+    }
+};
+
 module.exports = {
-  findEventosByFilter,
-  cache
+    findEventosByFilter: exports.findEventosByFilter,
+    findEventosByTarea: exports.findEventosByTarea,
+    getTiposEstadoEvento: exports.getTiposEstadoEvento,
+    getTiposEvento: exports.getTiposEvento,
+    cache
 };

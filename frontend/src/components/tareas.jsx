@@ -71,6 +71,40 @@ const Tareas = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
 
+  const normalizeText = (text) => {
+    if (!text) return '';
+    
+    let normalizedText = String(text);
+    
+    normalizedText = normalizedText
+      .replace(/ESPA.?.'A/g, 'ESPAÑA')
+      .replace(/ESPA.?.A/g, 'ESPAÑA')
+      .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+      .replace(/PEQUE.?.OS/g, 'PEQUEÑOS');
+  
+    const replacements = {
+      'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+      'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+      'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+      'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+      'Âº': 'º', 'Âª': 'ª',
+      'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+      'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+      'â‚¬': '€',
+      'â€"': '–', 'â€"': '—',
+      'â€œ': '"', 'â€': '"',
+      'â€¢': '•',
+      'â€¦': '…',
+      'Â¡': '¡', 'Â¿': '¿'
+    };
+  
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+      normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+  
+    return normalizedText;
+  };
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -365,21 +399,6 @@ const Tareas = () => {
     fetchTareas();
   };
   
-  const handleClearFilters = () => {
-    setIdTarea('');
-    setSelectedTiposTarea([]);
-    setSelectedEstadosTarea([]);
-    setSelectedAliases([]);
-    setSelectedMercados([]);
-    setSelectedCadenas([]);
-    setSelectedGruposCadena([]);
-    setIdLocalizacion('');
-    setSelectedGruposLocalizacion([]);
-    setSelectedAjenos([]);
-    setPaginaActual(0);
-    fetchTareas();
-  };
-  
   const formatTime = (date) => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
@@ -422,14 +441,21 @@ const Tareas = () => {
   };
   
   const filterBySearch = (items, searchTerm, field = null) => {
-    if (!searchTerm || searchTerm.trim() === '') return items;
+    const itemsArray = Array.isArray(items) ? items : 
+      (items && items.content && Array.isArray(items.content)) ? 
+      items.content : [];
+    
+    if (!searchTerm || searchTerm.trim() === '') return itemsArray;
     
     const normalizedSearchTerm = searchTerm.toLowerCase().trim();
     
-    return items.filter(item => {
-      const searchField = field ? item[field] : (item.descripcion || item.nombre);
+    return itemsArray.filter(item => {
+      if (!item) return false;
+      
+      const searchField = field ? item[field] : 
+      (item.nombreAlias || item.descripcion || item.nombre || '');
       const searchFieldStr = String(searchField || '').toLowerCase();
-      const idString = String(item.id);
+      const idString = item.id ? String(item.id) : '';
       
       return searchFieldStr.includes(normalizedSearchTerm) || 
         idString.includes(normalizedSearchTerm);
@@ -556,39 +582,6 @@ const Tareas = () => {
     }
   };
   
-  const renderDropdownItems = (items, selectedItems, filterType, searchTerm) => {
-    const filteredItems = filterBySearch(items, searchTerm);
-    
-    if (filteredItems.length === 0) {
-      return (
-        <div className="dropdown-item no-results">
-          No se encontraron resultados
-        </div>
-      );
-    }
-    
-    return (
-      <>
-        {filteredItems.map(item => (
-          <div 
-            key={item.id} 
-            className="dropdown-item"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFilterSelect(filterType, item.id);
-            }}
-          >
-            <input 
-              type="checkbox" 
-              checked={selectedItems.includes(item.id)}
-              readOnly
-            />
-            <span>{`${item.id} - ${item.descripcion || ''}`}</span>
-          </div>
-        ))}
-      </>
-    );
-  };
   
   if (error) {
     return (
@@ -632,17 +625,17 @@ const Tareas = () => {
       </div>
       
       {showFilters && (
-  <div className="filters-section">
-    <div className="filters-row">
-      <div className="filter-item">
-        <input
-          type="text"
-          placeholder="Id Tarea"
-          value={idTarea}
-          onChange={(e) => setIdTarea(e.target.value)}
-          className="filter-input"
-        />
-      </div>
+        <div className="filters-section">
+          <div className="filters-row">
+            <div className="filter-item">
+              <input
+                type="text"
+                placeholder="Id Tarea"
+                value={idTarea}
+                onChange={(e) => setIdTarea(e.target.value)}
+                className="filter-input"
+              />
+            </div>
       
       <div className="filter-item">
         <div 
@@ -823,7 +816,7 @@ const Tareas = () => {
                         checked={selectedAliases.includes(alias.id)}
                         readOnly
                       />
-                      <span>{alias.id} - {alias.descripcion || alias.nombre || ''}</span>
+                      <span>{`${alias.id} - ${normalizeText(alias.nombreAlias || alias.descripcion || '')}`}</span>
                     </div>
                   ))}
                 </div>
@@ -834,7 +827,7 @@ const Tareas = () => {
                     if (selectedAliases.length === aliases.length) {
                       setSelectedAliases([]);
                     } else {
-                      setSelectedAliases(aliases.map(item => item.id));
+                      setSelectedAliases(Array.isArray(aliases) ? aliases.map(item => item.id) : []);
                     }
                   }}
                 >
@@ -892,7 +885,7 @@ const Tareas = () => {
                         checked={selectedMercados.includes(mercado.id)}
                         readOnly
                       />
-                      <span>{mercado.id} - {mercado.descripcion}</span>
+                      <span>{mercado.id} - {normalizeText(mercado.descripcion)}</span>
                     </div>
                   ))}
                 </div>
@@ -963,7 +956,7 @@ const Tareas = () => {
                         checked={selectedCadenas.includes(cadena.id)}
                         readOnly
                       />
-                      <span>{cadena.id} - {cadena.descripcion}</span>
+                      <span>{cadena.id} - {normalizeText(cadena.descripcion)}</span>
                     </div>
                   ))}
                 </div>
@@ -1333,10 +1326,10 @@ const Tareas = () => {
                     </div>
                   </td>
                   <td>{tarea.idTarea}</td>
-                  <td>{tarea.nombreTarea}</td>
+                  <td>{normalizeText(tarea.nombreTarea)}</td>
                   <td>{renderTipoTarea(tarea.idTipoTarea, tarea.descripcionTipoTarea)}</td>
                   <td>{renderEstadoTarea(tarea.idTipoEstadoTarea, tarea.descripcionTipoEstadoTarea)}</td>
-                  <td>{tarea.alias}</td>
+                  <td>{normalizeText(tarea.alias)}</td>
                   <td>{tarea.fechaAlta}</td>
                 </tr>
               ))

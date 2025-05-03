@@ -1,7 +1,7 @@
 // backend/node/controllers/eventoController.js
 const eventoRepository = require('../repositories/eventoRepository');
 
-exports.getEventos = async (req, res) => {
+exports.getEventosFilter = async (req, res) => {
   try {
     const {
       page = 0,
@@ -88,3 +88,45 @@ function parseIntArray(param) {
   }
   return param.toString().split(',').map(item => parseInt(item.trim(), 10));
 }
+
+exports.getEventos = async (req, res) => {
+    try {
+      const { idsTarea } = req.query;
+      
+      const idsTareaArray = idsTarea ? parseIntArray(idsTarea) : null;
+
+      const result = await eventoRepository.findEventosByTarea(idsTareaArray);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error en getEventosByTarea:', error);
+      res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }
+};
+
+exports.getTiposEstadoEvento = async (req, res) => {
+    try {
+      const { idIdioma = 1 } = req.query;
+      
+      const result = await eventoRepository.getTiposEstadoEvento(parseInt(idIdioma));
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error en getTiposEstadoEvento:', error);
+      res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }
+};
+
+exports.getTiposEvento = async (req, res) => {
+    try {
+      const { idIdioma = 1 } = req.query;
+      
+      const result = await eventoRepository.getTiposEvento(parseInt(idIdioma));
+      console.log('Tipos de evento obtenidos:', result.length);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error en getTiposEvento:', error);
+      res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }
+};

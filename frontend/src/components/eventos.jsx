@@ -23,7 +23,7 @@ const Eventos = () => {
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
   const [hasMore, setHasMore] = useState(true);
   const [showNewEventMenu, setShowNewEventMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState('eventos'); // 'eventos' or 'ejecuciones'
+  const [activeTab, setActiveTab] = useState('eventos');
 
   const tableContainerRef = useRef();
   const [openFilter, setOpenFilter] = useState(null);
@@ -75,6 +75,86 @@ const Eventos = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
 
+  const normalizeText = (text) => {
+    if (!text) return '';
+    
+    let normalizedText = String(text);
+    
+    normalizedText = normalizedText
+      .replace(/ESPA.?.'A/g, 'ESPAÑA')
+      .replace(/ESPA.?.A/g, 'ESPAÑA')
+      .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+      .replace(/PEQUE.?.OS/g, 'PEQUEÑOS');
+  
+    const replacements = {
+      'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+      'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+      'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+      'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+      'Âº': 'º', 'Âª': 'ª',
+      'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+      'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+      'â‚¬': '€',
+      'â€"': '–', 'â€"': '—',
+      'â€œ': '"', 'â€': '"',
+      'â€¢': '•',
+      'â€¦': '…',
+      'Â¡': '¡', 'Â¿': '¿'
+    };
+  
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+      normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+  
+    return normalizedText;
+  };
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        const [
+          tiposEventoRes,
+          estadosEventoRes,
+          aliasesRes,
+          mercadosRes,
+          gruposCadenaRes,
+          gruposLocalizacionRes,
+          articulosRes,
+          eventosRes
+        ] = await Promise.all([
+          axios.get(`${BASE_URL}/eventos/tipos-evento?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/tipos-estado-evento?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/alias?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/mercados?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/grupos-cadena?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/grupos-localizacion?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/ajenos?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/eventos/eventos?idIdioma=${languageId}`)
+        ]);
+        
+        setTiposEvento(tiposEventoRes.data || []);
+        setEstadosEvento(estadosEventoRes.data || []);
+        setAliases(aliasesRes.data || []);
+        setMercados(mercadosRes.data || []);
+        setGruposCadena(gruposCadenaRes.data || []);
+        setGruposLocalizacion(gruposLocalizacionRes.data || []);
+        setArticulos(articulosRes.data || []);
+        setEventos(eventosRes.data.content || []);
+        
+        await fetchEventos();
+      } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+        setError('Error al cargar los datos. Por favor, inténtelo de nuevo.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchInitialData();
+  }, [languageId]);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -124,10 +204,7 @@ const Eventos = () => {
       
       const params = buildQueryParams(nextPage);
       
-      let endpoint = `${BASE_URL}/api/eventos/filter`;
-      if (activeTab === 'ejecuciones') {
-        endpoint = `${BASE_URL}/api/eventos/ejecuciones/filter`;
-      }
+      let endpoint = `${BASE_URL}/eventos/filter`;
       
       const response = await axios.get(endpoint, { params });
       
@@ -217,10 +294,8 @@ const Eventos = () => {
       
       const params = buildQueryParams();
       
-      let endpoint = `${BASE_URL}/api/eventos/filter`;
-      if (activeTab === 'ejecuciones') {
-        endpoint = `${BASE_URL}/api/eventos/ejecuciones/filter`;
-      }
+      let endpoint = `${BASE_URL}/eventos/filter`;
+
       
       const response = await axios.get(endpoint, { params });
       
@@ -243,6 +318,48 @@ const Eventos = () => {
       setLoading(false);
     }
   };
+
+    const renderEventoDropdownItems = (items, selectedItem, searchTerm) => {
+        const filteredItems = items.filter(item => {
+        if (!item) return false;
+        
+        const nombreStr = String(item.nombre || '').toLowerCase();
+        const idStr = String(item.idEvento || '');
+        const search = searchTerm.toLowerCase().trim();
+        
+        return nombreStr.includes(search) || idStr.includes(search);
+        });
+        
+        if (filteredItems.length === 0) {
+        return (
+            <div className="dropdown-item no-results">
+            No se encontraron resultados
+            </div>
+        );
+        }
+        return (
+        <>
+            {filteredItems.map(item => (
+            <div 
+                key={item.idEvento} 
+                className="dropdown-item"
+                onClick={(e) => {
+                e.stopPropagation();
+                handleFilterSelect('idEvento', item.idEvento);
+                }}
+            >
+                <input 
+                type="checkbox" 
+                checked={selectedItem === item.idEvento}
+                readOnly
+                />
+                <span>{`${item.idEvento} - ${item.nombreEvento || ''}`}</span>
+            </div>
+            ))}
+        </>
+        );
+        
+    };
   
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -282,6 +399,9 @@ const Eventos = () => {
         setSelectedTiposEvento(prev => 
           prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
         );
+        break;
+        case 'idEvento':
+            setIdEvento(value);
         break;
       case 'estadoEvento':
         setSelectedEstadosEvento(prev => 
@@ -402,14 +522,26 @@ const Eventos = () => {
   };
   
   const filterBySearch = (items, searchTerm, field = null) => {
-    if (!searchTerm || searchTerm.trim() === '') return items;
+    // Handle case where items might be null/undefined
+    if (!items) return [];
+    
+    // Handle cases where items might be an object with content array
+    const itemsArray = Array.isArray(items) ? items : 
+                      (items && items.content && Array.isArray(items.content)) ? 
+                      items.content : [];
+    
+    if (!searchTerm || searchTerm.trim() === '') return itemsArray;
     
     const normalizedSearchTerm = searchTerm.toLowerCase().trim();
     
-    return items.filter(item => {
-      const searchField = field ? item[field] : (item.descripcion || item.nombre);
+    return itemsArray.filter(item => {
+      if (!item) return false;
+      
+      // Check all possible field names for the search
+      const searchField = field ? item[field] : 
+                         (item.nombreAlias || item.descripcion || item.nombre || '');
       const searchFieldStr = String(searchField || '').toLowerCase();
-      const idString = String(item.id);
+      const idString = item.id ? String(item.id) : '';
       
       return searchFieldStr.includes(normalizedSearchTerm) || 
         idString.includes(normalizedSearchTerm);
@@ -418,16 +550,6 @@ const Eventos = () => {
   
   const handleNuevoEvento = () => {
     setShowNewEventMenu(!showNewEventMenu);
-  };
-
-  const handleNuevoEventoManual = () => {
-    setShowNewEventMenu(false);
-    navigate('/crear-evento/manual');
-  };
-  
-  const handleNuevoEventoAutomatico = () => {
-    setShowNewEventMenu(false);
-    navigate('/crear-evento/automatico');
   };
 
   const handleToggleFilters = () => {
@@ -449,7 +571,7 @@ const Eventos = () => {
       
       await Promise.all(
         selectedEventos.map(idEvento => 
-          axios.put(`${BASE_URL}/api/eventos/${idEvento}/estado`, {
+          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
             idEstadoEvento: 3,
             idIdioma: languageId
           })
@@ -480,7 +602,7 @@ const Eventos = () => {
       
       await Promise.all(
         selectedEventos.map(idEvento => 
-          axios.put(`${BASE_URL}/api/eventos/${idEvento}/estado`, {
+          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
             idEstadoEvento: 1,
             idIdioma: languageId
           })
@@ -511,7 +633,7 @@ const Eventos = () => {
       
       await Promise.all(
         selectedEventos.map(idEvento => 
-          axios.put(`${BASE_URL}/api/eventos/${idEvento}/estado`, {
+          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
             idEstadoEvento: 2,
             idIdioma: languageId
           })
@@ -563,19 +685,11 @@ const Eventos = () => {
               checked={selectedItems.includes(item.id)}
               readOnly
             />
-            <span>{`${item.id} - ${item.descripcion || ''}`}</span>
+            <span>{`${item.id} - ${item.nombreAlias || item.descripcion || item.nombre || ''}`}</span>
           </div>
         ))}
       </>
     );
-  };
-  
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setPaginaActual(0);
-    setSelectedEventos([]);
-    setSelectAll(false);
-    fetchEventos();
   };
   
   if (error) {
@@ -610,23 +724,36 @@ const Eventos = () => {
         <div className="filters-section">
           <div className="filters-row">
             <div className="filter-item">
-              <div 
-                className="filter-dropdown"
-                onClick={() => toggleFilter('idEvento')}
-              >
-                <span className="filter-label">Id o Nombre Evento</span>
-                <div className="filter-value">
-                  <input
-                    type="text"
-                    placeholder="Id o Nombre Evento"
-                    value={nombreEvento}
-                    onChange={(e) => setNombreEvento(e.target.value)}
-                    className="filter-input"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <FaChevronDown className="dropdown-arrow" />
+                <div 
+                    className="filter-dropdown"
+                    onClick={() => toggleFilter('idEvento')}
+                >
+                    <span className="filter-label">Id o Nombre Evento</span>
+                    <div className="filter-value">
+                        <span className="filter-placeholder">
+                        {idEvento ? idEvento : 'Seleccionar'}
+                        </span>
+                        <FaChevronDown className="dropdown-arrow" />
+                    </div>
+                    {openFilter === 'idEvento' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
+                            <input 
+                                type="text" 
+                                placeholder="Buscar evento..." 
+                                value={eventoSearch}
+                                onChange={(e) => setEventoSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            </div>
+                            <div className="dropdown-items-container">
+                            <div className="dropdown-items">
+                                {renderEventoDropdownItems(eventos, idEvento, eventoSearch)}
+                            </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-              </div>
             </div>
             
             <div className="filter-item">
@@ -991,7 +1118,7 @@ const Eventos = () => {
               <th className="tareas-column">{t('TAREAS ASOCIADAS')}</th>
               <th className="mercados-column">{t('MERCADOS')}</th>
               <th className="cadenas-column">{t('CADENAS')}</th>
-              <th className="fecha-alta-column">{t('FECHA DE ALTA')}</th>
+              <th className="fecha-alta-column">{t('FECHA ALTA')}</th>
             </tr>
           </thead>
           <tbody>
@@ -1035,9 +1162,9 @@ const Eventos = () => {
                       </div>
                     ) : '-'}
                   </td>                 
-                  <td>{evento.mercados ? (
+                  <td>{normalizeText(evento.mercados ? (
                     Array.isArray(evento.mercados) ? evento.mercados.join(', ') : evento.mercados
-                  ) : '-'}</td>
+                  ) : '-')}</td>
                   <td>{evento.cadenas ? (
                     Array.isArray(evento.cadenas) ? evento.cadenas.join(', ') : evento.cadenas
                   ) : '-'}</td>
