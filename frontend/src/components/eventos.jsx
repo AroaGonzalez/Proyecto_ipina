@@ -23,7 +23,6 @@ const Eventos = () => {
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
   const [hasMore, setHasMore] = useState(true);
   const [showNewEventMenu, setShowNewEventMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState('eventos');
 
   const tableContainerRef = useRef();
   const [openFilter, setOpenFilter] = useState(null);
@@ -33,25 +32,15 @@ const Eventos = () => {
   const [estadosEvento, setEstadosEvento] = useState([]);
   const [aliases, setAliases] = useState([]);
   const [mercados, setMercados] = useState([]);
-  const [cadenas, setCadenas] = useState([]);
   const [gruposCadena, setGruposCadena] = useState([]);
   const [gruposLocalizacion, setGruposLocalizacion] = useState([]);
   const [articulos, setArticulos] = useState([]);
   
-  // Filter input values
-  const [idEvento, setIdEvento] = useState('');
+  const [idEvento, setIdEvento] = useState([]);
   const [nombreEvento, setNombreEvento] = useState('');
-  const [idTipoEvento, setIdTipoEvento] = useState('');
-  const [idEstadoEvento, setIdEstadoEvento] = useState('');
   const [idEjecucion, setIdEjecucion] = useState('');
-  const [idAlias, setIdAlias] = useState('');
-  const [idMercado, setIdMercado] = useState('');
-  const [idGrupoCadena, setIdGrupoCadena] = useState('');
   const [idLocalizacion, setIdLocalizacion] = useState('');
-  const [idGrupoLocalizacion, setIdGrupoLocalizacion] = useState('');
-  const [idArticulo, setIdArticulo] = useState('');
 
-  // Search terms for dropdowns
   const [eventoSearch, setEventoSearch] = useState('');
   const [tipoEventoSearch, setTipoEventoSearch] = useState('');
   const [estadoEventoSearch, setEstadoEventoSearch] = useState('');
@@ -61,7 +50,6 @@ const Eventos = () => {
   const [grupoLocalizacionSearch, setGrupoLocalizacionSearch] = useState('');
   const [articuloSearch, setArticuloSearch] = useState('');
 
-  // Selected filters
   const [selectedTiposEvento, setSelectedTiposEvento] = useState([]);
   const [selectedEstadosEvento, setSelectedEstadosEvento] = useState([]);
   const [selectedAliases, setSelectedAliases] = useState([]);
@@ -70,7 +58,6 @@ const Eventos = () => {
   const [selectedGruposLocalizacion, setSelectedGruposLocalizacion] = useState([]);
   const [selectedArticulos, setSelectedArticulos] = useState([]);
   
-  // UI state
   const [selectedEventos, setSelectedEventos] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
@@ -84,6 +71,8 @@ const Eventos = () => {
       .replace(/ESPA.?.'A/g, 'ESPAÑA')
       .replace(/ESPA.?.A/g, 'ESPAÑA')
       .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+      .replace(/PEQUE.?.A/g, 'PEQUEÑA')
+        .replace(/CAMPA.?.A/g, 'CAMPAÑA')
       .replace(/PEQUE.?.OS/g, 'PEQUEÑOS');
   
     const replacements = {
@@ -195,7 +184,7 @@ const Eventos = () => {
   }, [loading, loadingMore, hasMore, eventos]);
   
   const loadMoreEventos = async () => {
-    if (!hasMore || loadingMore) return;
+    if (!hasMore || loadingMore || eventos.length >= totalElements) return;
     
     try {
       setLoadingMore(true);
@@ -224,6 +213,68 @@ const Eventos = () => {
       setLoadingMore(false);
     }
   };
+
+  const handleActivateEventos = async () => {
+    try {
+      const updatedEventos = eventos.map(evento => {
+        if (selectedEventos.includes(evento.idEvento)) {
+          return {
+            ...evento,
+            idEstadoEvento: 2, // Cambiado de 1 a 2 (ACTIVO)
+            descripcionEstadoEvento: 'ACTIVO'
+          };
+        }
+        return evento;
+      });
+      
+      await Promise.all(
+        selectedEventos.map(idEvento => 
+          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
+            idEstadoEvento: 2, // Cambiado de 1 a 2 (ACTIVO)
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      setEventos(updatedEventos);
+      setSelectedEventos([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al activar eventos:', error);
+    }
+  };
+  
+  const handlePauseEventos = async () => {
+    try {
+      const updatedEventos = eventos.map(evento => {
+        if (selectedEventos.includes(evento.idEvento)) {
+          return {
+            ...evento,
+            idEstadoEvento: 1,
+            descripcionEstadoEvento: 'PAUSADO'
+          };
+        }
+        return evento;
+      });
+      
+      await Promise.all(
+        selectedEventos.map(idEvento => 
+          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
+            idEstadoEvento: 1,
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      setEventos(updatedEventos);
+      setSelectedEventos([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al pausar eventos:', error);
+    }
+  };
   
   const buildQueryParams = (page = 0) => {
     const params = {
@@ -232,11 +283,8 @@ const Eventos = () => {
       idIdioma: languageId,
     };
     
-    if (idEvento) {
-      const ids = idEvento.split(/\s+/).filter(id => id.trim() !== '');
-      if (ids.length > 0) {
-        params.idsEvento = ids;
-      }
+    if (idEvento.length > 0) {
+        params.idsEvento = idEvento.join(',');
     }
     
     if (nombreEvento) {
@@ -281,84 +329,90 @@ const Eventos = () => {
     if (selectedArticulos.length > 0) {
       params.idsArticulo = selectedArticulos.join(',');
     }
+    if (selectedArticulos.length > 0) {
+        console.log('Filtrando por artículos:', selectedArticulos);
+        params.idsArticulo = selectedArticulos.join(',');
+    }
     
     return params;
   };
   
-  const fetchEventos = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setPaginaActual(0);
-      setHasMore(true);
-      
-      const params = buildQueryParams();
-      
-      let endpoint = `${BASE_URL}/eventos/filter`;
+    const fetchEventos = async () => {
+        try {
+        setLoading(true);
+        setError(null);
+        setPaginaActual(0);
+        setHasMore(true);
+        setEventos([]); // Añadir esta línea
+        localStorage.removeItem('eventos-cache');
+        
+        const params = buildQueryParams();
+        let endpoint = `${BASE_URL}/eventos/filter`;
+        
+        console.log('Enviando parámetros de búsqueda:', params);
+        
+        const response = await axios.get(endpoint, { params });
 
-      
-      const response = await axios.get(endpoint, { params });
-      
-      setEventos(response.data.content || []);
-      setTotalElements(response.data.totalElements || 0);
-      setUltimaActualizacion(new Date());
-      
-      if (
-        response.data.content.length === 0 || 
-        response.data.content.length < tamañoPagina || 
-        response.data.content.length === response.data.totalElements
-      ) {
-        setHasMore(false);
-      }
-      
-    } catch (error) {
-      console.error('Error al cargar eventos:', error);
-      setError('Error al cargar los eventos');
-    } finally {
-      setLoading(false);
-    }
-  };
+        setEventos(response.data.content || []);
+        setTotalElements(response.data.totalElements || 0);
+        setUltimaActualizacion(new Date());
+        
+        if (
+            response.data.content.length === 0 || 
+            response.data.content.length < tamañoPagina || 
+            response.data.content.length === response.data.totalElements
+        ) {
+            setHasMore(false);
+        }
+        
+        } catch (error) {
+        console.error('Error al cargar eventos:', error);
+        setError('Error al cargar los eventos');
+        } finally {
+        setLoading(false);
+        }
+    };
 
-    const renderEventoDropdownItems = (items, selectedItem, searchTerm) => {
+    const renderEventoDropdownItems = (items, selectedItems, searchTerm) => {
         const filteredItems = items.filter(item => {
-        if (!item) return false;
-        
-        const nombreStr = String(item.nombre || '').toLowerCase();
-        const idStr = String(item.idEvento || '');
-        const search = searchTerm.toLowerCase().trim();
-        
-        return nombreStr.includes(search) || idStr.includes(search);
+            if (!item) return false;
+            
+            const nombreStr = normalizeText(String(item.nombreEvento || '')).toLowerCase();
+            const idStr = String(item.idEvento || '');
+            const search = searchTerm.toLowerCase().trim();
+            
+            return nombreStr.includes(search) || idStr.includes(search);
         });
         
         if (filteredItems.length === 0) {
-        return (
-            <div className="dropdown-item no-results">
-            No se encontraron resultados
-            </div>
-        );
+            return (
+                <div className="dropdown-item no-results">
+                    No se encontraron resultados
+                </div>
+            );
         }
-        return (
-        <>
-            {filteredItems.map(item => (
-            <div 
-                key={item.idEvento} 
-                className="dropdown-item"
-                onClick={(e) => {
-                e.stopPropagation();
-                handleFilterSelect('idEvento', item.idEvento);
-                }}
-            >
-                <input 
-                type="checkbox" 
-                checked={selectedItem === item.idEvento}
-                readOnly
-                />
-                <span>{`${item.idEvento} - ${item.nombreEvento || ''}`}</span>
-            </div>
-            ))}
-        </>
-        );
         
+        return (
+            <>
+                {filteredItems.map(item => (
+                    <div 
+                        key={item.idEvento} 
+                        className="dropdown-item"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('idEvento', item.idEvento);
+                        }}
+                    >
+                        <input 
+                            type="checkbox" 
+                            checked={selectedItems.includes(item.idEvento)}
+                            readOnly
+                        />
+                        <span>{`${item.idEvento} - ${normalizeText(item.nombreEvento || '')}`}</span>
+                    </div>
+                ))}
+            </>
+        );
     };
   
   useEffect(() => {
@@ -401,7 +455,9 @@ const Eventos = () => {
         );
         break;
         case 'idEvento':
-            setIdEvento(value);
+            setIdEvento(prev => 
+                prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+            );
         break;
       case 'estadoEvento':
         setSelectedEstadosEvento(prev => 
@@ -447,22 +503,6 @@ const Eventos = () => {
     fetchEventos();
   };
   
-  const handleClearFilters = () => {
-    setIdEvento('');
-    setNombreEvento('');
-    setSelectedTiposEvento([]);
-    setSelectedEstadosEvento([]);
-    setIdEjecucion('');
-    setSelectedAliases([]);
-    setSelectedMercados([]);
-    setSelectedGruposCadena([]);
-    setIdLocalizacion('');
-    setSelectedGruposLocalizacion([]);
-    setSelectedArticulos([]);
-    setPaginaActual(0);
-    fetchEventos();
-  };
-  
   const formatTime = (date) => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
@@ -472,10 +512,10 @@ const Eventos = () => {
     
     switch (estadoId) {
       case 1:
-        className += ' activo';
+        className += ' pausado';
         break;
       case 2:
-        className += ' pausado';
+        className += ' activo';
         break;
       case 3:
         className += ' eliminado';
@@ -537,19 +577,18 @@ const Eventos = () => {
     return itemsArray.filter(item => {
       if (!item) return false;
       
-      // Check all possible field names for the search
       const searchField = field ? item[field] : 
-                         (item.nombreAlias || item.descripcion || item.nombre || '');
-      const searchFieldStr = String(searchField || '').toLowerCase();
+        (item.nombreAlias || item.descripcion || item.nombre || '');
+      const searchFieldStr = normalizeText(String(searchField || '').toLowerCase());
       const idString = item.id ? String(item.id) : '';
       
       return searchFieldStr.includes(normalizedSearchTerm) || 
         idString.includes(normalizedSearchTerm);
     });
   };
-  
+
   const handleNuevoEvento = () => {
-    setShowNewEventMenu(!showNewEventMenu);
+    navigate('/nuevo-evento');
   };
 
   const handleToggleFilters = () => {
@@ -586,69 +625,7 @@ const Eventos = () => {
       console.error('Error al eliminar eventos:', error);
     }
   };
-  
-  const handleActivateEventos = async () => {
-    try {
-      const updatedEventos = eventos.map(evento => {
-        if (selectedEventos.includes(evento.idEvento)) {
-          return {
-            ...evento,
-            idEstadoEvento: 1,
-            descripcionEstadoEvento: 'ACTIVO'
-          };
-        }
-        return evento;
-      });
       
-      await Promise.all(
-        selectedEventos.map(idEvento => 
-          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
-            idEstadoEvento: 1,
-            idIdioma: languageId
-          })
-        )
-      );
-      
-      setEventos(updatedEventos);
-      setSelectedEventos([]);
-      setSelectAll(false);
-      
-    } catch (error) {
-      console.error('Error al activar eventos:', error);
-    }
-  };
-  
-  const handlePauseEventos = async () => {
-    try {
-      const updatedEventos = eventos.map(evento => {
-        if (selectedEventos.includes(evento.idEvento)) {
-          return {
-            ...evento,
-            idEstadoEvento: 2,
-            descripcionEstadoEvento: 'PAUSADO'
-          };
-        }
-        return evento;
-      });
-      
-      await Promise.all(
-        selectedEventos.map(idEvento => 
-          axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
-            idEstadoEvento: 2,
-            idIdioma: languageId
-          })
-        )
-      );
-      
-      setEventos(updatedEventos);
-      setSelectedEventos([]);
-      setSelectAll(false);
-      
-    } catch (error) {
-      console.error('Error al pausar eventos:', error);
-    }
-  };
-  
   const handleEditEvento = () => {
     if (selectedEventos.length === 1) {
       const idEvento = selectedEventos[0];
@@ -685,7 +662,7 @@ const Eventos = () => {
               checked={selectedItems.includes(item.id)}
               readOnly
             />
-            <span>{`${item.id} - ${item.nombreAlias || item.descripcion || item.nombre || ''}`}</span>
+            <span>{`${item.id} - ${normalizeText(item.nombreAlias || item.descripcion || item.nombre || '')}`}</span>
           </div>
         ))}
       </>
@@ -731,7 +708,9 @@ const Eventos = () => {
                     <span className="filter-label">Id o Nombre Evento</span>
                     <div className="filter-value">
                         <span className="filter-placeholder">
-                        {idEvento ? idEvento : 'Seleccionar'}
+                            {idEvento.length > 0 
+                                ? `${idEvento.length} seleccionados` 
+                                : 'Seleccionar'}
                         </span>
                         <FaChevronDown className="dropdown-arrow" />
                     </div>
@@ -1071,32 +1050,33 @@ const Eventos = () => {
               <FaTrash />
             </button>
             <button 
-              className={`action-button activate-button ${selectedEventos.some(id => 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 1 || 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3) ? 'disabled' : ''}`} 
-              onClick={handleActivateEventos}
-              disabled={selectedEventos.some(id => 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 1 || 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3)}
-            >
-              <FaPlay className="action-icon" /> {t('ACTIVAR')}
-            </button>
-            <button 
-              className={`action-button pause-button ${selectedEventos.some(id => 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 2 || 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3) ? 'disabled' : ''}`} 
-              onClick={handlePauseEventos}
-              disabled={selectedEventos.some(id => 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 2 || 
-                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3)}
-            >
-              <FaPause className="action-icon" /> {t('PAUSAR')}
+                className={`action-button activate-button ${selectedEventos.some(id => 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 2 || 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3) ? 'disabled' : ''}`} 
+                onClick={handleActivateEventos}
+                disabled={selectedEventos.some(id => 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 2 || 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3)}
+                >
+                <FaPlay className="action-icon" /> {t('ACTIVAR')}
+                </button>
+
+                <button 
+                className={`action-button pause-button ${selectedEventos.some(id => 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 1 || 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3) ? 'disabled' : ''}`} 
+                onClick={handlePauseEventos}
+                disabled={selectedEventos.some(id => 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 1 || 
+                    eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3)}
+                >
+                <FaPause className="action-icon" /> {t('PAUSAR')}
             </button>
           </div>
         </div>
       )}
       
-      <div className="eventos-table-container" ref={tableContainerRef}>
+      <div className="eventos-table-container" ref={tableContainerRef} key={`eventos-table-${selectedMercados.join('-')}`}>
         <table className="eventos-table">
           <thead>
             <tr>
@@ -1113,7 +1093,7 @@ const Eventos = () => {
               <th className="id-column">{t('ID EVENTO')}</th>
               <th className="nombre-column">{t('EVENTO')}</th>
               <th className="tipo-column">{t('TIPO DE EVENTO')}</th>
-              <th className="estado-column">{t('ESTADO DEL EVENTO')}</th>
+              <th className="estado-column" style={{minWidth: '150px', background: '#f0f0f0'}}>{t('ESTADO DEL EVENTO')}</th>
               <th className="tipo-tarea-column">{t('TIPO DE TAREA')}</th>
               <th className="tareas-column">{t('TAREAS ASOCIADAS')}</th>
               <th className="mercados-column">{t('MERCADOS')}</th>
@@ -1151,9 +1131,9 @@ const Eventos = () => {
                     </div>
                   </td>
                   <td>{evento.idEvento}</td>
-                  <td>{evento.nombreEvento}</td>
+                  <td>{normalizeText(evento.nombreEvento)}</td>
                   <td>{renderTipoEvento(evento.idTipoEvento, evento.descripcionTipoEvento)}</td>
-                  <td>{renderEstadoEvento(evento.idEstadoEvento, evento.descripcionEstadoEvento)}</td>
+                  <td style={{minWidth: '150px', background: '#f5f5f5'}}>{renderEstadoEvento(evento.idEstadoEvento, evento.descripcionEstadoEvento)}</td>
                   <td>{renderTipoTarea(evento.idTipoTarea, evento.descripcionTipoTarea)}</td>
                   <td>
                     {evento.tareasAsociadas ? (

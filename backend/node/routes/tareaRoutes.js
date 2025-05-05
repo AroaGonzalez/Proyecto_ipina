@@ -8,7 +8,7 @@ const tiendaController = require('../controllers/tiendaController');
 router.get('/filter', tareaController.getTareas);
 router.get('/tipos-tarea', tareaController.getTiposTarea);
 router.get('/tipos-estado-tarea', tareaController.getTiposEstadoTarea);
-router.get('/alias', aliasController.getAliasFilter);
+router.get('/alias', aliasController.getAlias);
 router.get('/cadenas', aliasController.getCadenas);
 router.get('/mercados', aliasController.getMercados);
 router.get('/grupos-localizacion', tiendaController.getGruposLocalizacion);

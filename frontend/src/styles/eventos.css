@@ -412,6 +412,7 @@
   position: relative;
   z-index: 1;
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .eventos-table {
@@ -490,8 +491,14 @@
   width: 200px;
 }
 
-.tipo-column, .estado-column, .tipo-tarea-column {
+.tipo-column, .tipo-tarea-column {
   width: 150px;
+}
+
+.estado-column {
+    width: 150px !important;
+    min-width: 150px !important;
+    display: table-cell !important;
 }
 
 .tareas-column {

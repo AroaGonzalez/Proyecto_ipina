@@ -22,6 +22,8 @@ import NuevaTareaDistribucion from './components/nuevaTareaDistribucion';
 import NuevaTareaRecuento from './components/nuevaTareaRecuento';
 import EditarTarea from './components/editarTarea';
 import Eventos from './components/eventos';
+import NuevoEvento from './components/nuevoEvento';
+
 
 function Layout({ children }) {
   const location = useLocation();
@@ -71,6 +73,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <NuevoAlias />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/nuevo-evento"
+              element={
+                <PrivateRoute>
+                  <NuevoEvento />
                 </PrivateRoute>
               }
             />

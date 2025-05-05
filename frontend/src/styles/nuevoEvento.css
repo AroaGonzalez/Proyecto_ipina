@@ -1,0 +1,330 @@
+/* styles/nuevoEvento.css */
+.nuevo-evento-container {
+  font-family: Arial, sans-serif;
+  color: #000;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 100%;
+  overflow-y: auto;
+}
+
+.nuevo-evento-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #000;
+  margin: 0 0 20px 0;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.paso-title {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.paso-number {
+  color: #666;
+  margin-right: 5px;
+}
+
+.info-icon, .success-icon {
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.info-icon {
+  color: #2196F3;
+}
+
+.success-icon {
+  color: #4CAF50;
+}
+
+.input-container {
+  margin-bottom: 30px;
+  position: relative;
+  max-width: 460px;
+}
+
+.evento-input, .evento-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.evento-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.counter {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.dropdowns-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.dropdown-wrapper {
+  position: relative;
+  width: 250px;
+}
+
+.custom-dropdown {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-icon {
+  font-size: 12px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.dropdown-search {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-search input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.dropdown-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.no-tareas-container {
+  min-height: 150px;
+  border: 1px solid #eee;
+  border-radius: 0;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+}
+
+.no-tareas-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #bbb;
+}
+
+.no-tareas-message {
+  font-size: 14px;
+  color: #999;
+  text-transform: uppercase;
+}
+
+.no-tareas-message p {
+  margin: 5px 0;
+}
+
+.tareas-table-container {
+  margin-bottom: 30px;
+}
+
+.tareas-count {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.tareas-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+}
+
+.tareas-table th,
+.tareas-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.tareas-table th {
+  background-color: #f8f8f8;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button, .create-button {
+  padding: 10px 20px;
+  border-radius: 0;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  min-width: 120px;
+}
+
+.cancel-button {
+  background-color: white;
+  border: 1px solid #000;
+  color: #000;
+}
+
+.create-button {
+  background-color: #000;
+  color: white;
+  border: none;
+}
+
+.create-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.tipo-tarea-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background-color: #8e82ff;
+  color: white;
+  border-radius: 3px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.estado-tarea-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  color: white;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.estado-tarea-badge.activa {
+  background-color: #00A19B;
+}
+
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+}
+
+.success-icon {
+  display: inline-flex;
+  margin-left: 10px;
+  color: #00A19B;
+  font-size: 18px;
+}
+
+.info-icon {
+  display: inline-flex;
+  margin-left: 10px;
+  color: #70757A;
+  font-size: 18px;
+  cursor: help;
+}
+
+.articulos-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.articulos-selection-info {
+  font-size: 14px;
+  color: #555;
+}
+
+.articulos-selected-count {
+  font-weight: 500;
+}
+
+.delete-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: white;
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.delete-button:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-icon {
+  font-size: 14px;
+}
+
+.custom-dropdown.selected-value {
+  font-weight: 500;
+  background-color: #f8f8f8;
+}

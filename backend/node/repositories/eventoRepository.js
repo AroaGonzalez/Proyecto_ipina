@@ -104,13 +104,12 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
       FROM AJENOS.EVENTO_RAM er
       INNER JOIN AJENOS.TIPO_EVENTO_RAM ter ON ter.ID_TIPO_EVENTO_RAM = er.ID_TIPO_EVENTO_RAM
       INNER JOIN AJENOS.TIPO_ESTADO_EVENTO_RAM teer ON teer.ID_TIPO_ESTADO_EVENTO_RAM = er.ID_TIPO_ESTADO_EVENTO_RAM
-      LEFT JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_EVENTO_RAM = er.ID_EVENTO_RAM
-      LEFT JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
-      LEFT JOIN AJENOS.TIPO_TAREA tt ON tt.ID_TIPO_TAREA = tr.ID_TIPO_TAREA
+      INNER JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_EVENTO_RAM = er.ID_EVENTO_RAM
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
+      INNER JOIN AJENOS.TIPO_TAREA tt ON tt.ID_TIPO_TAREA = tr.ID_TIPO_TAREA AND tt.ID_TIPO_TAREA <> 3
       LEFT JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
     `;
     
-    // Apply fromClausedSql
     if (tipoAlias.length > 0) {
       sqlQuery += `
         INNER JOIN AJENOS.ALIAS_TAREA al ON al.ID_TAREA_RAM = tr.ID_TAREA_RAM
@@ -212,35 +211,41 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
     const hasMercado = filter.idsMercado && filter.idsMercado.length > 0;
     
     if (hasGrupoCadena || hasMercado) {
-      let subQuery = ` AND er.ID_EVENTO_RAM IN (SELECT er4.ID_EVENTO_RAM
-        FROM AJENOS.EVENTO_RAM er4
-        LEFT JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_EVENTO_RAM = er4.ID_EVENTO_RAM
-        LEFT JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
-        LEFT JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = tr.ID_TAREA_RAM
-        LEFT JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON taa.ID_TAREA_AMBITO = ta.ID_TAREA_AMBITO
-        LEFT JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
-        LEFT JOIN MAESTROS.PAIS p ON lc.ID_PAIS = p.ID_PAIS
-        LEFT JOIN MAESTROS.PAIS_IDIOMA pi ON pi.ID_PAIS = p.ID_PAIS AND pi.ID_IDIOMA = :idIdioma
-        LEFT JOIN MAESTROS.CADENA c ON lc.ID_CADENA = c.ID_CADENA
-        LEFT JOIN MAESTROS.GRUPO_CADENA_CADENA gcc ON gcc.ID_CADENA = c.ID_CADENA
-        LEFT JOIN MAESTROS.GRUPO_CADENA gc ON gc.ID_GRUPO_CADENA = gcc.ID_GRUPO_CADENA
-        WHERE er4.FECHA_BAJA IS NULL AND `;
-        
-      const conditions = [];
-      
-      if (hasGrupoCadena) {
-        conditions.push(`gc.ID_GRUPO_CADENA IN (${filter.idsGrupoCadena.join(',')})`);
-      }
-      
-      if (hasMercado) {
-        conditions.push(`p.ID_PAIS IN (${filter.idsMercado.join(',')})`);
-      }
-      
-      subQuery += conditions.join(' AND ') + ')';
-      
-      sqlQuery += subQuery;
-      countQuery += subQuery;
+        let subQuery = ` AND er.ID_EVENTO_RAM IN (SELECT DISTINCT er4.ID_EVENTO_RAM
+          FROM AJENOS.EVENTO_RAM er4
+          INNER JOIN AJENOS.EVENTO_TAREA_RAM etr4 ON etr4.ID_EVENTO_RAM = er4.ID_EVENTO_RAM
+          INNER JOIN AJENOS.TAREA_RAM tr4 ON tr4.ID_TAREA_RAM = etr4.ID_TAREA_RAM
+          INNER JOIN AJENOS.TAREA_AMBITO ta4 ON ta4.ID_TAREA_RAM = tr4.ID_TAREA_RAM
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa4 ON taa4.ID_TAREA_AMBITO = ta4.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.LOCALIZACION_COMPRA lc4 ON lc4.ID_LOCALIZACION_COMPRA = taa4.ID_LOCALIZACION_COMPRA
+          INNER JOIN MAESTROS.PAIS p4 ON lc4.ID_PAIS = p4.ID_PAIS
+          INNER JOIN MAESTROS.PAIS_IDIOMA pi4 ON pi4.ID_PAIS = p4.ID_PAIS AND pi4.ID_IDIOMA = :idIdioma`;
+          
+        if (hasGrupoCadena) {
+          subQuery += `
+          INNER JOIN MAESTROS.CADENA c4 ON lc4.ID_CADENA = c4.ID_CADENA
+          INNER JOIN MAESTROS.GRUPO_CADENA_CADENA gcc4 ON gcc4.ID_CADENA = c4.ID_CADENA
+          INNER JOIN MAESTROS.GRUPO_CADENA gc4 ON gc4.ID_GRUPO_CADENA = gcc4.ID_GRUPO_CADENA`;
+        }
+          
+        subQuery += ` WHERE er4.FECHA_BAJA IS NULL AND `;
+            
+        const conditions = [];
+            
+        if (hasGrupoCadena) {
+          conditions.push(`gc4.ID_GRUPO_CADENA IN (${filter.idsGrupoCadena.join(',')})`);
+        }
+            
+        if (hasMercado) {
+          conditions.push(`p4.ID_PAIS IN (${filter.idsMercado.join(',')})`);
+        }
+            
+        subQuery += conditions.join(' AND ') + ')';
+            
+        sqlQuery += subQuery;
+        countQuery += subQuery;
     }
+
     
     if (filter.idsLocalizacion && filter.idsLocalizacion.length > 0) {
       const subQuery = ` AND er.ID_EVENTO_RAM IN (SELECT er111.ID_EVENTO_RAM
@@ -288,11 +293,9 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
       countQuery += subQuery;
     }
     
-    // Group by clause
     sqlQuery += ` GROUP BY er.ID_EVENTO_RAM, er.NOMBRE, ter.ID_TIPO_EVENTO_RAM, teri.DESCRIPCION, teer.ID_TIPO_ESTADO_EVENTO_RAM, 
       teeri.DESCRIPCION, er.FECHA_ALTA, tt.ID_TIPO_TAREA, tti.DESCRIPCION`;
       
-    // Order by clause
     sqlQuery += ` ORDER BY er.ID_EVENTO_RAM DESC LIMIT ${filter.limit} OFFSET ${filter.offset * filter.limit}`;
     
     const replacements = { idIdioma: filter.idIdioma };
@@ -312,14 +315,13 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
     
     const totalElements = parseInt(countResult ? Object.values(countResult)[0] : 0);
     
-    // Process the eventos results
     const processedEventos = eventos.map(evento => ({
       idEvento: evento.idEvento,
       nombreEvento: fixEncoding(evento.nombreEvento),
       idTipoEvento: evento.idTipoEvento,
       descripcionTipoEvento: fixEncoding(evento.descripcionTipoEvento),
-      idTipoEstadoEvento: evento.idTipoEstadoEvento,
-      descripcionTipoEstadoEvento: fixEncoding(evento.descripcionTipoEstadoEvento),
+      idEstadoEvento: evento.idTipoEstadoEvento,
+      descripcionEstadoEvento: fixEncoding(evento.descripcionTipoEstadoEvento),
       idTipoTarea: evento.idTipoTarea,
       descripcionTipoTarea: fixEncoding(evento.descripcionTipoTarea),
       fechaCreacion: evento.fechaCreacion ? new Date(evento.fechaCreacion).toISOString().split('T')[0] : null,
@@ -327,18 +329,15 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
       entrenado: evento.entrenado === 'TRUE'
     }));
     
-    // If we have eventos, get the cadenas and mercados
     if (processedEventos.length > 0) {
       const idsEvento = processedEventos.map(evento => evento.idEvento);
       const eventosAmbito = await findNombreCadenasAndDescripcionMercadosByIdEvento(idsEvento, filter.idIdioma);
       
-      // Create a map for quick lookup
       const eventoAmbitoMap = {};
       eventosAmbito.forEach(ambito => {
         eventoAmbitoMap[ambito.idEvento] = ambito;
       });
       
-      // Add cadenas and mercados to the processed eventos
       processedEventos.forEach(evento => {
         const ambito = eventoAmbitoMap[evento.idEvento];
         if (ambito) {
@@ -359,7 +358,7 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
     };
     
     cache.set(cacheKey, result);
-    
+
     return result;
   } catch (error) {
     console.error('Error en findEventosByFilter:', error);
@@ -367,7 +366,6 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
   }
 };
 
-// Function to get the cadenas and mercados for eventos
 async function findNombreCadenasAndDescripcionMercadosByIdEvento(idsEvento, idIdioma) {
   try {
     const query = `
@@ -495,10 +493,281 @@ exports.getTiposEvento = async (idIdioma = 1) => {
     }
 };
 
-module.exports = {
-    findEventosByFilter: exports.findEventosByFilter,
-    findEventosByTarea: exports.findEventosByTarea,
-    getTiposEstadoEvento: exports.getTiposEstadoEvento,
-    getTiposEvento: exports.getTiposEvento,
-    cache
+exports.updateEventoEstado = async (idsEvento, idTipoEstadoEvento, usuario) => {
+    try {
+      if (!idsEvento || !Array.isArray(idsEvento) || idsEvento.length === 0) {
+        throw new Error('Se requiere al menos un ID de evento');
+      }
+      
+      if (!idTipoEstadoEvento) {
+        throw new Error('Se requiere el ID del tipo de estado del evento');
+      }
+
+      let query = `
+        UPDATE AJENOS.EVENTO_RAM 
+        SET USUARIO_MODIFICACION = :usuario,
+            ID_TIPO_ESTADO_EVENTO_RAM = :idTipoEstadoEvento,
+            FECHA_MODIFICACION = CURRENT_TIMESTAMP
+        WHERE ID_EVENTO_RAM IN (:idsEvento)
+      `;
+      
+      // Ejecutar la actualización
+      const result = await sequelizeAjenos.query(query, {
+        replacements: { 
+          usuario,
+          idTipoEstadoEvento: parseInt(idTipoEstadoEvento),
+          idsEvento
+        },
+        type: sequelizeAjenos.QueryTypes.UPDATE
+      });
+      
+      // Limpiar caché relacionada con eventos
+      cache.clear('eventos_');
+      
+      return {
+        success: true,
+        affectedRows: result[1] || 0,
+        message: `Se han actualizado ${result[1] || 0} eventos al estado ${idTipoEstadoEvento}`
+      };
+    } catch (error) {
+      console.error('Error en updateEventoEstado:', error);
+      throw error;
+    }
 };
+
+exports.findTareasByTipoTarea = async (idIdioma, idTipoTarea) => {
+    try {
+      const tareaBasicaQuery = `
+        SELECT DISTINCT
+          t.ID_TAREA_RAM AS idTarea,
+          t.NOMBRE AS nombreTarea,
+          t.ID_TIPO_TAREA AS idTipoTarea,
+          t.ID_TIPO_ESTADO_TAREA_RAM AS idTipoEstadoTarea,
+          tai.DESCRIPCION AS descripcionTipoTarea,
+          teti.DESCRIPCION AS descripcionTipoEstadoTarea,
+          t.FECHA_ALTA AS fechaAlta
+        FROM AJENOS.TAREA_RAM t
+        LEFT JOIN AJENOS.TIPO_ESTADO_TAREA_RAM_IDIOMA teti ON teti.ID_TIPO_ESTADO_TAREA_RAM = t.ID_TIPO_ESTADO_TAREA_RAM 
+          AND teti.ID_IDIOMA = :idIdioma
+        LEFT JOIN AJENOS.TIPO_TAREA_IDIOMA tai ON tai.ID_TIPO_TAREA = t.ID_TIPO_TAREA 
+          AND tai.ID_IDIOMA = :idIdioma
+        INNER JOIN AJENOS.ALIAS_TAREA at1 ON at1.ID_TAREA_RAM = t.ID_TAREA_RAM
+        INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = at1.ID_ALIAS
+        LEFT JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = t.ID_TAREA_RAM
+        LEFT JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON taa.ID_TAREA_AMBITO = ta.ID_TAREA_AMBITO
+        LEFT JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+        LEFT JOIN MAESTROS.CADENA c ON c.ID_CADENA = lc.ID_CADENA
+        LEFT JOIN MAESTROS.PAIS p ON lc.ID_PAIS = p.ID_PAIS
+        LEFT JOIN MAESTROS.PAIS_IDIOMA pi ON pi.ID_PAIS = p.ID_PAIS AND pi.ID_IDIOMA = :idIdioma
+        WHERE t.ID_TIPO_TAREA = :idTipoTarea AND t.FECHA_BAJA IS NULL
+        ORDER BY t.FECHA_ALTA DESC
+      `;
+      
+      const tareaBasicaList = await sequelizeAjenos.query(tareaBasicaQuery, {
+        replacements: { idIdioma, idTipoTarea },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      if (!tareaBasicaList || tareaBasicaList.length === 0) {
+        return [];
+      }
+      
+      const idTareas = tareaBasicaList.map(tarea => tarea.idTarea);
+      
+      const cadenasMercadoQuery = `
+        SELECT 
+          t.ID_TAREA_RAM as idTarea,
+          GROUP_CONCAT(DISTINCT pi.DESCRIPCION SEPARATOR ',') as mercados,
+          GROUP_CONCAT(DISTINCT c.NOMBRE SEPARATOR ',') as cadenas
+        FROM AJENOS.TAREA_RAM t
+        LEFT JOIN AJENOS.TAREA_AMBITO ta ON ta.ID_TAREA_RAM = t.ID_TAREA_RAM
+        LEFT JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON taa.ID_TAREA_AMBITO = ta.ID_TAREA_AMBITO
+        LEFT JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+        LEFT JOIN MAESTROS.CADENA c ON lc.ID_CADENA = c.ID_CADENA
+        LEFT JOIN MAESTROS.PAIS p ON lc.ID_PAIS = p.ID_PAIS
+        LEFT JOIN MAESTROS.PAIS_IDIOMA pi ON pi.ID_PAIS = p.ID_PAIS AND pi.ID_IDIOMA = :idIdioma
+        WHERE t.ID_TAREA_RAM IN (:idTareas)
+        GROUP BY t.ID_TAREA_RAM
+        ORDER BY t.ID_TAREA_RAM
+      `;
+      
+      const tareaCadenasMercados = await sequelizeAjenos.query(cadenasMercadoQuery, {
+        replacements: { idTareas, idIdioma },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      const tareaCadenasMercadoMap = {};
+      tareaCadenasMercados.forEach(item => {
+        tareaCadenasMercadoMap[item.idTarea] = item;
+      });
+      
+      const result = await Promise.all(tareaBasicaList.map(async (tarea) => {
+        const tareaCadenasMercado = tareaCadenasMercadoMap[tarea.idTarea];
+        if (tareaCadenasMercado) {
+          tarea.cadenas = tareaCadenasMercado.cadenas ? 
+            tareaCadenasMercado.cadenas.split(',').map(c => fixEncoding(c)) : [];
+          tarea.mercados = tareaCadenasMercado.mercados ? 
+            tareaCadenasMercado.mercados.split(',').map(m => fixEncoding(m)) : [];
+        } else {
+          tarea.cadenas = [];
+          tarea.mercados = [];
+        }
+        
+        const idsAliasQuery = `
+          SELECT DISTINCT at.ID_ALIAS
+          FROM AJENOS.ALIAS_TAREA at
+          WHERE at.ID_TAREA_RAM = :idTarea AND at.FECHA_BAJA IS NULL
+        `;
+        
+        const idsAlias = await sequelizeAjenos.query(idsAliasQuery, {
+          replacements: { idTarea: tarea.idTarea },
+          type: sequelizeAjenos.QueryTypes.SELECT
+        });
+        
+        tarea.idsAlias = idsAlias.map(item => item.ID_ALIAS);
+        
+        tarea.nombreTarea = fixEncoding(tarea.nombreTarea);
+        tarea.descripcionTipoTarea = fixEncoding(tarea.descripcionTipoTarea);
+        tarea.descripcionTipoEstadoTarea = fixEncoding(tarea.descripcionTipoEstadoTarea);
+        
+        if (tarea.fechaAlta) {
+          tarea.fechaAlta = new Date(tarea.fechaAlta).toISOString().split('T')[0];
+        }
+        
+        return tarea;
+      }));
+      
+      return result;
+    } catch (error) {
+      console.error('Error en findTareasByTipoTarea:', error);
+      throw error;
+    }
+};
+
+exports.getTiposTarea = async (idIdioma = 1) => {
+    try {
+      const query = `
+        SELECT tt.ID_TIPO_TAREA as id, tti.DESCRIPCION as descripcion
+        FROM AJENOS.TIPO_TAREA tt
+        INNER JOIN AJENOS.TIPO_TAREA_IDIOMA tti ON tt.ID_TIPO_TAREA = tti.ID_TIPO_TAREA
+        WHERE tti.ID_IDIOMA = :idIdioma AND tt.ID_TIPO_TAREA <> 3
+        ORDER BY tt.ID_TIPO_TAREA
+      `;
+      
+      const result = await sequelizeAjenos.query(query, {
+        replacements: { idIdioma },
+        type: sequelizeAjenos.QueryTypes.SELECT
+      });
+      
+      return result.map(item => ({
+        id: item.id,
+        descripcion: fixEncoding(item.descripcion)
+      }));
+    } catch (error) {
+      console.error('Error al obtener tipos de tarea:', error);
+      return [];
+    }
+};
+
+exports.getTareasInfo = async (idsTarea) => {
+  try {
+    if (!idsTarea || idsTarea.length === 0) {
+      return [];
+    }
+    
+    const query = `
+      SELECT t.ID_TAREA_RAM as idTarea, t.ID_TIPO_TAREA as idTipoTarea
+      FROM AJENOS.TAREA_RAM t
+      WHERE t.ID_TAREA_RAM IN (:idsTarea)
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idsTarea },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error en getTareasInfo:', error);
+    throw error;
+  }
+};
+
+exports.createEvento = async (eventoData) => {
+    const transaction = await sequelizeAjenos.transaction();
+    
+    try {
+      const { 
+        nombre, 
+        descripcion, 
+        idTipoEvento, 
+        idTipoEstadoEvento, 
+        idTipoTarea,
+        idTipoEstadoLineaCompras,
+        createEventoTarea,
+        usuarioAlta 
+      } = eventoData;
+  
+      // Obtener el máximo ID actual
+      const [maxIdResult] = await sequelizeAjenos.query(
+        "SELECT MAX(ID_EVENTO_RAM) as maxId FROM AJENOS.EVENTO_RAM",
+        { type: sequelizeAjenos.QueryTypes.SELECT, transaction }
+      );
+      
+      const idEvento = (maxIdResult.maxId || 0) + 1;
+      
+      const insertEventoQuery = `
+        INSERT INTO AJENOS.EVENTO_RAM 
+          (ID_EVENTO_RAM, NOMBRE, DESCRIPCION, ID_TIPO_EVENTO_RAM, ID_TIPO_ESTADO_EVENTO_RAM, 
+          ID_TIPO_ESTADO_LINEA_COMPRAS, ID_TIPO_TAREA, USUARIO_ALTA, FECHA_ALTA)
+        VALUES
+          (:idEvento, :nombre, :descripcion, :idTipoEvento, :idTipoEstadoEvento, 
+          :idTipoEstadoLineaCompras, :idTipoTarea, :usuarioAlta, CURRENT_TIMESTAMP)
+      `;
+    
+      await sequelizeAjenos.query(insertEventoQuery, {
+        replacements: {
+          idEvento,
+          nombre,
+          descripcion,
+          idTipoEvento,
+          idTipoEstadoEvento,
+          idTipoEstadoLineaCompras,
+          idTipoTarea,
+          usuarioAlta
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT,
+        transaction
+      });
+      
+      if (createEventoTarea && createEventoTarea.length > 0) {
+        const insertEventoTareaQuery = `
+          INSERT INTO AJENOS.EVENTO_TAREA_RAM
+            (ID_EVENTO_RAM, ID_TAREA_RAM)
+          VALUES
+            (:idEvento, :idTarea)
+        `;
+        
+        for (const tareaItem of createEventoTarea) {
+          await sequelizeAjenos.query(insertEventoTareaQuery, {
+            replacements: {
+              idEvento,
+              idTarea: tareaItem.idTarea
+            },
+            type: sequelizeAjenos.QueryTypes.INSERT,
+            transaction
+          });
+        }
+      }
+      
+      await transaction.commit();
+      
+      cache.clear('eventos_');
+      
+      return idEvento;
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error en createEvento:', error);
+      throw error;
+    }
+  };

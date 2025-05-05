@@ -4,9 +4,9 @@ const commonOptions = {
   host: process.env.MYSQL_HOST || 'mysqldb',
   dialect: 'mysql',
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  collation: 'utf8mb4_unicode_ci',
   dialectOptions: {
     charset: 'utf8mb4',
-    collate: 'utf8mb4_unicode_ci',
     connectTimeout: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 60000,
     maxPreparedStatements: 100,
     decimalNumbers: true,
