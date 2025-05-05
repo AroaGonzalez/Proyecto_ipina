@@ -53,7 +53,7 @@ const sequelizeMaestros = new Sequelize(
 );
 
 async function connectWithRetry() {
-  let retries = 10;
+  let retries = 30;
   while (retries > 0) {
     try {
       await sequelizeAjenos.sync({ alter: true });

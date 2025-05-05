@@ -19,5 +19,7 @@ router.put('/estado', eventoController.updateEventoEstado);
 router.get('/tareas/list', eventoController.getTareasByTipo);
 router.get('/tipos-tarea', eventoController.getTiposTarea);
 router.post('/create', eventoController.createEvento);
+router.get('/:id', eventoController.getEventoById);
+router.put('/:id', eventoController.updateEvento);
 
 module.exports = router;

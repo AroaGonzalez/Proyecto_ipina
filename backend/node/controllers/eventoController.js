@@ -260,3 +260,75 @@ exports.createEvento = async (req, res) => {
     });
   }
 };
+
+exports.getEventoById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const evento = await eventoRepository.findEventoById(parseInt(id));
+    
+    if (!evento) {
+      return res.status(404).json({ message: 'Evento no encontrado' });
+    }
+    
+    res.json(evento);
+  } catch (error) {
+    console.error('Error al obtener evento:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
+};
+
+exports.getEventoById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { idIdioma = 1 } = req.query;
+    
+    const evento = await eventoRepository.findEventoById(parseInt(id), parseInt(idIdioma));
+    
+    if (!evento) {
+      return res.status(404).json({ message: 'Evento no encontrado' });
+    }
+    
+    res.json(evento);
+  } catch (error) {
+    console.error('Error al obtener evento:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
+};
+
+// En el controller eventoController.js
+exports.updateEvento = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const eventoData = req.body;
+    
+    // Validación de datos requeridos
+    if (!eventoData.nombreEvento || !eventoData.descripcion) {
+      return res.status(400).json({
+        message: 'Faltan campos obligatorios: nombre o descripción'
+      });
+    }
+    
+    // Si se envía idsTarea, convertirlo a formato createEventoTarea
+    if (eventoData.idsTarea && Array.isArray(eventoData.idsTarea)) {
+      eventoData.createEventoTarea = eventoData.idsTarea.map(idTarea => ({ idTarea }));
+    }
+    
+    // Preparar los datos para el repositorio
+    const dataToUpdate = {
+      nombreEvento: eventoData.nombreEvento,
+      descripcion: eventoData.descripcion,
+      idTipoTarea: eventoData.idTipoTarea, // Asegúrate de pasar esto
+      idTipoEvento: eventoData.idTipoEvento,
+      idTipoEstadoEvento: eventoData.idTipoEstadoEvento,
+      createEventoTarea: eventoData.createEventoTarea,
+      usuario: req.user?.username || 'sistema'
+    };
+    
+    const result = await eventoRepository.updateEvento(parseInt(id), dataToUpdate);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error al actualizar evento:', error);
+    res.status(500).json({ message: 'Error al actualizar el evento', error: error.message });
+  }
+};

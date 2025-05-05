@@ -49,44 +49,6 @@ const sequelizeMaestros = new Sequelize(
   commonOptions
 );
 
-const MAX_RETRIES = 30;
-const RETRY_INTERVAL = 10000;
-
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-async function connectWithRetry() {
-  let retries = MAX_RETRIES;
-  
-  while (retries > 0) {
-    try {
-      await sequelizeAjenos.authenticate();
-      await sequelizeMaestros.authenticate();
-      
-      console.log('✅ Conexión a MySQL establecida correctamente.');
-      
-      await sequelizeAjenos.sync({ alter: true });
-      await sequelizeMaestros.sync({ alter: true });
-      
-      console.log('✅ Tablas sincronizadas correctamente.');
-      return;
-    } catch (error) {
-      console.error('Error al conectar o sincronizar con MySQL:', error.message);
-      retries -= 1;
-      
-      if (retries > 0) {
-        console.log(`Reintentando conexión en ${RETRY_INTERVAL/1000} segundos (${retries} intentos restantes)...`);
-        await sleep(RETRY_INTERVAL);
-      }
-    }
-  }
-  
-  if (retries === 0) {
-    console.error('No se pudo conectar a MySQL después de varios intentos.');
-    process.exit(1);
-  }
-}
-
-connectWithRetry();
 
 module.exports = {
   sequelizeAjenos,

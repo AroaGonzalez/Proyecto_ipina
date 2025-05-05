@@ -23,6 +23,7 @@ import NuevaTareaRecuento from './components/nuevaTareaRecuento';
 import EditarTarea from './components/editarTarea';
 import Eventos from './components/eventos';
 import NuevoEvento from './components/nuevoEvento';
+import EditEvento from './components/editEvento';
 
 
 function Layout({ children }) {
@@ -153,6 +154,13 @@ function App() {
               element={
                 <PrivateRoute>
                   <EdicionRelaciones />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/editar-evento/:id"
+              element={
+                <PrivateRoute>
+                  <EditEvento />
                 </PrivateRoute>
               }
             />
