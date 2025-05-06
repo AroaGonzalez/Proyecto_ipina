@@ -800,7 +800,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(aliases, aliasSearch).map((alias) => (
                     <div 
@@ -838,7 +837,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -869,7 +867,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(mercados, mercadoSearch).map((mercado) => (
                     <div 
@@ -907,7 +904,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -940,7 +936,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(cadenas, cadenaSearch).map((cadena) => (
                     <div 
@@ -978,7 +973,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -1009,7 +1003,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(gruposCadena, grupoCadenaSearch).map((grupo) => (
                     <div 
@@ -1047,7 +1040,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -1088,7 +1080,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(gruposLocalizacion, grupoLocalizacionSearch).map((grupo) => (
                     <div 
@@ -1126,7 +1117,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -1157,7 +1147,6 @@ const Tareas = () => {
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div className="dropdown-items-container">
                 <div className="dropdown-items">
                   {filterBySearch(ajenos, ajenoSearch).map((ajeno) => (
                     <div 
@@ -1195,7 +1184,6 @@ const Tareas = () => {
                   />
                   <span>Seleccionar todo</span>
                 </div>
-              </div>
             </div>
           )}
         </div>

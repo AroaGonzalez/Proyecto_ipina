@@ -115,19 +115,6 @@
   font-weight: normal;
 }
 
-.filter-dropdown .dropdown-value {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  height: 35px;
-  border-bottom: 1px solid #ccc;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s;
-}
-
 .filter-value {
   display: flex;
   justify-content: space-between;
@@ -159,7 +146,8 @@
   margin-left: 5px;
 }
 
-.dropdown-menu {
+/* Nuevo estilo para el dropdown que coincide con tareas.css */
+.filter-dropdown-content {
   position: absolute;
   top: 100%;
   left: 0;
@@ -193,11 +181,6 @@
   border-radius: 0;
   font-size: 14px;
   outline: none;
-}
-
-.dropdown-items-container {
-  max-height: 250px;
-  overflow-y: auto;
 }
 
 .dropdown-items {
@@ -235,6 +218,7 @@
   cursor: default;
 }
 
+/* Nuevos estilos para coincidir con tareas.css */
 .dropdown-item.select-all {
   border-top: 1px solid #ddd;
   padding: 10px 15px;
@@ -533,9 +517,56 @@
   background: #a0a0a0;
 }
 
+/* Elimino la clase dropdown-checkbox y modifico para usar el estilo de tareas */
+.dropdown-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 8px 0;
+}
+
+/* Estilos para los checkboxes en la tabla */
+.checkbox {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+}
+
+/* Media queries */
 @media (max-width: 1200px) {
   .filter-field {
     min-width: 180px;
+  }
+  
+  .filter-row {
+    flex-wrap: wrap;
+  }
+  
+  .filter-field {
+    min-width: 200px;
+    flex-basis: calc(33.333% - 10px);
+  }
+  
+  .filter-buttons {
+    margin-top: 15px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .selection-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .selection-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
@@ -573,5 +604,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+  
+  .filter-field {
+    flex: 0 0 100%;
   }
 }

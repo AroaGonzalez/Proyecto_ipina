@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { FaChevronDown, FaSearch, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo } from 'react-icons/fa';
+import { FaChevronDown, FaSearch, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../context/LanguageContext';
@@ -59,6 +59,14 @@ const Propuestas = () => {
   // Estado para selección múltiple
   const [selectedPropuestas, setSelectedPropuestas] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  
+  // Estados para selección múltiple en filtros
+  const [selectedMercados, setSelectedMercados] = useState([]);
+  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+  const [selectedEventos, setSelectedEventos] = useState([]);
+  const [selectedEstadosPropuesta, setSelectedEstadosPropuesta] = useState([]);
+  const [selectedUnidadesCompras, setSelectedUnidadesCompras] = useState([]);
+  const [selectedArticulos, setSelectedArticulos] = useState([]);
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
@@ -190,14 +198,14 @@ const Propuestas = () => {
       // Construir filtros para la petición
       const filter = {
         idsPropuesta: idPropuesta ? [idPropuesta] : [],
-        idsUnidadComprasGestora: idUnidadCompras ? [idUnidadCompras] : [],
-        idsAjeno: idArticulos ? [idArticulos] : [],
-        idsMercado: idMercado ? [idMercado] : [],
-        idsGrupoCadena: idGrupoCadena ? [idGrupoCadena] : [],
+        idsUnidadComprasGestora: selectedUnidadesCompras.length > 0 ? selectedUnidadesCompras : [],
+        idsAjeno: selectedArticulos.length > 0 ? selectedArticulos : [],
+        idsMercado: selectedMercados.length > 0 ? selectedMercados : [],
+        idsGrupoCadena: selectedGruposCadena.length > 0 ? selectedGruposCadena : [],
         idsLocalizacion: idLocalizacion ? [idLocalizacion] : [],
-        idsEvento: idNombreEvento ? [idNombreEvento] : [],
+        idsEvento: selectedEventos.length > 0 ? selectedEventos : [],
         idsEjecucion: idEjecucion ? [idEjecucion] : [],
-        idsTipoEstadoPropuesta: estadoPropuesta ? [estadoPropuesta] : [],
+        idsTipoEstadoPropuesta: selectedEstadosPropuesta.length > 0 ? selectedEstadosPropuesta : [],
         fechaCreacionDesde: inicioFechaCreacion || null,
         fechaCreacionHasta: finFechaCreacion || null
       };
@@ -225,16 +233,16 @@ const Propuestas = () => {
   // Función para limpiar filtros
   const clearFilters = () => {
     setIdLocalizacion('');
-    setIdMercado('');
-    setIdGrupoCadena('');
-    setIdNombreEvento('');
+    setSelectedMercados([]);
+    setSelectedGruposCadena([]);
+    setSelectedEventos([]);
     setIdEjecucion('');
     setIdPropuesta('');
-    setEstadoPropuesta('');
+    setSelectedEstadosPropuesta([]);
     setInicioFechaCreacion('');
     setFinFechaCreacion('');
-    setIdUnidadCompras('');
-    setIdArticulos('');
+    setSelectedUnidadesCompras([]);
+    setSelectedArticulos([]);
     setShowResults(false);
     setPropuestas([]);
     setSelectedPropuestas([]);
@@ -272,34 +280,42 @@ const Propuestas = () => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Renderizado de elementos de dropdown
-  const renderDropdownItems = (items, selectedValue, filterSetter, searchTerm) => {
-    const filteredItems = filterBySearch(items, searchTerm);
-    
-    if (filteredItems.length === 0) {
-      return (
-        <div className="dropdown-item no-results">
-          No se encontraron resultados
-        </div>
-      );
+  // Manejar selección individual en filtros
+  const handleFilterSelect = (filterType, value) => {
+    switch (filterType) {
+      case 'mercado':
+        setSelectedMercados(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      case 'grupoCadena':
+        setSelectedGruposCadena(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      case 'evento':
+        setSelectedEventos(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      case 'estadoPropuesta':
+        setSelectedEstadosPropuesta(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      case 'unidadCompras':
+        setSelectedUnidadesCompras(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      case 'articulos':
+        setSelectedArticulos(prev => 
+          prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+        );
+        break;
+      default:
+        break;
     }
-    
-    return (
-      <>
-        {filteredItems.map(item => (
-          <div 
-            key={item.id} 
-            className="dropdown-item"
-            onClick={() => {
-              filterSetter(item.id);
-              setOpenFilter(null);
-            }}
-          >
-            <span>{`${item.id} - ${normalizeText(item.descripcion || '')}`}</span>
-          </div>
-        ))}
-      </>
-    );
   };
 
   if (error) {
@@ -329,13 +345,10 @@ const Propuestas = () => {
           <thead>
             <tr>
               <th className="checkbox-column">
-                <div className="checkbox">
-                  <input 
-                    type="checkbox" 
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                    id="select-all"
-                  />
+                <div className="checkbox" onClick={handleSelectAll}>
+                  {selectAll ? 
+                    <FaCheckSquare className="checkbox-icon checked" /> : 
+                    <FaSquare className="checkbox-icon" />}
                 </div>
               </th>
               <th>ID LÍNEA</th>
@@ -359,13 +372,10 @@ const Propuestas = () => {
                 className={selectedPropuestas.includes(propuesta.idPropuesta) ? 'selected-row' : ''}
               >
                 <td className="checkbox-column">
-                  <div className="checkbox">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedPropuestas.includes(propuesta.idPropuesta)}
-                      onChange={() => handleSelectPropuesta(propuesta.idPropuesta)}
-                      id={`propuesta-${propuesta.idPropuesta}`}
-                    />
+                  <div className="checkbox" onClick={() => handleSelectPropuesta(propuesta.idPropuesta)}>
+                    {selectedPropuestas.includes(propuesta.idPropuesta) ? 
+                      <FaCheckSquare className="checkbox-icon checked" /> : 
+                      <FaSquare className="checkbox-icon" />}
                   </div>
                 </td>
                 <td>{propuesta.idEjecucion}</td>
@@ -429,17 +439,21 @@ const Propuestas = () => {
             
             {/* Filtro de ID Mercado */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('mercado')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('mercado')}
+              >
                 <label className="filter-label">Id o Mercado</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {idMercado ? mercados.find(m => m.id === idMercado)?.descripcion || `ID: ${idMercado}` : 'Seleccionar'}
+                    {selectedMercados.length > 0 
+                      ? `${selectedMercados.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'mercado' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -449,10 +463,42 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(mercados, idMercado, setIdMercado, mercadoSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                      {filterBySearch(mercados, mercadoSearch).map((mercado) => (
+                        <div 
+                          key={mercado.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('mercado', mercado.id);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedMercados.includes(mercado.id)}
+                            readOnly
+                          />
+                          <span>{mercado.id} - {normalizeText(mercado.descripcion)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedMercados.length === mercados.length) {
+                          setSelectedMercados([]);
+                        } else {
+                          setSelectedMercados(mercados.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedMercados.length === mercados.length && mercados.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -461,17 +507,21 @@ const Propuestas = () => {
             
             {/* Filtro de ID Grupo Cadena */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('grupoCadena')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('grupoCadena')}
+              >
                 <label className="filter-label">Id o Grupo Cadena (T6)</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {idGrupoCadena ? gruposCadena.find(g => g.id === idGrupoCadena)?.descripcion || `ID: ${idGrupoCadena}` : 'Seleccionar'}
+                    {selectedGruposCadena.length > 0 
+                      ? `${selectedGruposCadena.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'grupoCadena' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -481,29 +531,65 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(gruposCadena, idGrupoCadena, setIdGrupoCadena, grupoCadenaSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                      {filterBySearch(gruposCadena, grupoCadenaSearch).map((grupo) => (
+                        <div 
+                          key={grupo.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('grupoCadena', grupo.id);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedGruposCadena.includes(grupo.id)}
+                            readOnly
+                          />
+                          <span>{grupo.id} - {grupo.descripcion}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedGruposCadena.length === gruposCadena.length) {
+                          setSelectedGruposCadena([]);
+                        } else {
+                          setSelectedGruposCadena(gruposCadena.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedGruposCadena.length === gruposCadena.length && gruposCadena.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
             
-            {/* Filtro de ID Nombre Evento */}
+            {/* Filtro de Nombre Evento */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('nombreEvento')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('nombreEvento')}
+              >
                 <label className="filter-label">Id o Nombre Evento</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {idNombreEvento ? eventos.find(e => e.id === idNombreEvento)?.descripcion || `ID: ${idNombreEvento}` : 'Seleccionar'}
+                    {selectedEventos.length > 0 
+                      ? `${selectedEventos.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'nombreEvento' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -513,10 +599,42 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(eventos, idNombreEvento, setIdNombreEvento, nombreEventoSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                      {filterBySearch(eventos, nombreEventoSearch).map((evento) => (
+                        <div 
+                          key={evento.idEvento} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('evento', evento.idEvento);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedEventos.includes(evento.idEvento)}
+                            readOnly
+                          />
+                          <span>{`${evento.idEvento} - ${normalizeText(evento.nombre || '')}`}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedEventos.length === eventos.length) {
+                          setSelectedEventos([]);
+                        } else {
+                          setSelectedEventos(eventos.map(item => item.idEvento));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedEventos.length === eventos.length && eventos.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -551,17 +669,21 @@ const Propuestas = () => {
           <div className="filters-row">
             {/* Filtro de Estado de la Propuesta */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('estadoPropuesta')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('estadoPropuesta')}
+              >
                 <label className="filter-label">Estado de la Propuesta</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {estadoPropuesta ? estadosPropuesta.find(e => e.id === estadoPropuesta)?.descripcion || `ID: ${estadoPropuesta}` : 'Seleccionar'}
+                    {selectedEstadosPropuesta.length > 0 
+                      ? `${selectedEstadosPropuesta.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'estadoPropuesta' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -571,10 +693,42 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(estadosPropuesta, estadoPropuesta, setEstadoPropuesta, estadoPropuestaSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                    {filterBySearch(estadosPropuesta, estadoPropuestaSearch).map((estado) => (
+                        <div 
+                          key={estado.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('estadoPropuesta', estado.id);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedEstadosPropuesta.includes(estado.id)}
+                            readOnly
+                          />
+                          <span>{estado.id} - {estado.descripcion}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedEstadosPropuesta.length === estadosPropuesta.length) {
+                          setSelectedEstadosPropuesta([]);
+                        } else {
+                          setSelectedEstadosPropuesta(estadosPropuesta.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedEstadosPropuesta.length === estadosPropuesta.length && estadosPropuesta.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -611,19 +765,23 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de ID Unidad Compras */}
+            {/* Filtro de Unidad Compras */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('unidadCompras')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('unidadCompras')}
+              >
                 <label className="filter-label">Id o Nombre de Unidad Compras Gestión</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {idUnidadCompras ? unidadesCompras.find(u => u.id === idUnidadCompras)?.descripcion || `ID: ${idUnidadCompras}` : 'Seleccionar'}
+                    {selectedUnidadesCompras.length > 0 
+                      ? `${selectedUnidadesCompras.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'unidadCompras' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -633,29 +791,65 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(unidadesCompras, idUnidadCompras, setIdUnidadCompras, unidadComprasSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                      {filterBySearch(unidadesCompras, unidadComprasSearch).map((unidad) => (
+                        <div 
+                          key={unidad.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('unidadCompras', unidad.id);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedUnidadesCompras.includes(unidad.id)}
+                            readOnly
+                          />
+                          <span>{unidad.id} - {unidad.descripcion || ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedUnidadesCompras.length === unidadesCompras.length) {
+                          setSelectedUnidadesCompras([]);
+                        } else {
+                          setSelectedUnidadesCompras(unidadesCompras.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedUnidadesCompras.length === unidadesCompras.length && unidadesCompras.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
             
-            {/* Filtro de ID Artículos */}
+            {/* Filtro de Artículos */}
             <div className="filter-field">
-              <div className="filter-dropdown" onClick={() => toggleFilter('articulos')}>
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('articulos')}
+              >
                 <label className="filter-label">Id o Artículos</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {idArticulos ? articulos.find(a => a.id === idArticulos)?.descripcion || `ID: ${idArticulos}` : 'Seleccionar'}
+                    {selectedArticulos.length > 0 
+                      ? `${selectedArticulos.length} seleccionados` 
+                      : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
-                
                 {openFilter === 'articulos' && (
-                  <div className="dropdown-menu">
+                  <div className="filter-dropdown-content">
                     <div className="dropdown-search">
                       <input 
                         type="text" 
@@ -665,17 +859,48 @@ const Propuestas = () => {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="dropdown-items-container">
-                      <div className="dropdown-items">
-                        {renderDropdownItems(articulos, idArticulos, setIdArticulos, articulosSearch)}
-                      </div>
+                    <div className="dropdown-items">
+                      {filterBySearch(articulos, articulosSearch).map((articulo) => (
+                        <div 
+                          key={articulo.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFilterSelect('articulos', articulo.id);
+                          }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedArticulos.includes(articulo.id)}
+                            readOnly
+                          />
+                          <span>{articulo.id} - {articulo.nombre || articulo.descripcion || ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedArticulos.length === articulos.length) {
+                          setSelectedArticulos([]);
+                        } else {
+                          setSelectedArticulos(articulos.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedArticulos.length === articulos.length && articulos.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
             
-            {/* Botones de acción */}
             <div className="search-button-container">
               <button className="reset-button" onClick={clearFilters}>
                 <FaUndo />

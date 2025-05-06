@@ -310,6 +310,11 @@
   outline: none;
 }
 
+.dropdown-items-container {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
 .dropdown-items {
   max-height: 250px;
   overflow-y: auto;
