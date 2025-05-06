@@ -562,14 +562,12 @@ const Eventos = () => {
   };
   
   const filterBySearch = (items, searchTerm, field = null) => {
-    // Handle case where items might be null/undefined
     if (!items) return [];
     
-    // Handle cases where items might be an object with content array
     const itemsArray = Array.isArray(items) ? items : 
-                      (items && items.content && Array.isArray(items.content)) ? 
-                      items.content : [];
-    
+      (items && items.content && Array.isArray(items.content)) ? 
+      items.content : [];
+
     if (!searchTerm || searchTerm.trim() === '') return itemsArray;
     
     const normalizedSearchTerm = searchTerm.toLowerCase().trim();

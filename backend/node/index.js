@@ -53,7 +53,7 @@ const sequelizeMaestros = new Sequelize(
 );
 
 async function connectWithRetry() {
-  let retries = 30;
+  let retries = 40;
   while (retries > 0) {
     try {
       await sequelizeAjenos.sync({ alter: true });
@@ -63,8 +63,8 @@ async function connectWithRetry() {
     } catch (error) {
       console.error('Error al conectar o sincronizar con MySQL:', error.message);
       retries -= 1;
-      console.log(`Reintentando conexión en 10 segundos (${retries} intentos restantes)...`);
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      console.log(`Reintentando conexión en 15 segundos (${retries} intentos restantes)...`);
+      await new Promise((resolve) => setTimeout(resolve, 15000));
     }
   }
   if (retries === 0) {
@@ -91,6 +91,7 @@ const tareaRoutes = require('./routes/tareaRoutes');
 const creacionRoutes = require('./routes/creationRoutes');
 const aliasRelacionesRoutes = require('./routes/aliasRelacionesRoutes');
 const eventoRoutes = require('./routes/eventoRoutes');
+const propuestaRoutes = require('./routes/propuestaRoutes');
 
 const User = require('./models/user')(sequelizeAjenos);
 
@@ -268,6 +269,7 @@ app.use('/api/tareas', tareaRoutes);
 app.use('/creacion', creacionRoutes);
 app.use('/relaciones', aliasRelacionesRoutes);
 app.use('/eventos', eventoRoutes);
+app.use('/propuestas', propuestaRoutes);
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

@@ -24,7 +24,7 @@ import EditarTarea from './components/editarTarea';
 import Eventos from './components/eventos';
 import NuevoEvento from './components/nuevoEvento';
 import EditEvento from './components/editEvento';
-
+import Propuestas from './components/propuestas';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -168,6 +168,13 @@ function App() {
               element={
                 <PrivateRoute>
                   <Tareas />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/propuestas"
+              element={
+                <PrivateRoute>
+                  <Propuestas />
                 </PrivateRoute>
               }
             />
