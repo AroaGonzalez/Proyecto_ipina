@@ -5,7 +5,6 @@ exports.getPropuestasByFilter = async (req, res) => {
     const filter = req.body.filter || {};
     const page = req.body.page || { number: 0, size: 50 };
     
-    // Configurar el filtro y la paginación
     const propuestaFilter = {
       idIdioma: req.query.idIdioma || 1,
       idsPropuesta: filter.idsPropuesta || [],
@@ -27,11 +26,8 @@ exports.getPropuestasByFilter = async (req, res) => {
       req.query.tipoAlias.split(',').map(id => parseInt(id.trim())) : 
       [];
     
-    console.log(`Consultando propuestas con filtros:`, propuestaFilter);
-    
     const result = await propuestaRepository.findPropuestasByFilter(propuestaFilter, tipoAlias);
     
-    // Formatear la respuesta como se espera
     const response = {
       propuestas: result.content,
       page: {
@@ -40,8 +36,6 @@ exports.getPropuestasByFilter = async (req, res) => {
         total: result.totalElements
       }
     };
-    
-    console.log(`Enviando ${result.content.length} de ${result.totalElements} resultados`);
     
     res.json(response);
   } catch (error) {
@@ -81,6 +75,34 @@ exports.getTiposEstadoPropuesta = async (req, res) => {
     res.status(500).json({ 
       message: 'Error al obtener tipos de estado de propuesta', 
       error: error.message 
+    });
+  }
+};
+
+exports.deletePropuestas = async (req, res) => {
+  try {
+    const { idsPropuesta } = req.body;
+    
+    if (!idsPropuesta || !Array.isArray(idsPropuesta) || idsPropuesta.length === 0) {
+      return res.status(400).json({
+        message: 'Es necesario proporcionar al menos un ID de propuesta válido'
+      });
+    }
+    
+    const usuarioBaja = req.body.usuarioBaja || req.user?.username || 'sistema';
+    const fechaBaja = req.body.fechaBaja ? new Date(req.body.fechaBaja) : new Date();
+    
+    await propuestaRepository.deletePropuestas(idsPropuesta, usuarioBaja, fechaBaja);
+    
+    res.json({
+      message: `Se han eliminado ${idsPropuesta.length} propuesta(s) correctamente`,
+      eliminados: idsPropuesta
+    });
+  } catch (error) {
+    console.error('Error en deletePropuestas:', error);
+    res.status(500).json({
+      message: 'Error al eliminar propuestas',
+      error: error.message
     });
   }
 };

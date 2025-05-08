@@ -1095,7 +1095,6 @@ const ParametrizacionAlias = () => {
                 onClick={handleSearch}
                 disabled={loading || loadingAjenos}
               >
-                <FaSearch className="search-icon" />
                 <span>{t('BUSCAR')}</span>
               </button>
             </div>
@@ -1299,7 +1298,7 @@ const ParametrizacionAlias = () => {
                 <th>{t('ALIAS TIPO')}</th>
                 <th>{t('ID ARTÍCULO')}</th>
                 <th>{t('ARTÍCULO')}</th>
-                <th>{t('ESTADO ARTÍCULO SPI')}</th>
+                <th>{t('ESTADO ARTÍCULO SFI')}</th>
                 <th>{t('ESTADO ARTÍCULO RAM')}</th>
                 <th>{t('ESTADO ARTÍCULO')}</th>
               </tr>

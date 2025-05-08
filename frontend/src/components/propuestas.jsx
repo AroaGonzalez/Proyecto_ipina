@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { FaChevronDown, FaSearch, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo, FaCheckSquare, FaSquare } from 'react-icons/fa';
+import { FaChevronDown, FaSearch, FaTrash, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo, FaCheckSquare, FaSquare } from 'react-icons/fa';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../context/LanguageContext';
@@ -10,21 +10,18 @@ const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 const Propuestas = () => {
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
+
+  const [paginaActual, setPaginaActual] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [tamañoPagina] = useState(50);
   
-  // Estados para los filtros
   const [idLocalizacion, setIdLocalizacion] = useState('');
-  const [idMercado, setIdMercado] = useState('');
-  const [idGrupoCadena, setIdGrupoCadena] = useState('');
-  const [idNombreEvento, setIdNombreEvento] = useState('');
   const [idEjecucion, setIdEjecucion] = useState('');
   const [idPropuesta, setIdPropuesta] = useState('');
-  const [estadoPropuesta, setEstadoPropuesta] = useState('');
   const [inicioFechaCreacion, setInicioFechaCreacion] = useState('');
   const [finFechaCreacion, setFinFechaCreacion] = useState('');
-  const [idUnidadCompras, setIdUnidadCompras] = useState('');
-  const [idArticulos, setIdArticulos] = useState('');
   
-  // Estados para búsqueda
   const [mercadoSearch, setMercadoSearch] = useState('');
   const [grupoCadenaSearch, setGrupoCadenaSearch] = useState('');
   const [nombreEventoSearch, setNombreEventoSearch] = useState('');
@@ -32,11 +29,9 @@ const Propuestas = () => {
   const [unidadComprasSearch, setUnidadComprasSearch] = useState('');
   const [articulosSearch, setArticulosSearch] = useState('');
   
-  // Estado para el menú desplegable activo
   const [openFilter, setOpenFilter] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
 
-  // Estado para almacenar las propuestas
   const [propuestas, setPropuestas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -44,11 +39,9 @@ const Propuestas = () => {
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
   const [totalElements, setTotalElements] = useState(0);
 
-  // Referencia para manejar clics fuera de los dropdowns
   const dropdownRef = useRef(null);
   const tableContainerRef = useRef();
 
-  // Estados para datos de los dropdowns
   const [mercados, setMercados] = useState([]);
   const [gruposCadena, setGruposCadena] = useState([]);
   const [eventos, setEventos] = useState([]);
@@ -56,11 +49,9 @@ const Propuestas = () => {
   const [unidadesCompras, setUnidadesCompras] = useState([]);
   const [articulos, setArticulos] = useState([]);
   
-  // Estado para selección múltiple
   const [selectedPropuestas, setSelectedPropuestas] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   
-  // Estados para selección múltiple en filtros
   const [selectedMercados, setSelectedMercados] = useState([]);
   const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
   const [selectedEventos, setSelectedEventos] = useState([]);
@@ -68,7 +59,6 @@ const Propuestas = () => {
   const [selectedUnidadesCompras, setSelectedUnidadesCompras] = useState([]);
   const [selectedArticulos, setSelectedArticulos] = useState([]);
 
-  // Efecto para cargar datos iniciales
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -108,7 +98,6 @@ const Propuestas = () => {
     fetchInitialData();
   }, [languageId]);
 
-  // Efecto para manejar clics fuera de los dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openFilter && !event.target.closest('.filter-dropdown')) {
@@ -122,7 +111,75 @@ const Propuestas = () => {
     };
   }, [openFilter]);
 
-  // Normalización de texto para caracteres especiales
+  useEffect(() => {
+    if (!loading && !loadingMore && hasMore) {
+      const container = tableContainerRef.current;
+      if (!container) return;
+  
+      const handleScroll = () => {
+        if (
+          container.scrollHeight - container.scrollTop <= container.clientHeight * 1.2 &&
+          hasMore && 
+          !loadingMore
+        ) {
+          loadMorePropuestas();
+        }
+      };
+  
+      container.addEventListener('scroll', handleScroll);
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [loading, loadingMore, hasMore, propuestas]);
+
+  const loadMorePropuestas = async () => {
+    if (!hasMore || loadingMore) return;
+    
+    try {
+      setLoadingMore(true);
+      
+      const nextPage = paginaActual + 1;
+      
+      const filter = {
+        idsPropuesta: idPropuesta ? idPropuesta.split(/\s+/).filter(id => id.trim() !== '') : [],
+        idsUnidadComprasGestora: selectedUnidadesCompras.length > 0 ? selectedUnidadesCompras : [],
+        idsAjeno: selectedArticulos.length > 0 ? selectedArticulos : [],
+        idsMercado: selectedMercados.length > 0 ? selectedMercados : [],
+        idsGrupoCadena: selectedGruposCadena.length > 0 ? selectedGruposCadena : [],
+        idsLocalizacion: idLocalizacion ? idLocalizacion.split(/\s+/).filter(id => id.trim() !== '') : [],
+        idsEvento: selectedEventos.length > 0 ? selectedEventos : [],
+        idsEjecucion: idEjecucion ? idEjecucion.split(/\s+/).filter(id => id.trim() !== '') : [],
+        idsTipoEstadoPropuesta: selectedEstadosPropuesta.length > 0 ? selectedEstadosPropuesta : [],
+        fechaCreacionDesde: inicioFechaCreacion || null,
+        fechaCreacionHasta: finFechaCreacion || null
+      };
+      
+      const page = { number: nextPage, size: tamañoPagina };
+      
+      const response = await axios.post(`${BASE_URL}/propuestas/filter?idIdioma=${languageId}`, {
+        filter,
+        page
+      });
+      
+      const newPropuestas = response.data.propuestas || [];
+      
+      if (newPropuestas.length === 0 || newPropuestas.length < tamañoPagina) {
+        setHasMore(false);
+      }
+      
+      setPropuestas(prevPropuestas => [...prevPropuestas, ...newPropuestas]);
+      setPaginaActual(nextPage);
+      
+    } catch (error) {
+      console.error('Error al cargar más propuestas:', error);
+      setError('Error al cargar más propuestas');
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const normalizeText = (text) => {
     if (!text) return '';
     
@@ -159,12 +216,66 @@ const Propuestas = () => {
     return normalizedText;
   };
 
-  // Función para manejar la apertura/cierre de dropdowns
+  const handleDeletePropuestas = async () => {
+    try {
+      if (selectedPropuestas.length === 0) {
+        return;
+      }
+      
+      setLoading(true);
+      
+      // Llamar al endpoint de borrado
+      await axios.put(`${BASE_URL}/propuestas/delete-propuestas`, {
+        idsPropuesta: selectedPropuestas,
+        usuarioBaja: 'frontend_user', // Idealmente esto vendría de un contexto de autenticación
+        fechaBaja: new Date().toISOString()
+      });
+      
+      // Actualizar la UI eliminando las propuestas seleccionadas
+      const updatedPropuestas = propuestas.filter(
+        propuesta => !selectedPropuestas.includes(propuesta.idPropuesta)
+      );
+      
+      // Mostrar mensaje de éxito
+      alert(`Se han eliminado ${selectedPropuestas.length} propuesta(s) correctamente`);
+      
+      // Actualizar el estado
+      setPropuestas(updatedPropuestas);
+      setTotalElements(prev => prev - selectedPropuestas.length);
+      setSelectedPropuestas([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al eliminar propuestas:', error);
+      setError(`Error al eliminar propuestas: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePublishInSFI = async () => {
+    try {
+      // You would typically call an API endpoint to publish to SFI
+      console.log("Publishing to SFI:", selectedPropuestas);
+      
+      // After successful publishing, update the UI accordingly
+      // This is a placeholder - implement according to your requirements
+      alert(`Propuestas ${selectedPropuestas.join(', ')} publicadas en SFI correctamente`);
+      
+      // Optionally clear selection after publishing
+      setSelectedPropuestas([]);
+      setSelectAll(false);
+      
+    } catch (error) {
+      console.error('Error al publicar en SFI:', error);
+      setError('Error al publicar en SFI');
+    }
+  };
+
   const toggleFilter = (filterName) => {
     setOpenFilter(openFilter === filterName ? null : filterName);
   };
 
-  // Función para filtrar datos en búsquedas
   const filterBySearch = (items, searchTerm, field = null) => {
     if (!items) return [];
     
@@ -189,28 +300,28 @@ const Propuestas = () => {
     });
   };
 
-  // Función para buscar propuestas
   const handleSearch = async () => {
     try {
       setLoading(true);
       setError(null);
+      setHasMore(true);
+      setPaginaActual(0);
       
-      // Construir filtros para la petición
       const filter = {
-        idsPropuesta: idPropuesta ? [idPropuesta] : [],
+        idsPropuesta: idPropuesta ? idPropuesta.split(/\s+/).filter(id => id.trim() !== '') : [],
         idsUnidadComprasGestora: selectedUnidadesCompras.length > 0 ? selectedUnidadesCompras : [],
         idsAjeno: selectedArticulos.length > 0 ? selectedArticulos : [],
         idsMercado: selectedMercados.length > 0 ? selectedMercados : [],
         idsGrupoCadena: selectedGruposCadena.length > 0 ? selectedGruposCadena : [],
-        idsLocalizacion: idLocalizacion ? [idLocalizacion] : [],
+        idsLocalizacion: idLocalizacion ? idLocalizacion.split(/\s+/).filter(id => id.trim() !== '') : [],
         idsEvento: selectedEventos.length > 0 ? selectedEventos : [],
-        idsEjecucion: idEjecucion ? [idEjecucion] : [],
+        idsEjecucion: idEjecucion ? idEjecucion.split(/\s+/).filter(id => id.trim() !== '') : [],
         idsTipoEstadoPropuesta: selectedEstadosPropuesta.length > 0 ? selectedEstadosPropuesta : [],
         fechaCreacionDesde: inicioFechaCreacion || null,
         fechaCreacionHasta: finFechaCreacion || null
       };
       
-      const page = { number: 0, size: 50 };
+      const page = { number: 0, size: tamañoPagina };
       
       const response = await axios.post(`${BASE_URL}/propuestas/filter?idIdioma=${languageId}`, {
         filter,
@@ -221,6 +332,14 @@ const Propuestas = () => {
       setTotalElements(response.data.page.total || 0);
       setUltimaActualizacion(new Date());
       setShowResults(true);
+
+      if (
+        response.data.propuestas.length === 0 || 
+        response.data.propuestas.length < tamañoPagina || 
+        response.data.propuestas.length === response.data.page.total
+      ) {
+        setHasMore(false);
+      }
       
     } catch (error) {
       console.error('Error al buscar propuestas:', error);
@@ -230,7 +349,6 @@ const Propuestas = () => {
     }
   };
 
-  // Función para limpiar filtros
   const clearFilters = () => {
     setIdLocalizacion('');
     setSelectedMercados([]);
@@ -249,12 +367,10 @@ const Propuestas = () => {
     setSelectAll(false);
   };
 
-  // Función para alternar la visibilidad de los filtros
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
   
-  // Manejar selección de todas las propuestas
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
     if (!selectAll) {
@@ -264,7 +380,6 @@ const Propuestas = () => {
     }
   };
   
-  // Manejar selección individual de propuesta
   const handleSelectPropuesta = (idPropuesta) => {
     setSelectedPropuestas(prev => {
       if (prev.includes(idPropuesta)) {
@@ -275,12 +390,10 @@ const Propuestas = () => {
     });
   };
   
-  // Formato de hora para mostrar última actualización
   const formatTime = (date) => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Manejar selección individual en filtros
   const handleFilterSelect = (filterType, value) => {
     switch (filterType) {
       case 'mercado':
@@ -329,40 +442,47 @@ const Propuestas = () => {
     );
   }
 
-  // Componente de tabla de propuestas
   const PropuestasTable = ({ propuestas, loading }) => {
-    if (loading) {
+    if (loading && propuestas.length === 0) {
       return <div className="loading-indicator">Cargando...</div>;
     }
-
+  
     if (!propuestas || propuestas.length === 0) {
       return null;
     }
-
+  
     return (
       <div className="propuestas-table-container" ref={tableContainerRef}>
         <table className="propuestas-table">
           <thead>
             <tr>
               <th className="checkbox-column">
-                <div className="checkbox" onClick={handleSelectAll}>
-                  {selectAll ? 
-                    <FaCheckSquare className="checkbox-icon checked" /> : 
-                    <FaSquare className="checkbox-icon" />}
+                <div className="checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                    id="select-all"
+                  />
                 </div>
               </th>
-              <th>ID LÍNEA</th>
-              <th>ID PROPUESTA</th>
-              <th>COD EJECUCIÓN</th>
-              <th>ESTADO DE LA LÍNEA</th>
-              <th>ID UNIDAD COMPRAS</th>
-              <th>NOMBRE UNIDAD COMPRAS GESTORA</th>
-              <th>ID EVENTO</th>
-              <th>EVENTO</th>
-              <th>MERCADO</th>
-              <th>ID LOCALIZ.</th>
-              <th>LOCALIZACIÓN</th>
-              <th>ESTADO LÍNEA SPI</th>
+              <th className="id-column">ID LÍNEA</th>
+              <th className="id-column">ID PROPUESTA</th>
+              <th className="short-text-column">COD EJECUCIÓN</th>
+              <th className="short-text-column">ESTADO DE LA LÍNEA</th>
+              <th className="id-column">ID UNIDAD COMPRAS</th>
+              <th className="medium-text-column">NOMBRE UNIDAD COMPRAS GESTORA</th>
+              <th className="id-column">ID EVENTO</th>
+              <th className="medium-text-column">EVENTO</th>
+              <th className="short-text-column">MERCADO</th>
+              <th className="id-column">ID LOCALIZACIÓN</th>
+              <th className="medium-text-column">LOCALIZACIÓN</th>
+              <th className="id-column">ID ARTÍCULO</th>
+              <th className="medium-text-column">ARTÍCULO</th>
+              <th className="short-text-column">CANTIDAD</th>
+              <th className="id-column">ID ALIAS</th>
+              <th className="long-text-column">DESCRIPCIÓN DEL ALIAS</th>
+              <th className="medium-text-column">FECHA DE CREACIÓN</th>
             </tr>
           </thead>
           <tbody>
@@ -372,45 +492,53 @@ const Propuestas = () => {
                 className={selectedPropuestas.includes(propuesta.idPropuesta) ? 'selected-row' : ''}
               >
                 <td className="checkbox-column">
-                  <div className="checkbox" onClick={() => handleSelectPropuesta(propuesta.idPropuesta)}>
-                    {selectedPropuestas.includes(propuesta.idPropuesta) ? 
-                      <FaCheckSquare className="checkbox-icon checked" /> : 
-                      <FaSquare className="checkbox-icon" />}
+                  <div className="checkbox">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedPropuestas.includes(propuesta.idPropuesta)}
+                      onChange={() => handleSelectPropuesta(propuesta.idPropuesta)}
+                      id={`propuesta-${propuesta.idPropuesta}`}
+                    />
                   </div>
                 </td>
-                <td>{propuesta.idEjecucion}</td>
-                <td>{propuesta.idPropuesta}</td>
-                <td>{propuesta.codEjecucion}</td>
-                <td>
+                <td className="id-column">{propuesta.idEjecucion}</td>
+                <td className="id-column">{propuesta.idPropuesta}</td>
+                <td className="short-text-column">{propuesta.codEjecucion}</td>
+                <td className="short-text-column">
                   <span className={`estado-propuesta estado-${propuesta.tipoEstadoPropuesta.id}`}>
                     {propuesta.tipoEstadoPropuesta.descripcion}
                   </span>
                 </td>
-                <td>{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.id : '-'}</td>
-                <td>{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.descripcion : '-'}</td>
-                <td>{propuesta.idEvento}</td>
-                <td>{propuesta.nombreEvento}</td>
-                <td>
-                  <span className="mercado-flag">
-                    {propuesta.mercado.id} - {propuesta.mercado.descripcion}
-                  </span>
+                <td className="id-column">{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.id : '-'}</td>
+                <td className="medium-text-column">{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.descripcion : '-'}</td>
+                <td className="id-column">{propuesta.idEvento}</td>
+                <td className="medium-text-column">{propuesta.nombreEvento}</td>
+                <td className="short-text-column">
+                  {propuesta.mercado.id} - {propuesta.mercado.descripcion}
                 </td>
-                <td>{propuesta.localizacionCompra.id}</td>
-                <td>{propuesta.localizacionCompra.descripcion} {propuesta.cadena.descripcion}</td>
-                <td>
-                  <span className={`estado-linea estado-${propuesta.tipoEstadoLineaSolicitud.id}`}>
-                    {propuesta.tipoEstadoLineaSolicitud.descripcion}
-                  </span>
-                </td>
+                <td className="id-column">{propuesta.localizacionCompra.id}</td>
+                <td className="medium-text-column">{normalizeText(propuesta.localizacionCompra.descripcion)}</td>
+                <td className="id-column">{propuesta.idAjeno}</td>
+                <td className="medium-text-column">{propuesta.descripcionAjeno}</td>
+                <td className="short-text-column">{propuesta.cantidad}</td>
+                <td className="id-column">{propuesta.idAlias}</td>
+                <td className="long-text-column">{propuesta.descripcionAlias}</td>
+                <td className="medium-text-column">{propuesta.fechaCreacion}</td>
               </tr>
             ))}
+            {loadingMore && (
+              <tr>
+                <td colSpan="18" className="loading-more-cell">
+                  <div className="loading-more-indicator">Cargando más resultados...</div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     );
   };
 
-  // Renderizado del componente principal
   return (
     <div className="propuestas-container">
       <div className="propuestas-header">
@@ -425,7 +553,6 @@ const Propuestas = () => {
       {showFilters && (
         <div className="filters-section" ref={dropdownRef}>
           <div className="filters-row">
-            {/* Filtro de ID Localización */}
             <div className="filter-field">
               <label className="filter-label">Id Localización</label>
               <input
@@ -437,7 +564,6 @@ const Propuestas = () => {
               />
             </div>
             
-            {/* Filtro de ID Mercado */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -505,7 +631,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de ID Grupo Cadena */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -546,7 +671,7 @@ const Propuestas = () => {
                             checked={selectedGruposCadena.includes(grupo.id)}
                             readOnly
                           />
-                          <span>{grupo.id} - {grupo.descripcion}</span>
+                          <span>{grupo.id} - {normalizeText(grupo.descripcion)}</span>
                         </div>
                       ))}
                     </div>
@@ -573,7 +698,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de Nombre Evento */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -641,7 +765,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de ID Ejecución */}
             <div className="filter-field">
               <label className="filter-label">Id Ejecución</label>
               <input
@@ -653,7 +776,6 @@ const Propuestas = () => {
               />
             </div>
             
-            {/* Filtro de ID Propuesta */}
             <div className="filter-field">
               <label className="filter-label">Id Propuesta</label>
               <input
@@ -667,7 +789,6 @@ const Propuestas = () => {
           </div>
           
           <div className="filters-row">
-            {/* Filtro de Estado de la Propuesta */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -735,7 +856,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de Inicio Fecha Creación */}
             <div className="filter-field">
               <label className="filter-label">Inicio Fecha Creación</label>
               <div className="date-input-container">
@@ -750,7 +870,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de Fin Fecha Creación */}
             <div className="filter-field">
               <label className="filter-label">Fin Fecha Creación</label>
               <div className="date-input-container">
@@ -765,7 +884,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de Unidad Compras */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -806,7 +924,7 @@ const Propuestas = () => {
                             checked={selectedUnidadesCompras.includes(unidad.id)}
                             readOnly
                           />
-                          <span>{unidad.id} - {unidad.descripcion || ''}</span>
+                          <span>{unidad.id} - {normalizeText(unidad.descripcion || '')}</span>
                         </div>
                       ))}
                     </div>
@@ -833,7 +951,6 @@ const Propuestas = () => {
               </div>
             </div>
             
-            {/* Filtro de Artículos */}
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -874,7 +991,7 @@ const Propuestas = () => {
                             checked={selectedArticulos.includes(articulo.id)}
                             readOnly
                           />
-                          <span>{articulo.id} - {articulo.nombre || articulo.descripcion || ''}</span>
+                          <span>{articulo.id} - {normalizeText(articulo.nombre || articulo.descripcion || '')}</span>
                         </div>
                       ))}
                     </div>
@@ -928,8 +1045,31 @@ const Propuestas = () => {
           </div>
         </div>
       )}
+
+      {selectedPropuestas.length > 0 && (
+        <div className="selection-toolbar">
+          <div className="selection-info">
+            Seleccionados {selectedPropuestas.length} resultados de {totalElements} encontrados
+          </div>
+          <div className="selection-actions">
+            <button 
+              className="action-button trash-button" 
+              onClick={handleDeletePropuestas}
+              title="Eliminar propuestas seleccionadas"
+            >
+              <FaTrash />
+            </button>
+            <button 
+              className="action-button publish-button"
+              onClick={handlePublishInSFI}
+              title="Publicar en SFI"
+            >
+              <span>PUBLICAR EN SFI</span>
+            </button>
+          </div>
+        </div>
+      )}
       
-      {/* Sección de resultados */}
       {showResults ? (
         loading ? (
           <div className="loading-indicator">Cargando...</div>

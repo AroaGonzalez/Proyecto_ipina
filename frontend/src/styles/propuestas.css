@@ -191,11 +191,10 @@
 .dropdown-item {
   display: flex;
   align-items: center;
-  padding: 8px 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-  border-bottom: 1px solid #f1f1f1;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 8px;
+  gap: 8px; /* Asegura espacio constante entre checkbox y texto */
 }
 
 .dropdown-item:hover {
@@ -218,21 +217,25 @@
   cursor: default;
 }
 
-/* Nuevos estilos para coincidir con tareas.css */
 .dropdown-item.select-all {
-  border-top: 1px solid #ddd;
-  padding: 10px 15px;
-  background-color: #f9f9f9;
-  position: sticky;
-  bottom: 0;
-  font-weight: 500;
-  z-index: 10;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.dropdown-item span {
+  color: #333;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 30px);
 }
 
 .dropdown-item input[type="checkbox"] {
-  margin-right: 8px;
-  min-width: 16px;
+  flex: none;
+  width: 16px;
   height: 16px;
+  margin-right: 8px;
 }
 
 .date-input-container {
@@ -323,7 +326,7 @@
   margin-right: 5px;
 }
 
-.results-section, .no-search-yet {
+.results-section {
   min-height: 300px;
   display: flex;
   justify-content: center;
@@ -363,27 +366,38 @@
 .propuestas-table-container {
   max-height: 70vh;
   overflow-y: auto;
+  overflow-x: auto;
   border: 1px solid #eee;
   border-radius: 0;
   margin: 0 20px 20px;
   position: relative;
   z-index: 1;
-  overflow-x: auto;
-  max-width: 100%;
+  max-width: calc(100% - 40px);
 }
 
 .propuestas-table {
   width: 100%;
-  border-collapse: collapse;
   min-width: 1200px;
+  border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
+}
+
+.propuestas-table th,
+.propuestas-table td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  padding: 10px 15px;
+  text-align: left;
+  vertical-align: middle;
+  word-wrap: break-word;
+  word-break: normal;
 }
 
 .propuestas-table th {
   position: sticky;
   top: 0;
-  white-space: nowrap;
   background-color: #f6f6f6;
   padding: 12px 15px;
   text-align: left;
@@ -417,6 +431,76 @@
 .checkbox-column {
   width: 40px;
   text-align: center;
+}
+
+.propuestas-table .checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 10px 0;
+}
+
+.propuestas-table .checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.propuestas-table .selected-row {
+  background-color: #f0f7ff;
+}
+
+.propuestas-table .selected-row:hover {
+  background-color: #e6f0fb;
+}
+
+.propuestas-table .checkbox-column {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  text-align: center;
+}
+
+.propuestas-table .id-column {
+  width: 80px;
+  min-width: 80px;
+}
+
+.propuestas-table .short-text-column {
+  width: 120px;
+  min-width: 120px;
+}
+
+.propuestas-table .medium-text-column {
+  width: 150px;
+  min-width: 150px;
+}
+
+.propuestas-table .long-text-column {
+  width: 200px;
+  min-width: 200px;
+}
+
+.propuestas-table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.propuestas-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.propuestas-table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.propuestas-table-container::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
 }
 
 .checkbox {
@@ -517,14 +601,12 @@
   background: #a0a0a0;
 }
 
-/* Elimino la clase dropdown-checkbox y modifico para usar el estilo de tareas */
 .dropdown-divider {
   height: 1px;
   background-color: #e0e0e0;
   margin: 8px 0;
 }
 
-/* Estilos para los checkboxes en la tabla */
 .checkbox {
   cursor: pointer;
   display: flex;
@@ -535,6 +617,79 @@
 .checkbox-column {
   width: 40px;
   text-align: center;
+}
+
+.selection-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  margin: 0 20px 15px;
+  border-radius: 4px;
+}
+
+.selection-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.trash-button {
+  color: #d32f2f;
+  border-color: #d32f2f;
+  padding: 6px 10px;
+}
+
+.trash-button:hover {
+  background-color: #ffebee;
+}
+
+.publish-button {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.publish-button:hover {
+  background-color: #388e3c;
+}
+
+.action-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.propuestas-table th.checkbox-column,
+.propuestas-table td.checkbox-column {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
 }
 
 /* Media queries */

@@ -92,6 +92,7 @@ const creacionRoutes = require('./routes/creationRoutes');
 const aliasRelacionesRoutes = require('./routes/aliasRelacionesRoutes');
 const eventoRoutes = require('./routes/eventoRoutes');
 const propuestaRoutes = require('./routes/propuestaRoutes');
+const recuentoRoutes = require('./routes/recuentoRoutes');
 
 const User = require('./models/user')(sequelizeAjenos);
 
@@ -270,6 +271,7 @@ app.use('/creacion', creacionRoutes);
 app.use('/relaciones', aliasRelacionesRoutes);
 app.use('/eventos', eventoRoutes);
 app.use('/propuestas', propuestaRoutes);
+app.use('/recuento', recuentoRoutes);
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
