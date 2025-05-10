@@ -15,6 +15,31 @@
   overflow: hidden;
 }
 
+.estado-1 {
+  background-color: #f7cd6a;
+  color: #8c5600;
+}
+
+.estado-2 {
+  background-color: #f09ca0;
+  color: #860005;
+}
+
+.estado-3 {
+  background-color: #65b5e8;
+  color: #004d85;
+}
+
+.estado-4 {
+  background-color: #6cd9b1;
+  color: #005a3a;
+}
+
+.estado-5 {
+  background-color: #e5737b;
+  color: #971216;
+}
+
 .recuentos-header {
   display: flex;
   justify-content: space-between;

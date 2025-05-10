@@ -59,3 +59,35 @@ exports.getRecuentosByFilter = async (req, res) => {
     });
   }
 };
+
+exports.updateEstadoRecuentos = async (req, res) => {
+  try {
+    const { idsRecuento, idTipoEstadoRecuento, usuario } = req.body;
+    
+    if (!idsRecuento || idsRecuento.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionaron IDs de recuento'
+      });
+    }
+    
+    const result = await recuentoRepository.updateEstadoRecuentos({
+      idsRecuento,
+      idTipoEstadoRecuento,
+      usuario
+    });
+    
+    res.json({
+      success: true,
+      totalUpdated: result.totalUpdated,
+      message: 'Estado de recuentos actualizado correctamente'
+    });
+  } catch (error) {
+    console.error('Error en updateEstadoRecuentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar estado de recuentos',
+      error: error.message
+    });
+  }
+};

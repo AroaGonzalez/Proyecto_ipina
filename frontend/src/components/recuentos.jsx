@@ -178,6 +178,68 @@ const Recuentos = () => {
         }
     };
 
+    const ESTADO_RECUENTO = {
+        DESCARTADO: 5,
+        VALIDADO: 4,
+        RECOGIDO: 2,
+        RESPUESTA: 3,
+        PENDIENTE: 1
+    };
+  
+  const handleDescartar = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+        idsRecuento: selectedRecuentos,
+        idTipoEstadoRecuento: ESTADO_RECUENTO.DESCARTADO,
+        usuario: 'frontend_user' // Idealmente, obtener del contexto de autenticación
+      });
+      
+      // Actualizar la UI tras éxito
+      if (response.data.success) {
+        // Refrescar los datos
+        handleSearch();
+        setSelectedRecuentos([]);
+        setSelectAll(false);
+        // Mostrar mensaje de éxito
+        alert(`Se han descartado ${selectedRecuentos.length} recuento(s) correctamente`);
+      }
+    } catch (error) {
+      console.error('Error al descartar recuentos:', error);
+      setError('Error al descartar recuentos');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleValidar = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+        idsRecuento: selectedRecuentos,
+        idTipoEstadoRecuento: ESTADO_RECUENTO.VALIDADO,
+        usuario: 'frontend_user' // Idealmente, obtener del contexto de autenticación
+      });
+      
+      // Actualizar la UI tras éxito
+      if (response.data.success) {
+        // Refrescar los datos
+        handleSearch();
+        setSelectedRecuentos([]);
+        setSelectAll(false);
+        // Mostrar mensaje de éxito
+        alert(`Se han validado ${selectedRecuentos.length} recuento(s) correctamente`);
+      }
+    } catch (error) {
+      console.error('Error al validar recuentos:', error);
+      setError('Error al validar recuentos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
     const handlePublishIn07 = async () => {
         try {
           // You would typically call an API endpoint to publish to SFI
@@ -268,6 +330,36 @@ const Recuentos = () => {
         });
     };
 
+    // Función para verificar si todos los recuentos seleccionados tienen un estado específico
+    const allSelectedRecuentosHaveState = (stateId) => {
+        if (selectedRecuentos.length === 0) return false;
+        return selectedRecuentos.every(idRecuento => {
+        const recuento = recuentos.find(r => r.idRecuento === idRecuento);
+        return recuento && recuento.tipoEstadoRecuento.id === stateId;
+        });
+    };
+    
+    // Función para verificar si algún recuento seleccionado tiene un estado específico
+    const anySelectedRecuentosHaveState = (stateId) => {
+        if (selectedRecuentos.length === 0) return false;
+        return selectedRecuentos.some(idRecuento => {
+        const recuento = recuentos.find(r => r.idRecuento === idRecuento);
+        return recuento && recuento.tipoEstadoRecuento.id === stateId;
+        });
+    };
+    
+    // Verificar si se puede validar (solo recuentos en estado RESPUESTA)
+    const canValidate = selectedRecuentos.length > 0 && selectedRecuentos.every(idRecuento => {
+        const recuento = recuentos.find(r => r.idRecuento === idRecuento);
+        return recuento && recuento.tipoEstadoRecuento.id === ESTADO_RECUENTO.RESPUESTA;
+    });
+    
+    // Verificar si se puede descartar (todos los recuentos no están ya descartados o validados)
+    const canDiscard = selectedRecuentos.length > 0 && !anySelectedRecuentosHaveState(ESTADO_RECUENTO.DESCARTADO) && !anySelectedRecuentosHaveState(ESTADO_RECUENTO.VALIDADO);
+    
+    // Verificar si se puede publicar en 07 (solo recuentos en estado PENDIENTE)
+    const canPublish = selectedRecuentos.length > 0 && allSelectedRecuentosHaveState(ESTADO_RECUENTO.PENDIENTE);
+
     const handleSearch = async () => {
         try {
             setLoading(true);
@@ -281,7 +373,7 @@ const Recuentos = () => {
                 idsGrupoCadena: selectedGruposCadena.length > 0 ? selectedGruposCadena : [],
                 idsAlias: idAlias.length > 0 ? idAlias : [],
                 idsTipoAlias: selectedTiposAlias.length > 0 ? selectedTiposAlias : [],
-                idsEstadoLinea: selectedEstadosLinea.length > 0 ? selectedEstadosLinea : [],
+                idsTipoEstadoRecuento: selectedEstadosLinea.length > 0 ? selectedEstadosLinea : [],
                 idsEvento: selectedEventos.length > 0 ? selectedEventos : [],
                 idsEjecucion: idEjecucion ? idEjecucion.split(/\s+/).filter(id => id.trim() !== '') : [],
                 fechaCreacionDesde: inicioFechaCreacion || null,
@@ -1020,9 +1112,26 @@ const Recuentos = () => {
                 </div>
                 <div className="selection-actions">
                 <button 
-                    className="action-button publish-button"
+                    className={`action-button ${!canDiscard ? 'disabled' : ''}`}
+                    onClick={handleDescartar}
+                    title="Descartar"
+                    disabled={!canDiscard}
+                >
+                    <FaTrash /> DESCARTAR
+                </button>
+                <button 
+                    className={`action-button ${!canValidate ? 'disabled' : ''}`}
+                    onClick={handleValidar}
+                    title="Validar"
+                    disabled={!canValidate}
+                >
+                    VALIDAR
+                </button>
+                <button 
+                    className={`action-button publish-button ${!canPublish ? 'disabled' : ''}`}
                     onClick={handlePublishIn07}
                     title="Publicar en 07"
+                    disabled={!canPublish}
                 >
                     <span>PUBLICAR EN 07</span>
                 </button>
@@ -1031,25 +1140,25 @@ const Recuentos = () => {
         )}
         
         {showResults ? (
-                loading ? (
-                  <div className="loading-indicator">Cargando...</div>
-                ) : recuentos.length > 0 ? (
-                  <RecuentosTable recuentos={recuentos} loading={loading} />
-                ) : (
-                  <div className="no-results">
-                    <div className="search-icon">
-                      <FaSearch />
-                    </div>
-                    <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
-                  </div>
-                )
-              ) : (
-                <div className="no-search-yet">
-                  <div className="search-icon">
+            loading ? (
+                <div className="loading-indicator">Cargando...</div>
+            ) : recuentos.length > 0 ? (
+                <RecuentosTable recuentos={recuentos} loading={loading} />
+            ) : (
+                <div className="no-results">
+                <div className="search-icon">
                     <FaSearch />
-                  </div>
-                  <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
                 </div>
+                <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
+                </div>
+            )
+            ) : (
+            <div className="no-search-yet">
+                <div className="search-icon">
+                <FaSearch />
+                </div>
+                <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
+            </div>
         )}
         </div>
     );
