@@ -205,8 +205,10 @@ exports.findPropuestasByFilter = async (propuestaFilter, tipoAlias = []) => {
       countQuery += ` AND eej1_0.COD_EJECUCION IN (${propuestaFilter.idsEjecucion.join(',')}) `;
     }
    
-    sqlQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
-    countQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
+    if (propuestaFilter.idsTipoEstadoPropuesta && propuestaFilter.idsEjecucion.length > 0) {
+      sqlQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
+      countQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
+    }
     
     sqlQuery += ` ORDER BY pj1_0.FECHA_ALTA DESC`;
     sqlQuery += ` LIMIT ${propuestaFilter.limit} OFFSET ${propuestaFilter.offset * propuestaFilter.limit}`;

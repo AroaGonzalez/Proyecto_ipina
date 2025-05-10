@@ -146,7 +146,6 @@
   margin-left: 5px;
 }
 
-/* Nuevo estilo para el dropdown que coincide con tareas.css */
 .filter-dropdown-content {
   position: absolute;
   top: 100%;
@@ -194,7 +193,7 @@
   justify-content: flex-start;
   text-align: left;
   padding: 8px;
-  gap: 8px; /* Asegura espacio constante entre checkbox y texto */
+  gap: 8px;
 }
 
 .dropdown-item:hover {
@@ -607,13 +606,6 @@
   margin: 8px 0;
 }
 
-.checkbox {
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .checkbox-column {
   width: 40px;
   text-align: center;
@@ -692,11 +684,7 @@
   vertical-align: middle;
 }
 
-/* Media queries */
 @media (max-width: 1200px) {
-  .filter-field {
-    min-width: 180px;
-  }
   
   .filter-row {
     flex-wrap: wrap;
@@ -739,10 +727,6 @@
   .filters-row {
     flex-direction: column;
     gap: 15px;
-  }
-  
-  .filter-field {
-    width: 100%;
   }
   
   .propuestas-header {

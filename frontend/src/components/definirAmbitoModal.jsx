@@ -517,7 +517,6 @@ return (
             {isGrupoCadenaDropdownOpen && (
               <div className="ambito-dropdown-content">
                 <div className="ambito-dropdown-search">
-                  <FaSearch className="search-icon" />
                   <input 
                     type="text" 
                     placeholder="Buscar grupo cadena..."
@@ -593,7 +592,6 @@ return (
             {isCadenaDropdownOpen && (
               <div className="ambito-dropdown-content">
                 <div className="ambito-dropdown-search">
-                  <FaSearch className="search-icon" />
                   <input 
                     type="text" 
                     placeholder="Buscar cadena..."
@@ -665,7 +663,6 @@ return (
             {isMercadoDropdownOpen && (
               <div className="ambito-dropdown-content">
                 <div className="ambito-dropdown-search">
-                  <FaSearch className="search-icon" />
                   <input 
                     type="text" 
                     placeholder="Buscar mercado..."

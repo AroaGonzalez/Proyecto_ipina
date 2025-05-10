@@ -11,7 +11,6 @@ import '../styles/edicionRelaciones.css';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
-// Memoized components for better performance
 const FilterDropdown = React.memo(({ 
   label, 
   placeholder, 
@@ -92,7 +91,6 @@ const FilterDropdown = React.memo(({
   </div>
 ));
 
-// Checkbox component to optimize selection performance
 const SelectionCheckbox = React.memo(({ 
   id, 
   isSelected, 
@@ -196,7 +194,6 @@ const TableRow = React.memo(({
   </tr>
 ));
 
-// Optimized PauseModal component
 const PauseModal = React.memo(({ isOpen, onClose, onConfirm, pauseDate, setPauseDate, loading }) => {
   if (!isOpen) return null;
   
@@ -242,7 +239,6 @@ const PauseModal = React.memo(({ isOpen, onClose, onConfirm, pauseDate, setPause
   );
 });
 
-// Creación de mapa optimizado para consultas de estado
 const useRelacionesStatusMap = (relaciones) => {
   return useMemo(() => {
     const statusMap = new Map();
@@ -261,8 +257,6 @@ const EdicionRelaciones = () => {
   const idsAliasSelected = location.state?.selectedItems || [];
   const originalFilters = location.state?.filters || {};
   
-  // State management - grouped by functionality
-  // Data states
   const [data, setData] = useState({
     ajenos: [],
     relaciones: [],
@@ -276,7 +270,6 @@ const EdicionRelaciones = () => {
     globalAjenosSelected: {}
   });
   
-  // UI states
   const [ui, setUi] = useState({
     loading: true,
     error: null,
@@ -298,7 +291,6 @@ const EdicionRelaciones = () => {
     localizacionSearchText: '',
   });
   
-  // Filter states
   const [filters, setFilters] = useState({
     selectedMercados: [],
     selectedCadenas: [],
@@ -307,7 +299,6 @@ const EdicionRelaciones = () => {
     selectedLocalizaciones: [],
   });
   
-  // Modal states
   const [modal, setModal] = useState({
     pauseModalOpen: false,
     pauseUntilDate: (() => {
@@ -319,20 +310,16 @@ const EdicionRelaciones = () => {
     activateLoading: false,
   });
 
-  // Refs
   const tableContainerRef = useRef(null);
   const tableEndRef = useRef(null);
   
-  // Crear mapa de status para consultas O(1)
   const relacionesStatusMap = useRelacionesStatusMap(data.relaciones);
   
-  // Fetch filter options and initial relaciones
   useEffect(() => {
     fetchFilterOptions();
     fetchRelaciones();
   }, [languageId]);
 
-  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (ui.openFilter && !event.target.closest('.filter-dropdown')) {
@@ -346,7 +333,6 @@ const EdicionRelaciones = () => {
     };
   }, [ui.openFilter]);
 
-  // Initialize global ajenos selections
   useEffect(() => {
     if (data.relaciones.length === 0) return;
     
@@ -364,7 +350,6 @@ const EdicionRelaciones = () => {
   useEffect(() => {
     if (data.relaciones.length === 0) return;
     
-    // Inicializar valores originales para todas las relaciones la primera vez
     const needsInitialization = !data.relaciones.some(rel => 
       rel.hasOwnProperty('originalAjenoSeccionGlobal') && 
       rel.hasOwnProperty('originalUnidadComprasGestora')
@@ -387,7 +372,6 @@ const EdicionRelaciones = () => {
     }
   }, [data.relaciones.length]);
 
-  // Infinite scroll handling with useCallback for better performance
   useEffect(() => {
     const handleScroll = () => {
       if (tableContainerRef.current) {
@@ -411,7 +395,6 @@ const EdicionRelaciones = () => {
     };
   }, [ui.loadingMore, ui.hasMore, ui.totalElements, data.relaciones.length]);
 
-  // Memoized function to filter alias - prevents unnecessary recalculations
   const getFilteredAlias = useCallback(() => {
     if (!Array.isArray(data.alias)) {
       return [];
@@ -436,7 +419,6 @@ const EdicionRelaciones = () => {
     }
   }, [data.alias, ui.aliasSearchText]);
 
-  // Memoized filtered data for dropdowns
   const filteredAlias = useMemo(() => getFilteredAlias(), [getFilteredAlias]);
   
   const filteredMercados = useMemo(() => {
@@ -466,7 +448,6 @@ const EdicionRelaciones = () => {
       : data.relacionesUnidades;
   }, [data.relacionesUnidades, ui.unidadCompraSearchText]);
 
-  // API calls with useCallback to prevent unnecessary recreations
   const fetchFilterOptions = useCallback(async () => {
     try {
       setUi(prev => ({ ...prev, loading: true }));
@@ -479,7 +460,6 @@ const EdicionRelaciones = () => {
         axios.get(`${BASE_URL}/relaciones/unidades-compra`)
       ]);
       
-      // Process alias data safely
       let processedAlias = [];
       if (aliasRes.data && aliasRes.data.content && Array.isArray(aliasRes.data.content)) {
         processedAlias = aliasRes.data.content.map(item => ({
@@ -505,7 +485,6 @@ const EdicionRelaciones = () => {
         error: t('Error al cargar opciones de filtro') 
       }));
       
-      // Reset all data to empty arrays on error
       setData(prev => ({
         ...prev,
         mercados: [],
@@ -519,9 +498,7 @@ const EdicionRelaciones = () => {
     }
   }, [languageId, t]);
 
-  // Prepare filter payload - extracted as a separate function to reduce duplication
   const prepareFilterPayload = useCallback((page = 0) => {
-    // Process alias selection
     let aliasToUse = [];      
     if (idsAliasSelected.length > 0) {
       if (filters.selectedAlias.length > 0) {
@@ -533,7 +510,6 @@ const EdicionRelaciones = () => {
       aliasToUse = filters.selectedAlias;
     }
     
-    // Process localization IDs
     let localizacionIds = [];
     if (ui.localizacionSearchText.trim()) {
       localizacionIds = ui.localizacionSearchText
@@ -543,17 +519,15 @@ const EdicionRelaciones = () => {
         .map(id => parseInt(id));
     }
     
-    // Build filter object
     const filter = {
       idIdioma: languageId,
       idsMercado: filters.selectedMercados.length > 0 ? filters.selectedMercados : undefined,
       idsCadena: filters.selectedCadenas.length > 0 ? filters.selectedCadenas : undefined,
       idsUnidadComprasGestora: filters.selectedUnidadesCompra.length > 0 ? filters.selectedUnidadesCompra : undefined,
       idsLocalizacion: localizacionIds.length > 0 ? localizacionIds : 
-                        (filters.selectedLocalizaciones.length > 0 ? filters.selectedLocalizaciones : undefined)
+        (filters.selectedLocalizaciones.length > 0 ? filters.selectedLocalizaciones : undefined)
     };
     
-    // Complete payload
     return {
       filter,
       idsAliasSelected: aliasToUse.length > 0 ? aliasToUse : [],
@@ -610,7 +584,6 @@ const EdicionRelaciones = () => {
           hasMore: initialRelaciones.length < totalCount
         }));
       } else {
-        // Reset all data if response is empty
         setData(prev => ({
           ...prev,
           relaciones: [],
@@ -665,12 +638,10 @@ const EdicionRelaciones = () => {
           setUi(prev => ({ ...prev, totalElements: newTotalElements }));
         }
         
-        // Process ajenos data efficiently
         if (response.data.ajenos) {
           const newAjenos = response.data.ajenos || [];
           const combinedAjenos = [...data.ajenos];
           
-          // Using a Map for faster lookups instead of repeated array finds
           const ajenosMap = new Map();
           combinedAjenos.forEach((ajeno, index) => {
             ajenosMap.set(ajeno.idAlias, index);
@@ -683,7 +654,6 @@ const EdicionRelaciones = () => {
               const existingDataAjenos = combinedAjenos[existingIndex].dataAjenos || [];
               const newDataAjenos = newAjeno.dataAjenos || [];
               
-              // Create a Set of existing IDs for faster lookups
               const existingIds = new Set(existingDataAjenos.map(da => da.idAjeno));
               
               const newItems = newDataAjenos.filter(da => !existingIds.has(da.idAjeno));
@@ -740,7 +710,6 @@ const EdicionRelaciones = () => {
     t
   ]);
 
-  // Event handlers using useCallback for better performance
   const toggleFilter = useCallback((filterName) => {
     setUi(prev => ({
       ...prev,
@@ -819,11 +788,8 @@ const EdicionRelaciones = () => {
     fetchRelaciones();
   }, [fetchRelaciones]);
 
-  
-  // Optimización de selección de items para evitar re-renders innecesarios
   const handleSelectItem = useCallback((id) => {
     setUi(prev => {
-      // Crear un nuevo Set a partir del array actual para busquedas O(1)
       const selectedItemsSet = new Set(prev.selectedItems);
       
       if (selectedItemsSet.has(id)) {
@@ -832,7 +798,6 @@ const EdicionRelaciones = () => {
         selectedItemsSet.add(id);
       }
       
-      // Convertir de nuevo a array
       return {
         ...prev,
         selectedItems: Array.from(selectedItemsSet)
@@ -914,7 +879,6 @@ const EdicionRelaciones = () => {
           filteredRelaciones: updatedRelaciones
         }));
         
-        // Limpiar selección después de activar
         setUi(prev => ({
           ...prev,
           selectedItems: [],
@@ -966,7 +930,6 @@ const EdicionRelaciones = () => {
           filteredRelaciones: updatedRelaciones
         }));
         
-        // Limpiar selección después de pausar
         setUi(prev => ({
           ...prev,
           selectedItems: [],
@@ -1006,7 +969,6 @@ const EdicionRelaciones = () => {
         ui.selectedItems.includes(r.idAliasAmbitoAplanado)
       );
       
-      // Formatear la fecha para que sea compatible con MySQL
       const formattedDate = modal.pauseUntilDate.toISOString().slice(0, 19).replace('T', ' ');
       
       const response = await axios.put(`${BASE_URL}/relaciones/pause`, {
@@ -1016,7 +978,6 @@ const EdicionRelaciones = () => {
       });
       
       if (response.data.success) {
-        // Actualizar las relaciones localmente
         const updatedRelaciones = data.relaciones.map(rel => {
           if (ui.selectedItems.includes(rel.idAliasAmbitoAplanado)) {
             return {
@@ -1035,7 +996,6 @@ const EdicionRelaciones = () => {
           filteredRelaciones: updatedRelaciones
         }));
         
-        // Limpiar selección después de pausar con fecha
         setUi(prev => ({
           ...prev,
           selectedItems: [],
@@ -1054,13 +1014,10 @@ const EdicionRelaciones = () => {
     }
   }, [data.relaciones, ui.selectedItems, modal.pauseUntilDate, t]);
 
-  // Modificación al método handleGlobalAjenoChange
   const handleGlobalAjenoChange = useCallback((idAliasAmbitoAplanado, idAjenoSeccionGlobal) => {
     setData(prev => {
-      // Obtener el valor original para comparar si hay cambio
       const relation = prev.relaciones.find(rel => rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado);
       
-      // Si no existe este campo, guardamos el valor actual como original
       if (relation && !relation.hasOwnProperty('originalAjenoSeccionGlobal')) {
         relation.originalAjenoSeccionGlobal = relation.idAjenoSeccionGlobal || 0;
       }
@@ -1075,8 +1032,6 @@ const EdicionRelaciones = () => {
           if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
             return {
               ...rel,
-              // No actualizamos idAjenoSeccionGlobal todavía, solo cuando guardemos
-              // Solo actualizar originalAjenoSeccionGlobal si no existe aún
               originalAjenoSeccionGlobal: rel.hasOwnProperty('originalAjenoSeccionGlobal') 
                 ? rel.originalAjenoSeccionGlobal 
                 : (rel.idAjenoSeccionGlobal || 0)
@@ -1088,8 +1043,6 @@ const EdicionRelaciones = () => {
           if (rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado) {
             return {
               ...rel,
-              // No actualizamos idAjenoSeccionGlobal todavía, solo cuando guardemos
-              // Solo actualizar originalAjenoSeccionGlobal si no existe aún
               originalAjenoSeccionGlobal: rel.hasOwnProperty('originalAjenoSeccionGlobal') 
                 ? rel.originalAjenoSeccionGlobal 
                 : (rel.idAjenoSeccionGlobal || 0)
@@ -1100,7 +1053,6 @@ const EdicionRelaciones = () => {
       };
     });
 
-    // Comprueba si hay cambios
     setUi(prev => {
       const relacionActual = data.relaciones.find(
         rel => rel.idAliasAmbitoAplanado === idAliasAmbitoAplanado
@@ -1110,12 +1062,10 @@ const EdicionRelaciones = () => {
         ? relacionActual.originalAjenoSeccionGlobal
         : (relacionActual?.idAjenoSeccionGlobal || 0);
         
-      // Si hay cambio, marcar isModified
       if (originalValue !== idAjenoSeccionGlobal) {
         return { ...prev, isModified: true };
       }
       
-      // Si no hay cambio en este, verificar si hay otros cambios
       const hayOtrosCambios = data.relaciones.some(rel => {
         const original = rel.originalAjenoSeccionGlobal !== undefined 
           ? rel.originalAjenoSeccionGlobal 
@@ -1132,7 +1082,6 @@ const EdicionRelaciones = () => {
 
   const updateUnidadCompra = useCallback((idAliasAmbitoAplanado, idUnidadComprasGestora) => {
     setData(prev => {
-      // Find the unidad name for improved performance
       const unidadName = prev.unidadesCompra.find(u => u.id === idUnidadComprasGestora)?.descripcion || null;
       
       return {
@@ -1165,9 +1114,7 @@ const EdicionRelaciones = () => {
 
   const handleSave = useCallback(async () => {
     try {
-      // Mapear y guardar los valores originales cuando se carga por primera vez
       if (!data.relaciones.some(rel => rel.hasOwnProperty('originalAjenoSeccionGlobal'))) {
-        // Primera vez - guardar estado original
         const relationsWithOriginals = data.relaciones.map(rel => ({
           ...rel,
           originalAjenoSeccionGlobal: rel.idAjenoSeccionGlobal || 0,
@@ -1180,14 +1127,11 @@ const EdicionRelaciones = () => {
           filteredRelaciones: relationsWithOriginals
         }));
         
-        // No continuar el guardado, solo inicializar los valores originales
         return;
       }
       
-      // Prepare data - only send modified fields for each relation
       const updatedRelaciones = data.relaciones
         .filter(rel => {
-          // Check if any field was modified
           const originalGlobalAjeno = rel.originalAjenoSeccionGlobal !== undefined 
             ? rel.originalAjenoSeccionGlobal 
             : (rel.idAjenoSeccionGlobal || 0);
@@ -1198,7 +1142,6 @@ const EdicionRelaciones = () => {
             ? rel.originalUnidadComprasGestora
             : (rel.idUnidadComprasGestora || 0);
             
-          // Debuggear la comparación
           console.log(`Relación ${rel.idAliasAmbitoAplanado}:`, {
             original: originalGlobalAjeno,
             current: currentGlobalAjeno,
@@ -1206,16 +1149,14 @@ const EdicionRelaciones = () => {
           });
             
           return currentGlobalAjeno !== originalGlobalAjeno || 
-                 rel.idUnidadComprasGestora !== originalUnidadCompra;
+            rel.idUnidadComprasGestora !== originalUnidadCompra;
         })
         .map(rel => {
-          // Only include changed fields
           const updatedRel = {
             idAliasAmbitoAplanado: rel.idAliasAmbitoAplanado,
             esSolicitable: rel.esSolicitable
           };
           
-          // Only include global ajeno if it changed
           const originalGlobalAjeno = rel.originalAjenoSeccionGlobal !== undefined 
             ? rel.originalAjenoSeccionGlobal 
             : (rel.idAjenoSeccionGlobal || 0);
@@ -1226,7 +1167,6 @@ const EdicionRelaciones = () => {
             updatedRel.idAjenoSeccionGlobal = currentGlobalAjeno;
           }
           
-          // Only include unidad compra if it changed
           const originalUnidadCompra = rel.originalUnidadComprasGestora !== undefined
             ? rel.originalUnidadComprasGestora
             : (rel.idUnidadComprasGestora || 0);
@@ -1245,14 +1185,12 @@ const EdicionRelaciones = () => {
         return;
       }
       
-      // Use PATCH instead of PUT
       const response = await axios.patch(`${BASE_URL}/relaciones/update`, {
         relaciones: updatedRelaciones,
         usuario: 'WEBAPP'
       });
       
       if (response.data.success) {
-        // Store current values as original values to track future changes
         const relationsWithOriginals = data.relaciones.map(rel => ({
           ...rel,
           originalAjenoSeccionGlobal: data.globalAjenosSelected[rel.idAliasAmbitoAplanado] || 0,
@@ -1290,7 +1228,6 @@ const EdicionRelaciones = () => {
   const shouldDisableActivateButton = useCallback(() => {
     if (ui.selectedItems.length === 0) return true;
     
-    // Usar mapa para consulta O(1) en lugar de .find() O(n)
     return !ui.selectedItems.some(id => {
       const status = relacionesStatusMap.get(id);
       return status === 2; // PAUSADO
@@ -1300,20 +1237,17 @@ const EdicionRelaciones = () => {
   const shouldDisablePauseButton = useCallback(() => {
     if (ui.selectedItems.length === 0) return true;
     
-    // Usar mapa para consulta O(1) en lugar de .find() O(n)
     return !ui.selectedItems.some(id => {
       const status = relacionesStatusMap.get(id);
       return status === 1; // ACTIVO
     });
   }, [ui.selectedItems, relacionesStatusMap]);
 
-  // Text normalization utility function
   const normalizeText = useCallback((text) => {
     if (!text) return '';
 
     let normalizedText = text;
 
-    // Reemplazos específicos
     normalizedText = normalizedText
       .replace(/ESPA.?.'A/g, 'ESPAÑA')
       .replace(/ESPA.?.A/g, 'ESPAÑA')
@@ -1326,7 +1260,6 @@ const EdicionRelaciones = () => {
       .replace(/GESTI.?.N/g, 'GESTIÓN')
       .replace(/DECORACI.?.N/g, 'DECORACIÓN');
 
-    // Reemplazos generales de caracteres codificados - using a more efficient approach
     const replacements = {
       'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
       'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
@@ -1343,7 +1276,6 @@ const EdicionRelaciones = () => {
       'Â¡': '¡', 'Â¿': '¿'
     };
 
-    // Faster replacement approach for multiple patterns
     for (const [badChar, goodChar] of Object.entries(replacements)) {
       normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
     }
@@ -1351,7 +1283,6 @@ const EdicionRelaciones = () => {
     return normalizedText;
   }, []);
 
-  // Memoized current time for render optimization
   const currentTime = useMemo(() => {
     return new Date().toLocaleTimeString('es-ES', {
       hour: '2-digit',
@@ -1359,7 +1290,6 @@ const EdicionRelaciones = () => {
     });
   }, []);
 
-  // Memoized handlers for select all functionality in filter dropdowns
   const handleSelectAllMercados = useCallback(() => {
     if (filters.selectedMercados.length === data.mercados.length) {
       setFilters(prev => ({ ...prev, selectedMercados: [] }));
@@ -1409,7 +1339,6 @@ const EdicionRelaciones = () => {
     }
   }, [filters.selectedUnidadesCompra.length, data.relacionesUnidades]);
 
-  // Memoized handlers for filter search text updates
   const updateMercadoSearchText = useCallback((text) => {
     setUi(prev => ({ ...prev, mercadoSearchText: text }));
   }, []);
@@ -1434,7 +1363,6 @@ const EdicionRelaciones = () => {
     setUi(prev => ({ ...prev, showFilters: !prev.showFilters }));
   }, []);
 
-  // Memoized check for alias item disabled state
   const isAliasDisabled = useCallback((item) => {
     return idsAliasSelected.length > 0 && !idsAliasSelected.includes(item.id);
   }, [idsAliasSelected]);
@@ -1475,7 +1403,6 @@ const EdicionRelaciones = () => {
       {ui.showFilters && (
         <div className="filters-section">
           <div className="filters-row">
-            {/* Filter de Alias */}
             <FilterDropdown
               label="Id o Nombre de Alias"
               placeholder="Seleccionar"
@@ -1492,7 +1419,6 @@ const EdicionRelaciones = () => {
               filterName="alias"
             />
             
-            {/* Filter de Mercado */}
             <FilterDropdown
               label="Id o Mercado"
               placeholder="Seleccionar"
@@ -1508,7 +1434,6 @@ const EdicionRelaciones = () => {
               filterName="mercado"
             />
             
-            {/* Filter de Cadena */}
             <FilterDropdown
               label="Id o Cadena"
               placeholder="Seleccionar"
@@ -1524,7 +1449,6 @@ const EdicionRelaciones = () => {
               filterName="cadena"
             />
             
-            {/* Filter de Localización */}
             <div className="filter-item">
               <div className="filter-input">
                 <span className="filter-label">Id Localización</span>
@@ -1542,7 +1466,6 @@ const EdicionRelaciones = () => {
               </div>
             </div>
             
-            {/* Filter de Unidad de Compra */}
             <FilterDropdown
               label="Id o Nombre de Unidad Compras Gestora"
               placeholder="Seleccionar"
@@ -1558,14 +1481,12 @@ const EdicionRelaciones = () => {
               filterName="unidadCompra"
             />
             
-            {/* Botón de Búsqueda */}
             <div className="search-button-container">
               <button 
                 className="search-button"
                 onClick={handleSearch}
                 disabled={ui.loading}
               >
-                <FaSearch className="search-icon" />
                 <span>{t('BUSCAR')}</span>
               </button>
             </div>
@@ -1573,7 +1494,6 @@ const EdicionRelaciones = () => {
         </div>
       )}
 
-      {/* Información de resultados */}
       <div className="results-info">
         <span className="results-count">
           {ui.loading ? t('Cargando...') : 
@@ -1597,7 +1517,7 @@ const EdicionRelaciones = () => {
               const response = await axios.get(`${BASE_URL}/relaciones/checkPausedRelations`);
               if (response.data.success) {
                 alert(`Relaciones actualizadas: ${response.data.updatedCount}`);
-                fetchRelaciones(); // Recargar datos
+                fetchRelaciones();
               }
             } catch (error) {
               console.error('Error al verificar relaciones pausadas:', error);
@@ -1609,7 +1529,6 @@ const EdicionRelaciones = () => {
         </button>
       </div>
       
-      {/* Barra de herramientas para selección */}
       {ui.selectedItems.length > 0 && (
         <div className="selection-toolbar">
           <div className="selection-info">
@@ -1643,14 +1562,12 @@ const EdicionRelaciones = () => {
         </div>
       )}
       
-      {/* Mensajes de error */}
       {ui.error && (
         <div className="error-message">
           {ui.error}
         </div>
       )}
 
-      {/* Tabla de datos */}
       <div className="table-container" ref={tableContainerRef}>
         <table className="alias-table">
           <thead>
@@ -1706,18 +1623,15 @@ const EdicionRelaciones = () => {
           </tbody>
         </table>
         
-        {/* Indicador de carga para scroll infinito */}
         {ui.loadingMore && (
           <div className="load-more-indicator">
             {t('Cargando más datos...')}
           </div>
         )}
         
-        {/* Elemento invisible de referencia para scroll infinito */}
         <div ref={tableEndRef}></div>
       </div>
 
-      {/* Botones de acción en el pie de página */}
       <div className="footer-buttons">
         <button 
           className="cancel-button"
@@ -1734,7 +1648,6 @@ const EdicionRelaciones = () => {
         </button>
       </div>
       
-      {/* Modal para pausar relaciones */}
       <PauseModal 
         isOpen={modal.pauseModalOpen}
         onClose={() => setModal(prev => ({ ...prev, pauseModalOpen: false }))}

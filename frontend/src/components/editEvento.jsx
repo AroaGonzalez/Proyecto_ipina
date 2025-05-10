@@ -31,7 +31,6 @@ const EditEvento = () => {
   const [tareaSearchTerm, setTareaSearchTerm] = useState('');
   
   useEffect(() => {
-    // Handle clicks outside of dropdowns
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowTipoTareaDropdown(false);
@@ -51,7 +50,6 @@ const EditEvento = () => {
   }, [selectedRowsForDelete]);
   
   useEffect(() => {
-    // Load event data
     const fetchEvento = async () => {
       try {
         setLoading(true);
@@ -62,21 +60,17 @@ const EditEvento = () => {
         setNombreEvento(eventoData.nombreEvento || '');
         setDescripcionEvento(eventoData.descripcionEvento || '');
         
-        // Fetch the tipo tarea
         const tiposTareaResponse = await axios.get(`${BASE_URL}/eventos/tipos-tarea?idIdioma=${languageId}`);
         setTiposTarea(tiposTareaResponse.data || []);
         
-        // Set selected tipo tarea
         const tipoTarea = tiposTareaResponse.data.find(tipo => tipo.id === eventoData.idTipoTarea);
         setSelectedTipoTarea(tipoTarea || null);
         
-        // Fetch associated tareas
         if (eventoData.tareas && eventoData.tareas.length > 0) {
           setSelectedTareas(eventoData.tareas);
         }
 
         if (eventoData.tareas && eventoData.tareas.length > 0) {
-            // Obtener el tipo de tarea de la primera tarea (asumiendo que todas tienen el mismo tipo)
             const idTipoTareaFromTareas = eventoData.tareas[0].idTipoTarea;
             const tipoTareaFromTareas = tiposTareaResponse.data.find(tipo => 
               tipo.id === idTipoTareaFromTareas);
@@ -172,7 +166,6 @@ const EditEvento = () => {
         return;
       }
       
-      // Prepare payload for the backend
       const eventoData = {
         nombreEvento: nombreEvento,
         descripcion: descripcionEvento,
@@ -208,16 +201,6 @@ const EditEvento = () => {
       setShowEstadoDropdown(!showEstadoDropdown);
       setShowTipoTareaDropdown(false);
       setShowTareaDropdown(false);
-    }
-  };
-  
-  const handleSelectTipoTarea = (tipoTarea) => {
-    setSelectedTipoTarea(tipoTarea);
-    setShowTipoTareaDropdown(false);
-    
-    // If distribution type (id=1), set PROPOSAL as default state
-    if (tipoTarea.id === 1) {
-      setEstadoSolicitud('PROPUESTA');
     }
   };
   
@@ -318,7 +301,6 @@ const EditEvento = () => {
                 style={{ pointerEvents: 'none', opacity: 0.7 }}
             >
                 <span>{selectedTipoTarea ? selectedTipoTarea.descripcion : "Tipo de Tarea"}</span>
-                {/* Eliminar el icono de dropdown o mantenerlo pero con estilo disabled */}
             </div>
         </div>
           
@@ -431,7 +413,7 @@ const EditEvento = () => {
                     <td>{normalizeText(tarea.nombreTarea)}</td>
                     <td><span className="tipo-tarea-badge">{tarea.descripcionTipoTarea}</span></td>
                     <td><span className="estado-tarea-badge activa">{tarea.descripcionTipoEstadoTarea || 'ACTIVA'}</span></td>
-                    <td>{tarea.mercados?.join(', ') || '-'}</td>
+                    <td>{normalizeText(tarea.mercados?.join(', ') || '-')}</td>
                     <td>{tarea.cadenas?.join(', ') || '-'}</td>
                     <td>{tarea.idsAlias?.length || '-'}</td>
                   </tr>

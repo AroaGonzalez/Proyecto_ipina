@@ -18,13 +18,11 @@ const CreacionAlias = () => {
   const [selectedAliasesIds, setSelectedAliasesIds] = useState([]);
   const [showDeleteAliasIcon, setShowDeleteAliasIcon] = useState(false);
     
-  // Datos básicos del alias
   const [tiposAlias, setTiposAlias] = useState([]);
   const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
   const [estacionalidades, setEstacionalidades] = useState([]);
   const [selectedEstacionalidad, setSelectedEstacionalidad] = useState('');
   
-  // Idiomas
   const [idiomas, setIdiomas] = useState([]);
   const [selectedIdiomas, setSelectedIdiomas] = useState([]);
   const [idiomasAliasValues, setIdiomasAliasValues] = useState({});
@@ -32,7 +30,6 @@ const CreacionAlias = () => {
   const [searchText, setSearchText] = useState('');
   const [checkAll, setCheckAll] = useState(false);
   
-  // Artículos
   const [articulos, setArticulos] = useState([]);
   const [articulosDisponibles, setArticulosDisponibles] = useState([]);
   const [filteredArticulos, setFilteredArticulos] = useState([]);
@@ -40,7 +37,6 @@ const CreacionAlias = () => {
   const [isArticulosDropdownOpen, setIsArticulosDropdownOpen] = useState(false);
   const [checkAllArticulos, setCheckAllArticulos] = useState(false);
 
-  // Ámbitos
   const [gruposCadenaDisponibles, setGruposCadenaDisponibles] = useState([]);
   const [cadenasDisponibles, setCadenasDisponibles] = useState([]);
   const [mercadosDisponibles, setMercadosDisponibles] = useState([]);
@@ -75,7 +71,6 @@ const CreacionAlias = () => {
   const [selectedTipoConexion, setSelectedTipoConexion] = useState('');
   const [tiposConexion, setTiposConexion] = useState([]);
 
-  // Añadir estos nuevos estados:
   const [aliasesPrincipales, setAliasesPrincipales] = useState([]);
   const [selectedAliasesPrincipales, setSelectedAliasesPrincipales] = useState([]);
   const [aliasSearchText, setAliasSearchText] = useState('');
@@ -83,8 +78,6 @@ const CreacionAlias = () => {
   const [isAliasesDropdownOpen, setIsAliasesDropdownOpen] = useState(false);
   const [acoplesRatio, setAcoplesRatio] = useState({});
   const aliasesDropdownRef = useRef(null);
-
-  
 
   useEffect(() => {
       function handleClickOutside(event) {
@@ -260,18 +253,16 @@ const CreacionAlias = () => {
   };
 
   useEffect(() => {
-    // Verificar que todos tienen elementos seleccionados
     if (selectedGruposCadena.length > 0 && selectedCadenas.length > 0 && selectedMercados.length > 0) {
       generateAmbitosTable();
     } else {
-      // Si alguno está vacío, limpiar la tabla
       setAmbitosTable([]);
     }
   }, [selectedGruposCadena, selectedCadenas, selectedMercados]);
       
   const generateAmbitosTable = () => {
       const newAmbitos = [];
-      let ambitoId = 1; // Reset ID counter
+      let ambitoId = 1;
     
       selectedGruposCadena.forEach(grupoId => {
         const grupoCadena = gruposCadenaDisponibles.find(g => g.id === grupoId);
@@ -307,17 +298,15 @@ const CreacionAlias = () => {
         });
       });
     
-      setAmbitosTable(newAmbitos); // Reemplaza la tabla completa
+      setAmbitosTable(newAmbitos);
   };
 
   const handleSelectAllCadenas = () => {
       if (filteredCadenas.every(c => selectedCadenas.includes(c.id))) {
-      // Deseleccionar todas
       setSelectedCadenas(selectedCadenas.filter(id => 
           !filteredCadenas.some(c => c.id === id)
       ));
       } else {
-      // Seleccionar todas
       const newIds = filteredCadenas.map(c => c.id).filter(id => !selectedCadenas.includes(id));
       setSelectedCadenas([...selectedCadenas, ...newIds]);
       }
@@ -334,7 +323,6 @@ const CreacionAlias = () => {
   const toggleArticulosDropdown = () => {
     if (!isArticulosDropdownOpen) {
       setArticuloSearchText('');
-      // Actualiza el estado selected de cada artículo basado en si ya está en la tabla
       setFilteredArticulos(articulosDisponibles.map(articulo => ({
           ...articulo,
           selected: articulos.some(a => 
@@ -370,14 +358,12 @@ const CreacionAlias = () => {
     if (!isCadenaDropdownOpen) {
       setCadenaSearchText('');
       
-      // Solo mostrar cadenas para los grupos seleccionados
       if (selectedGruposCadena.length > 0) {
         const cadenasFiltradas = cadenasDisponibles.filter(
           cadena => selectedGruposCadena.includes(cadena.idGrupoCadena)
         );
         setFilteredCadenas(cadenasFiltradas);
       } else {
-        // Si no hay grupos seleccionados, no mostrar cadenas
         setFilteredCadenas([]);
       }
     }
@@ -549,11 +535,6 @@ const CreacionAlias = () => {
     setFilteredGruposCadena(gruposCadenaDisponibles);
   };
   
-  const clearCadenaSearch = () => {
-    setCadenaSearchText('');
-    setFilteredCadenas(cadenasDisponibles);
-  };
-  
   const clearMercadoSearch = () => {
     setMercadoSearchText('');
     setFilteredMercados(mercadosDisponibles);
@@ -649,7 +630,6 @@ const CreacionAlias = () => {
   };
 
     const handleGrupoCadenaSelect = (grupo) => {
-        // Actualizar grupo cadena seleccionado
         const newSelectedGrupos = selectedGruposCadena.includes(grupo.id)
         ? selectedGruposCadena.filter(id => id !== grupo.id)
         : [...selectedGruposCadena, grupo.id];
@@ -660,16 +640,13 @@ const CreacionAlias = () => {
           setAmbitosTable([]);
         }
         
-        // Filtrar y mostrar las cadenas pertenecientes a los grupos seleccionados
         const cadenasFiltradas = cadenasDisponibles.filter(
         cadena => newSelectedGrupos.includes(cadena.idGrupoCadena)
         );
         
         setFilteredCadenas(cadenasFiltradas);
         
-        // Automáticamente seleccionar todas las cadenas del grupo seleccionado
         if (newSelectedGrupos.length > 0) {
-        // Para cada grupo nuevo (que acaba de ser seleccionado), seleccionar todas sus cadenas
         if (!selectedGruposCadena.includes(grupo.id) && newSelectedGrupos.includes(grupo.id)) {
             const cadenaIds = cadenasFiltradas
             .filter(cadena => cadena.idGrupoCadena === grupo.id)
@@ -677,7 +654,6 @@ const CreacionAlias = () => {
             
             setSelectedCadenas(prev => [...prev, ...cadenaIds.filter(id => !prev.includes(id))]);
         }
-        // Si estamos desseleccionando un grupo, eliminar sus cadenas
         else if (selectedGruposCadena.includes(grupo.id) && !newSelectedGrupos.includes(grupo.id)) {
             const cadenasDelGrupo = cadenasDisponibles
             .filter(cadena => cadena.idGrupoCadena === grupo.id)
@@ -686,7 +662,6 @@ const CreacionAlias = () => {
             setSelectedCadenas(prev => prev.filter(id => !cadenasDelGrupo.includes(id)));
         }
         } else {
-        // Si no hay grupos seleccionados, deseleccionar todas las cadenas
         setSelectedCadenas([]);
         }
         
@@ -701,12 +676,10 @@ const CreacionAlias = () => {
     setSelectedCadenas(newSelectedCadenas);
     setSelectedCadena(cadena.id);
     
-    // Si se eliminaron todas las cadenas, limpiar la tabla de ámbitos
     if (newSelectedCadenas.length === 0) {
       setAmbitosTable([]);
     }
     
-    // Actualizar tabla si tenemos todas las selecciones
     if (selectedGruposCadena.length > 0 && newSelectedCadenas.length > 0 && selectedMercados.length > 0) {
       generateAmbitosTable();
     }
@@ -720,12 +693,10 @@ const CreacionAlias = () => {
     setSelectedMercados(newSelectedMercados);
     setSelectedMercado(mercado.id);
     
-    // Si se eliminaron todos los mercados, limpiar la tabla de ámbitos
     if (newSelectedMercados.length === 0) {
       setAmbitosTable([]);
     }
     
-    // Actualizar tabla si tenemos todas las selecciones
     if (selectedGruposCadena.length > 0 && selectedCadenas.length > 0 && newSelectedMercados.length > 0) {
       generateAmbitosTable();
     }
@@ -762,10 +733,9 @@ const CreacionAlias = () => {
         try {
             setLoading(true);
             
-            // Determinar el tipo de conexión origen
-            let idTipoConexionOrigenDatoAlias = 1; // Por defecto PRINCIPAL
+            let idTipoConexionOrigenDatoAlias = 1;
             if (selectedTipoAlias === '2' && selectedTipoConexion === '2') {
-              idTipoConexionOrigenDatoAlias = 2; // ACOPLE
+              idTipoConexionOrigenDatoAlias = 2;
             }
             
             const nuevoAlias = {
@@ -869,7 +839,7 @@ const CreacionAlias = () => {
                             <option 
                                 key={tipo.id} 
                                 value={tipo.id}
-                                disabled={tipo.id === 3} // Deshabilita el tipo 3
+                                disabled={tipo.id === 3}
                             >
                                 {tipo.descripcion}
                             </option>
@@ -1434,7 +1404,6 @@ const CreacionAlias = () => {
                 {isGrupoCadenaDropdownOpen && (
                     <div className="filter-dropdown-content">
                         <div className="dropdown-search">
-                        <FaSearch className="search-icon" />
                         <input 
                             type="text" 
                             placeholder={t('Buscar grupo cadena...')}
@@ -1507,7 +1476,6 @@ const CreacionAlias = () => {
                 {isCadenaDropdownOpen && (
                     <div className="filter-dropdown-content">
                         <div className="dropdown-search">
-                        <FaSearch className="search-icon" />
                         <input 
                             type="text" 
                             placeholder={t('Buscar cadena...')}
@@ -1577,7 +1545,6 @@ const CreacionAlias = () => {
                 {isMercadoDropdownOpen && (
                     <div className="filter-dropdown-content">
                         <div className="dropdown-search">
-                        <FaSearch className="search-icon" />
                         <input 
                             type="text" 
                             placeholder={t('Buscar mercado...')}

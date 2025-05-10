@@ -200,13 +200,10 @@ const EdicionAlias = () => {
     let normalizedText = text;
 
     normalizedText = normalizedText
-    .replace(/ESPA.?.'A/g, 'ESPAÑA')
     .replace(/ESPA.?.A/g, 'ESPAÑA')
-    .replace(/ESPA.A/g, 'ESPAÑA')
-    .replace('ESPAÃ\'A', 'ESPAÑA')
-    .replace('ESPAÃA', 'ESPAÑA')
-    .replace('ESPAÃ±A', 'ESPAÑA')
-    .replace('ESPAÑA', 'ESPAÑA');
+    .replace(/PEQUE.?.O/g, 'PEQUEÑO')
+    .replace(/PEQUE.?.A/g, 'PEQUEÑA');
+    
 
     const replacements = {
       'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
@@ -795,23 +792,18 @@ const EdicionAlias = () => {
   };
 
   const addCadenasForGrupoCadena = (grupo) => {
-    // Obtenemos todas las cadenas que pertenecen a este grupo
     const cadenasDelGrupo = cadenasDisponibles.filter(
       cadena => cadena.idGrupoCadena === grupo.id
     );
     
-    // En vez de usar todos los mercados disponibles, solo usamos los que ya están seleccionados
-    // Obtenemos los mercados únicos que ya están en la tabla de ámbitos
     const mercadosSeleccionados = new Set();
     ambitosTable.forEach(ambito => {
       if (selectedAmbitos.includes(ambito.id)) {
-        mercadosSeleccionados.add(JSON.stringify(ambito.mercado)); // Convertimos a string para poder usar Set
+        mercadosSeleccionados.add(JSON.stringify(ambito.mercado)); 
       }
     });
     
-    // Si no hay mercados seleccionados, usamos solo el mercado que está actualmente seleccionado (si existe)
     if (mercadosSeleccionados.size === 0 && ambitoToAdd.mercado) {
-      // Para cada cadena del grupo, creamos un ámbito con el mercado seleccionado actualmente
       cadenasDelGrupo.forEach(cadena => {
         const ambitoToAddWithCadena = {
           grupoCadena: grupo,
@@ -819,12 +811,10 @@ const EdicionAlias = () => {
           mercado: ambitoToAdd.mercado
         };
         
-        // Añadimos este ámbito a la tabla
         addAmbitoWithValues(ambitoToAddWithCadena);
       });
     } 
     else if (mercadosSeleccionados.size > 0) {
-      // Para cada cadena del grupo, creamos un ámbito con cada mercado seleccionado
       cadenasDelGrupo.forEach(cadena => {
         mercadosSeleccionados.forEach(mercadoStr => {
           const mercado = JSON.parse(mercadoStr);
@@ -834,7 +824,6 @@ const EdicionAlias = () => {
             mercado: mercado
           };
           
-          // Añadimos este ámbito a la tabla
           addAmbitoWithValues(ambitoToAddWithCadena);
         });
       });
@@ -842,12 +831,10 @@ const EdicionAlias = () => {
   };
 
   const handleCadenaSelect = (cadena) => {
-    // Verificamos si esta cadena ya está en algún ámbito
     const existingAmbitos = ambitosTable.filter(
       ambito => ambito.cadena.id === cadena.id && selectedAmbitos.includes(ambito.id)
     );
     
-    // Si ya existe, los eliminamos todos 
     if (existingAmbitos.length > 0) {
       existingAmbitos.forEach(ambito => {
         removeAmbitoIfExists(null, cadena.id, null);
@@ -855,14 +842,12 @@ const EdicionAlias = () => {
       return;
     }
     
-    // Guardamos la cadena seleccionada en el estado
     setSelectedCadena(cadena.id);
     setAmbitoToAdd(prev => ({
       ...prev,
       cadena: cadena
     }));
     
-    // Buscamos el grupo cadena al que pertenece esta cadena
     const grupoCadena = gruposCadenaDisponibles.find(g => g.id === cadena.idGrupoCadena);
     
     if (!grupoCadena) {
@@ -870,15 +855,13 @@ const EdicionAlias = () => {
       return;
     }
     
-    // Obtenemos todos los mercados únicos que ya están seleccionados en la tabla
     const mercadosSeleccionados = new Set();
     ambitosTable.forEach(ambito => {
       if (selectedAmbitos.includes(ambito.id)) {
-        mercadosSeleccionados.add(JSON.stringify(ambito.mercado)); // Convertimos a string para poder usar Set
+        mercadosSeleccionados.add(JSON.stringify(ambito.mercado));
       }
     });
     
-    // Si no hay mercados seleccionados, usamos el mercado actual (si existe)
     if (mercadosSeleccionados.size === 0 && ambitoToAdd.mercado) {
       const newAmbitoToAdd = {
         grupoCadena: grupoCadena,
@@ -889,7 +872,6 @@ const EdicionAlias = () => {
       return;
     }
     
-    // Si hay mercados seleccionados, creamos un ámbito para cada uno con la nueva cadena
     mercadosSeleccionados.forEach((mercadoStr) => {
       const mercado = JSON.parse(mercadoStr);
       const newAmbitoToAdd = {
@@ -902,12 +884,10 @@ const EdicionAlias = () => {
   };
 
   const handleMercadoSelect = (mercado) => {
-    // Verificamos si este mercado ya está en algún ámbito
     const existingAmbitos = ambitosTable.filter(
       ambito => ambito.mercado.id === mercado.id && selectedAmbitos.includes(ambito.id)
     );
     
-    // Si ya existe, los eliminamos todos
     if (existingAmbitos.length > 0) {
       existingAmbitos.forEach(ambito => {
         removeAmbitoIfExists(null, null, mercado.id);
@@ -915,19 +895,15 @@ const EdicionAlias = () => {
       return;
     }
     
-    // Guardamos el mercado en el estado
     setSelectedMercado(mercado.id);
     setAmbitoToAdd(prev => ({
       ...prev,
       mercado: mercado
     }));
-    
-    // Conseguimos todas las combinaciones únicas de grupo cadena - cadena que ya están en la tabla
     const gruposCadenaCombinations = new Map();
     
     ambitosTable.forEach(ambito => {
       if (selectedAmbitos.includes(ambito.id)) {
-        // Usamos como clave la combinación de IDs de grupo y cadena
         const key = `${ambito.grupoCadena.id}-${ambito.cadena.id}`;
         if (!gruposCadenaCombinations.has(key)) {
           gruposCadenaCombinations.set(key, {
@@ -969,14 +945,6 @@ const EdicionAlias = () => {
         return a;
       })
     );
-  };
-
-  const handleAmbitoSelect = (ambitoId) => {
-    if (selectedAmbitos.includes(ambitoId)) {
-      setSelectedAmbitos(prev => prev.filter(id => id !== ambitoId));
-    } else {
-      setSelectedAmbitos(prev => [...prev, ambitoId]);
-    }
   };
 
   const handleAddArticulo = () => {
@@ -1547,7 +1515,7 @@ const EdicionAlias = () => {
                                 ID: {articulo.idAjeno || articulo.id}
                               </div>
                               <div className="articulos-item-nombre">
-                                {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                                {normalizeText(articulo.nombreAjeno || articulo.descripcion || articulo.nombre)}
                               </div>
                             </div>
                           </div>
@@ -1643,7 +1611,7 @@ const EdicionAlias = () => {
                             </td>
                             <td>{articuloId}</td>
                             <td className="articulo-name">
-                              {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                              {normalizeText(articulo.nombreAjeno || articulo.descripcion || articulo.nombre)}
                             </td>
                             <td className="unidades-box">{articulo.unidadesMedida?.descripcion || articulo.descripcionUnidadesMedida}</td>
                             <td>{articulo.unidadesEmpaquetado}</td>
@@ -1710,7 +1678,6 @@ const EdicionAlias = () => {
                 {isGrupoCadenaDropdownOpen && (
                 <div className="filter-dropdown-content">
                   <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
                     <input 
                       type="text" 
                       placeholder={t('Buscar grupo cadena...')}
@@ -1836,7 +1803,6 @@ const EdicionAlias = () => {
                 {isCadenaDropdownOpen && (
                 <div className="filter-dropdown-content">
                   <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
                     <input 
                       type="text" 
                       placeholder={t('Buscar cadena...')}
@@ -1974,7 +1940,6 @@ const EdicionAlias = () => {
                 {isMercadoDropdownOpen && (
                 <div className="filter-dropdown-content">
                   <div className="dropdown-search">
-                    <FaSearch className="search-icon" />
                     <input 
                       type="text" 
                       placeholder={t('Buscar mercado...')}

@@ -224,22 +224,18 @@ const Propuestas = () => {
       
       setLoading(true);
       
-      // Llamar al endpoint de borrado
       await axios.put(`${BASE_URL}/propuestas/delete-propuestas`, {
         idsPropuesta: selectedPropuestas,
-        usuarioBaja: 'frontend_user', // Idealmente esto vendría de un contexto de autenticación
+        usuarioBaja: 'frontend_user',
         fechaBaja: new Date().toISOString()
       });
       
-      // Actualizar la UI eliminando las propuestas seleccionadas
       const updatedPropuestas = propuestas.filter(
         propuesta => !selectedPropuestas.includes(propuesta.idPropuesta)
       );
       
-      // Mostrar mensaje de éxito
       alert(`Se han eliminado ${selectedPropuestas.length} propuesta(s) correctamente`);
       
-      // Actualizar el estado
       setPropuestas(updatedPropuestas);
       setTotalElements(prev => prev - selectedPropuestas.length);
       setSelectedPropuestas([]);
@@ -350,21 +346,21 @@ const Propuestas = () => {
   };
 
   const clearFilters = () => {
-    setIdLocalizacion('');
-    setSelectedMercados([]);
-    setSelectedGruposCadena([]);
-    setSelectedEventos([]);
-    setIdEjecucion('');
-    setIdPropuesta('');
-    setSelectedEstadosPropuesta([]);
-    setInicioFechaCreacion('');
-    setFinFechaCreacion('');
-    setSelectedUnidadesCompras([]);
-    setSelectedArticulos([]);
-    setShowResults(false);
-    setPropuestas([]);
-    setSelectedPropuestas([]);
-    setSelectAll(false);
+      setIdLocalizacion('');
+      setSelectedMercados([]);
+      setSelectedGruposCadena([]);
+      setSelectedEventos([]);
+      setIdEjecucion('');
+      setIdPropuesta('');
+      setSelectedEstadosPropuesta([]);
+      setInicioFechaCreacion('');
+      setFinFechaCreacion('');
+      setSelectedUnidadesCompras([]);
+      setSelectedArticulos([]);
+      setShowResults(false);
+      setPropuestas([]);
+      setSelectedPropuestas([]);
+      setSelectAll(false);
   };
 
   const toggleFilters = () => {
