@@ -99,8 +99,7 @@ const NuevaTareaRecuento = () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/tareas/alias-and-acoples`, {
         params: {
-          idIdioma: languageId,
-          idTipoTarea: 2
+          idIdioma: languageId
         }
       });
       
@@ -132,8 +131,7 @@ const NuevaTareaRecuento = () => {
       const response = await axios.get(`${BASE_URL}/api/tareas/alias-and-acoples`, {
         params: {
           term: aliasSearchTerm,
-          idIdioma: languageId,
-          idTipoTarea: 2
+          idIdioma: languageId
         }
       });
       

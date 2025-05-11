@@ -22,4 +22,7 @@ router.post('/create', eventoController.createEvento);
 router.get('/:id', eventoController.getEventoById);
 router.put('/:id', eventoController.updateEvento);
 
+router.post('/:id/ejecutar', eventoController.ejecutarEventos);
+router.post('/ejecutar', eventoController.ejecutarEventos);
+
 module.exports = router;

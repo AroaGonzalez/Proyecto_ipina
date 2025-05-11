@@ -2924,8 +2924,29 @@ exports.createAlias = async (alias, fechaAlta, usuarioAlta) => {
 
 exports.createAliasIdioma = async (idAlias, idiomas) => {
   try {
-    // Preparar consultas para cada idioma
-    const queries = idiomas.map(idioma => `
+    // Verificar existencia previa para evitar duplicados
+    const existingRecords = await sequelizeAjenos.query(`
+      SELECT ID_ALIAS, ID_IDIOMA 
+      FROM AJENOS.ALIAS_IDIOMA 
+      WHERE ID_ALIAS = :idAlias
+    `, {
+      replacements: { idAlias },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    // Filtrar idiomas que ya existen
+    const existingIdiomasMap = new Map(existingRecords.map(r => [`${r.ID_ALIAS}-${r.ID_IDIOMA}`, true]));
+    const idiomasToInsert = idiomas.filter(idioma => 
+      !existingIdiomasMap.has(`${idAlias}-${idioma.idIdioma}`)
+    );
+    
+    if (idiomasToInsert.length === 0) {
+      console.log(`Todos los idiomas ya existen para el alias ${idAlias}, no se requiere inserción`);
+      return true;
+    }
+    
+    // Preparar consultas para idiomas que no existen
+    const queries = idiomasToInsert.map(idioma => `
       INSERT INTO AJENOS.ALIAS_IDIOMA (
         ID_ALIAS, 
         ID_IDIOMA, 

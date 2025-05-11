@@ -136,7 +136,6 @@ exports.updateEventoEstado = async (req, res) => {
       const { idEstadoEvento } = req.body;
       const idsEvento = req.params.id ? [parseInt(req.params.id)] : parseIntArray(req.body.idsEvento);
       
-      // Obtener el usuario autenticado (ajusta esto según tu sistema de autenticación)
       const usuario = req.user?.username || 'sistema';
       
       if (!idsEvento || idsEvento.length === 0) {
@@ -295,29 +294,25 @@ exports.getEventoById = async (req, res) => {
   }
 };
 
-// En el controller eventoController.js
 exports.updateEvento = async (req, res) => {
   try {
     const id = req.params.id;
     const eventoData = req.body;
     
-    // Validación de datos requeridos
     if (!eventoData.nombreEvento || !eventoData.descripcion) {
       return res.status(400).json({
         message: 'Faltan campos obligatorios: nombre o descripción'
       });
     }
     
-    // Si se envía idsTarea, convertirlo a formato createEventoTarea
     if (eventoData.idsTarea && Array.isArray(eventoData.idsTarea)) {
       eventoData.createEventoTarea = eventoData.idsTarea.map(idTarea => ({ idTarea }));
     }
     
-    // Preparar los datos para el repositorio
     const dataToUpdate = {
       nombreEvento: eventoData.nombreEvento,
       descripcion: eventoData.descripcion,
-      idTipoTarea: eventoData.idTipoTarea, // Asegúrate de pasar esto
+      idTipoTarea: eventoData.idTipoTarea,
       idTipoEvento: eventoData.idTipoEvento,
       idTipoEstadoEvento: eventoData.idTipoEstadoEvento,
       createEventoTarea: eventoData.createEventoTarea,
@@ -330,5 +325,77 @@ exports.updateEvento = async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar evento:', error);
     res.status(500).json({ message: 'Error al actualizar el evento', error: error.message });
+  }
+};
+
+const TipoEstadoEventoEnum = {
+  ACTIVO: 2,
+  PAUSADO: 1,
+  ELIMINADO: 3,
+  EN_EJECUCION: 5 
+};
+
+exports.ejecutarEventos = async (req, res) => {
+  try {
+    const idEvento = req.params.id ? parseInt(req.params.id) : null;
+    const idsEvento = idEvento ? [idEvento] : (req.body.idsEvento ? parseIntArray(req.body.idsEvento) : []);
+    const { idIdioma = 1 } = req.query;
+    
+    if (!idsEvento || idsEvento.length === 0) {
+      return res.status(400).json({ 
+        message: 'Se requiere al menos un ID de evento' 
+      });
+    }
+    
+    const usuario = req.user?.username || 'sistema';
+    const fechaEjecucion = new Date();
+    
+    const eventosInfo = await eventoRepository.findEventosByIds(idsEvento, parseInt(idIdioma));
+    
+    if (eventosInfo.length === 0) {
+      return res.status(404).json({ 
+        message: 'No se encontraron eventos para ejecutar' 
+      });
+    }
+    
+    const idTipoTarea = eventosInfo[0].idTipoTarea;
+    const todosIguales = eventosInfo.every(evento => evento.idTipoTarea === idTipoTarea);
+    
+    if (!todosIguales) {
+      return res.status(400).json({ 
+        message: 'Todos los eventos deben tener el mismo tipo de tarea para ejecutarlos juntos' 
+      });
+    }
+    
+    const codEjecucion = await eventoRepository.getNextCodigoEventoEjecucion();
+    
+    await eventoRepository.updateEventoEstado(
+      idsEvento,
+      TipoEstadoEventoEnum.EN_EJECUCION,
+      usuario,
+      fechaEjecucion
+    );
+    
+    await eventoRepository.ejecutarEventos(
+      idsEvento, 
+      idTipoTarea, 
+      codEjecucion, 
+      fechaEjecucion, 
+      usuario, 
+      parseInt(idIdioma)
+    );
+    
+    return res.json({
+      success: true,
+      codEjecucion,
+      message: `Se ha iniciado la ejecución de ${idsEvento.length} evento(s)`
+    });
+    
+  } catch (error) {
+    console.error('Error en ejecutarEventos:', error);
+    return res.status(500).json({ 
+      message: 'Error al ejecutar eventos', 
+      error: error.message 
+    });
   }
 };

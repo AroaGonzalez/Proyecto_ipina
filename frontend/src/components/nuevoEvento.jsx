@@ -394,8 +394,8 @@ const NuevoEvento = () => {
                     <td>{normalizeText(tarea.nombreTarea)}</td>
                     <td><span className="tipo-tarea-badge">{tarea.descripcionTipoTarea}</span></td>
                     <td><span className="estado-tarea-badge activa">{tarea.descripcionTipoEstadoTarea || 'ACTIVA'}</span></td>
-                    <td>{tarea.mercados?.join(', ') || '-'}</td>
-                    <td>{tarea.cadenas?.join(', ') || '-'}</td>
+                    <td>{normalizeText(tarea.mercados?.join(', ') || '-')}</td>
+                    <td>{normalizeText(tarea.cadenas?.join(', ') || '-')}</td>
                     <td>{tarea.idsAlias?.length || '-'}</td>
                   </tr>
                 ))}

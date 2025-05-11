@@ -244,6 +244,38 @@ const Eventos = () => {
       console.error('Error al activar eventos:', error);
     }
   };
+
+  const handleExecuteEventos = async () => {
+    try {
+      // Show loading indicator or notification
+      setLoading(true);
+      
+      // Execute each selected event
+      await Promise.all(
+        selectedEventos.map(idEvento => 
+          axios.post(`${BASE_URL}/eventos/${idEvento}/ejecutar`, {
+            idIdioma: languageId
+          })
+        )
+      );
+      
+      // Refresh the events list to get updated status
+      await fetchEventos();
+      
+      // Clear selection
+      setSelectedEventos([]);
+      setSelectAll(false);
+      
+      // Show success notification (you could implement a toast notification system)
+      console.log('Eventos ejecutados correctamente');
+      
+    } catch (error) {
+      console.error('Error al ejecutar eventos:', error);
+      setError('Error al ejecutar los eventos');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handlePauseEventos = async () => {
     try {
@@ -1069,6 +1101,15 @@ const Eventos = () => {
                     eventos.find(evento => evento.idEvento === id)?.idEstadoEvento === 3)}
                 >
                 <FaPause className="action-icon" /> {t('PAUSAR')}
+            </button>
+            <button 
+              className={`action-button execute-button ${selectedEventos.some(id => 
+                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento !== 2) ? 'disabled' : ''}`} 
+              onClick={handleExecuteEventos}
+              disabled={selectedEventos.some(id => 
+                eventos.find(evento => evento.idEvento === id)?.idEstadoEvento !== 2)}
+            >
+              <FaPlay className="action-icon" /> {t('EJECUTAR')}
             </button>
           </div>
         </div>

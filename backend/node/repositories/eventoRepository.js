@@ -48,7 +48,6 @@ function fixEncoding(text) {
     .replace(/ProducciÃ³n/g, 'Producción');
 }
 
-// Constantes para enumerados
 const TipoAliasEnum = {
   TIPO_IV: { idTipoAlias: 4 }
 };
@@ -127,7 +126,6 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
         AND
       `;
       
-      // If TIPO_IV is the only type
       if (tipoAlias.includes(TipoAliasEnum.TIPO_IV.idTipoAlias) && tipoAlias.length === 1) {
         sqlQuery += `
           er.ID_TIPO_TAREA = 2
@@ -155,7 +153,6 @@ exports.findEventosByFilter = async (filter = {}, tipoAlias = []) => {
       countQuery += ` WHERE 1=1 `;
     }
     
-    // Apply whereClaused
     if (filter.idsEvento && filter.idsEvento.length > 0) {
       sqlQuery += ` AND er.ID_EVENTO_RAM IN (${filter.idsEvento.join(',')})`;
       countQuery += ` AND er.ID_EVENTO_RAM IN (${filter.idsEvento.join(',')})`;
@@ -511,7 +508,6 @@ exports.updateEventoEstado = async (idsEvento, idTipoEstadoEvento, usuario) => {
         WHERE ID_EVENTO_RAM IN (:idsEvento)
       `;
       
-      // Ejecutar la actualización
       const result = await sequelizeAjenos.query(query, {
         replacements: { 
           usuario,
@@ -521,7 +517,6 @@ exports.updateEventoEstado = async (idsEvento, idTipoEstadoEvento, usuario) => {
         type: sequelizeAjenos.QueryTypes.UPDATE
       });
       
-      // Limpiar caché relacionada con eventos
       cache.clear('eventos_');
       
       return {
@@ -708,7 +703,6 @@ exports.createEvento = async (eventoData) => {
       usuarioAlta 
     } = eventoData;
 
-    // Obtener el máximo ID actual
     const [maxIdResult] = await sequelizeAjenos.query(
       "SELECT MAX(ID_EVENTO_RAM) as maxId FROM AJENOS.EVENTO_RAM",
       { type: sequelizeAjenos.QueryTypes.SELECT, transaction }
@@ -774,7 +768,6 @@ exports.createEvento = async (eventoData) => {
 
 exports.findEventoById = async (idEvento, idIdioma = 1) => {
   try {
-    // Primera consulta para obtener los datos básicos del evento
     const eventoQuery = `
       SELECT 
         er.ID_EVENTO_RAM AS idEvento,
@@ -806,7 +799,6 @@ exports.findEventoById = async (idEvento, idIdioma = 1) => {
       return null;
     }
 
-    // Segunda consulta para obtener las tareas asociadas al evento
     const tareasQuery = `
       SELECT DISTINCT
         tr.ID_TAREA_RAM AS idTarea,
@@ -844,7 +836,6 @@ exports.findEventoById = async (idEvento, idIdioma = 1) => {
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
-    // Para cada tarea, obtener los ID de alias asociados
     const tareas = await Promise.all(tareasResult.map(async (tarea) => {
       const aliasQuery = `
         SELECT at.ID_ALIAS
@@ -870,7 +861,6 @@ exports.findEventoById = async (idEvento, idIdioma = 1) => {
       };
     }));
     
-    // Formatear el resultado con los datos del evento y sus tareas asociadas
     return {
       idEvento: eventoResult.idEvento,
       nombreEvento: fixEncoding(eventoResult.nombreEvento),
@@ -891,7 +881,6 @@ exports.findEventoById = async (idEvento, idIdioma = 1) => {
   }
 };
 
-// Implementación de la función updateEvento basada en el código Java proporcionado
 exports.updateEvento = async (idEvento, eventoData) => {
   const transaction = await sequelizeAjenos.transaction();
   
@@ -903,7 +892,6 @@ exports.updateEvento = async (idEvento, eventoData) => {
       createEventoTarea
     } = eventoData;
     
-    // Get current event data
     const currentEventQuery = `
       SELECT * FROM AJENOS.EVENTO_RAM
       WHERE ID_EVENTO_RAM = :idEvento AND FECHA_BAJA IS NULL
@@ -919,7 +907,6 @@ exports.updateEvento = async (idEvento, eventoData) => {
       throw new Error('Evento no encontrado o ya eliminado');
     }
     
-    // Update evento basic information
     const updateEventoQuery = `
       UPDATE AJENOS.EVENTO_RAM
       SET NOMBRE = :nombreEvento,
@@ -936,13 +923,12 @@ exports.updateEvento = async (idEvento, eventoData) => {
         nombreEvento,
         descripcion,
         idTipoTarea: idTipoTarea || currentEvent.ID_TIPO_TAREA,
-        usuario: 'sistema' // This should be replaced with authenticated user info
+        usuario: 'sistema'
       },
       type: sequelizeAjenos.QueryTypes.UPDATE,
       transaction
     });
     
-    // Get current tareas associated with the event
     const currentTareasQuery = `
       SELECT ID_TAREA_RAM FROM AJENOS.EVENTO_TAREA_RAM
       WHERE ID_EVENTO_RAM = :idEvento
@@ -956,17 +942,14 @@ exports.updateEvento = async (idEvento, eventoData) => {
     
     const currentTareaIds = currentTareas.map(tarea => tarea.ID_TAREA_RAM);
     
-    // Extract tarea IDs from the eventoData
     let tareaIds = [];
     if (Array.isArray(createEventoTarea)) {
       tareaIds = createEventoTarea.map(tarea => tarea.idTarea);
     }
     
-    // Find tareas to add and remove
     const tareasToAdd = tareaIds.filter(id => !currentTareaIds.includes(id));
     const tareasToRemove = currentTareaIds.filter(id => !tareaIds.includes(id));
     
-    // Add new tareas
     if (tareasToAdd.length > 0) {
       const insertEventoTareaQuery = `
         INSERT INTO AJENOS.EVENTO_TAREA_RAM (ID_EVENTO_RAM, ID_TAREA_RAM)
@@ -985,7 +968,6 @@ exports.updateEvento = async (idEvento, eventoData) => {
       }
     }
     
-    // Remove tareas that are no longer associated
     if (tareasToRemove.length > 0) {
       const deleteEventoTareaQuery = `
         DELETE FROM AJENOS.EVENTO_TAREA_RAM
@@ -1004,7 +986,6 @@ exports.updateEvento = async (idEvento, eventoData) => {
     
     await transaction.commit();
     
-    // Clear cache related to eventos
     cache.clear('eventos_');
     
     return {
@@ -1018,3 +999,907 @@ exports.updateEvento = async (idEvento, eventoData) => {
     throw error;
   }
 };
+
+exports.getNextCodigoEventoEjecucion = async () => {
+  try {
+    // En MySQL no existe la sintaxis "NEXT VALUE FOR"
+    // Alternativa 1: Si existe una tabla de secuencias
+    const query = "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'AJENOS' AND TABLE_NAME = 'EVENTO_EJECUCION_RAM'";
+    
+    // Alternativa 2: Usar MAX + 1
+    // const query = "SELECT COALESCE(MAX(COD_EJECUCION), 0) + 1 AS nextId FROM AJENOS.EVENTO_EJECUCION_RAM";
+    
+    const [result] = await sequelizeAjenos.query(query, {
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    if (result && result.AUTO_INCREMENT) {
+      return result.AUTO_INCREMENT;
+    } else if (result && result.nextId) {
+      return result.nextId;
+    }
+    
+    // Si no podemos obtener el valor, generamos uno basado en timestamp
+    return Date.now();
+  } catch (error) {
+    console.error('Error al obtener el siguiente código de ejecución:', error);
+    
+    // Fallback en caso de error - usar timestamp
+    console.log('Usando timestamp como código de ejecución alternativo');
+    return Date.now();
+  }
+};
+
+exports.findEventosByIds = async (idsEvento, idIdioma = 1) => {
+  try {
+    if (!idsEvento || idsEvento.length === 0) {
+      return [];
+    }
+    
+    const query = `
+      SELECT 
+        er.ID_EVENTO_RAM as idEvento,
+        er.ID_TIPO_TAREA as idTipoTarea,
+        er.ID_TIPO_ESTADO_EVENTO_RAM as idTipoEstadoEvento
+      FROM AJENOS.EVENTO_RAM er
+      WHERE er.ID_EVENTO_RAM IN (:idsEvento)
+      AND er.FECHA_BAJA IS NULL
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idsEvento },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error en findEventosByIds:', error);
+    throw error;
+  }
+};
+
+exports.updateEventoEstado = async (idsEvento, idTipoEstadoEvento, usuario, fechaEjecucion = null) => {
+  try {
+    if (!idsEvento || !Array.isArray(idsEvento) || idsEvento.length === 0) {
+      throw new Error('Se requiere al menos un ID de evento');
+    }
+    
+    if (!idTipoEstadoEvento) {
+      throw new Error('Se requiere el ID del tipo de estado del evento');
+    }
+
+    const query = `
+      UPDATE AJENOS.EVENTO_RAM 
+      SET USUARIO_MODIFICACION = :usuario,
+          ID_TIPO_ESTADO_EVENTO_RAM = :idTipoEstadoEvento,
+          FECHA_MODIFICACION = CURRENT_TIMESTAMP
+      WHERE ID_EVENTO_RAM IN (:idsEvento)
+    `;
+    
+    const replacements = { 
+      usuario,
+      idTipoEstadoEvento: parseInt(idTipoEstadoEvento),
+      idsEvento
+    };
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements,
+      type: sequelizeAjenos.QueryTypes.UPDATE
+    });
+    
+    cache.clear('eventos_');
+    
+    return {
+      success: true,
+      affectedRows: result[1] || 0,
+      message: `Se han actualizado ${result[1] || 0} eventos al estado ${idTipoEstadoEvento}`
+    };
+  } catch (error) {
+    console.error('Error en updateEventoEstado:', error);
+    throw error;
+  }
+};
+
+
+exports.ejecutarEventos = async (idsEvento, idTipoTarea, codEjecucion, fechaEjecucion, usuarioEjecucion, idIdioma) => {
+  try {
+    
+    // Ejecutar según el tipo de tarea
+    switch (idTipoTarea) {
+      case 1: // Distribución
+        await ejecutarEventosDistribucion(idsEvento, codEjecucion, idIdioma, usuarioEjecucion, fechaEjecucion);
+        break;
+      case 2: // Recuento
+        await ejecutarEventosRecuento(idsEvento, codEjecucion, idIdioma, usuarioEjecucion, fechaEjecucion);
+        break;
+      default:
+        throw new Error(`Tipo de tarea no soportado: ${idTipoTarea}`);
+    }
+    
+    return {
+      success: true,
+      codEjecucion,
+      message: `Se han ejecutado ${idsEvento.length} eventos`
+    };
+  } catch (error) {
+    console.error('Error en ejecutarEventos:', error);
+    
+    // En caso de error, actualizar los eventos a ACTIVO nuevamente
+    try {
+      await exports.updateEventoEstado(idsEvento, 2, usuarioEjecucion); // 2 = ACTIVO
+    } catch (updateError) {
+      console.error('Error al restaurar estado de eventos tras fallo:', updateError);
+    }
+    
+    throw error;
+  }
+};
+
+const TipoEstadoTareaRamEnum = {
+  PUBLICADA: 1,
+  PAUSADA: 2,
+  ELIMINADA: 3
+};
+
+const TipoEstadoEventoEjecucionEnum = {
+  COMPLETADO: 1,
+  PAUSADO: 2,
+  PREPARADO: 3,
+  FALLIDO: 4,
+  EN_EJECUCION: 5
+};
+
+const TipoEstadoPropuestaEnum = {
+  PUBLICADO: 1,
+  PENDIENTE: 2,
+  BORRADO: 3
+};
+
+async function ejecutarEventosDistribucion(idsEvento, codEjecucion, idIdioma, usuarioEjecucion, fechaEjecucion) {
+  try {
+    console.log(`Iniciando ejecución de distribución para eventos: ${idsEvento.join(', ')} con código ${codEjecucion}`);
+    const fechaBaja = new Date();
+    
+    // Procesar cada evento
+    for (const idEvento of idsEvento) {
+      console.log(`Ejecutando evento ${idEvento}`);
+      
+      // Buscar tareas activas asociadas al evento
+      const idsTareaActivas = await findIdsTareasByIdEventoIdTipoEstadoTarea(
+        idEvento, 
+        [TipoEstadoTareaRamEnum.PUBLICADA]
+      );
+      
+      if (idsTareaActivas && idsTareaActivas.length > 0) {
+        // Procesar cada tarea activa
+        for (const idTarea of idsTareaActivas) {
+          console.log(`Ejecutando tarea ${idTarea}`);
+          
+          const propuestasMap = {};
+          
+          // Obtener información de ambitos aplanados de la tarea
+          const tareaAmbitoAplanadoElegible = await findBaseTareaAmbitoAplanadoEventoByIdTarea(idTarea);
+          
+          if (tareaAmbitoAplanadoElegible && tareaAmbitoAplanadoElegible.length > 0) {
+            // Crear objetos de ejecución de eventos
+            const eventosEjecucion = tareaAmbitoAplanadoElegible.map(taa => ({
+              idEventoEjecucion: null, // Se asignará después
+              codEjecucion: codEjecucion,
+              idEvento: idEvento,
+              idAjeno: taa.idAjeno,
+              idLocalizacionCompra: taa.idLocalizacionCompra,
+              idTipoEstadoEventoEjecucion: TipoEstadoEventoEjecucionEnum.COMPLETADO,
+              fechaHoraInicioEjecucion: fechaEjecucion,
+              fechaHoraFinEjecucion: fechaEjecucion,
+              usuarioAlta: usuarioEjecucion,
+              fechaAlta: fechaEjecucion,
+              idAlias: taa.idAliasAcople ? taa.idAliasAcople : taa.idAlias
+            }));
+            
+            // Crear ejecuciones en BD
+            await createEventosEjecucion(eventosEjecucion, fechaEjecucion, usuarioEjecucion);
+            
+            // Preparar solicitud para Analytics
+            const analyticsProposalRequest = {};
+            
+            tareaAmbitoAplanadoElegible.forEach(taa => {
+              // Encontrar el ID de ejecución correspondiente
+              const eventoEjecucion = eventosEjecucion.find(ee => 
+                ee.idAjeno === taa.idAjeno && 
+                ee.idLocalizacionCompra === taa.idLocalizacionCompra && 
+                ee.idAlias === (taa.idAliasAcople ? taa.idAliasAcople : taa.idAlias)
+              );
+              
+              const idEventoEjecucion = eventoEjecucion ? eventoEjecucion.idEventoEjecucion : codEjecucion;
+              
+              // Crear propuesta
+              const propuestaJpa = {
+                idTipoEstadoPropuesta: TipoEstadoPropuestaEnum.PENDIENTE,
+                idAlias: taa.idAliasAcople ? taa.idAliasAcople : taa.idAlias,
+                idLocalizacionCompra: taa.idLocalizacionCompra,
+                idEventoEjecucion: idEventoEjecucion,
+                usuarioAlta: usuarioEjecucion,
+                fechaAlta: fechaEjecucion,
+                fechaHoraEjecucion: fechaEjecucion,
+                cantidadDataAnalytics: null,
+                stockTeoricoDataAnalytics: null,
+                fechaCalculoDataAnalytics: null
+              };
+              
+              // Preparar cuerpo para solicitud a Analytics
+              const diaEjecucion = formatDateToLocalDate(fechaEjecucion);
+              const proposalRequestBody = {
+                idEventoEjecucion: idEventoEjecucion.toString(),
+                diaEjecucion: diaEjecucion,
+                idLocalizacion: taa.idLocalizacionCompra,
+                idAlias: taa.idAliasAcople ? taa.idAliasAcople : taa.idAlias
+              };
+              
+              // Configurar valores adicionales
+              setProposalRequestBodyValues(proposalRequestBody, taa);
+              
+              // Agregar a las colecciones
+              analyticsProposalRequest[idEventoEjecucion.toString()] = proposalRequestBody;
+              propuestasMap[idEventoEjecucion.toString()] = propuestaJpa;
+            });
+            
+            try {
+              // Llamar al servicio de Analytics
+              const analyticsProposalResponse = await getAnalyticsProposal(analyticsProposalRequest);
+              
+              // Procesar respuestas
+              Object.entries(analyticsProposalResponse.propuestas || {}).forEach(([idEventoEjecucion, proposalResponseBody]) => {
+                if (propuestasMap[idEventoEjecucion]) {
+                  const propuestaJpa = propuestasMap[idEventoEjecucion];
+                  
+                  if (!proposalResponseBody.unidadesPropuestas) {
+                    propuestaJpa.idTipoEstadoPropuesta = TipoEstadoPropuestaEnum.BORRADO;
+                    propuestaJpa.fechaBaja = fechaBaja;
+                  } else {
+                    const tareaAmbitoAplanadoEvento = tareaAmbitoAplanadoElegible.find(taa => 
+                      taa.idAlias === propuestaJpa.idAlias &&
+                      taa.idLocalizacionCompra === propuestaJpa.idLocalizacionCompra
+                    );
+                    
+                    if (tareaAmbitoAplanadoEvento) {
+                      // Ajustar propuesta según stock mínimo
+                      if (tareaAmbitoAplanadoEvento.stockMinimo && 
+                          proposalResponseBody.unidadesPropuestas < tareaAmbitoAplanadoEvento.stockMinimo) {
+                        proposalResponseBody.unidadesPropuestas = tareaAmbitoAplanadoEvento.stockMinimo;
+                      }
+                      
+                      // Calcular stock teórico
+                      const stockTeoricoCalculado = calcularPropuestaFinal(
+                        proposalResponseBody.unidadesPropuestas,
+                        tareaAmbitoAplanadoEvento.unidadesEmpaquetado,
+                        tareaAmbitoAplanadoEvento.multiploMinimo
+                      );
+                      
+                      propuestaJpa.cantidadDataAnalytics = proposalResponseBody.unidadesPropuestas;
+                      propuestaJpa.stockTeoricoDataAnalytics = stockTeoricoCalculado;
+                      propuestaJpa.fechaCalculoDataAnalytics = fechaEjecucion;
+                    } else {
+                      propuestaJpa.idTipoEstadoPropuesta = TipoEstadoPropuestaEnum.BORRADO;
+                    }
+                  }
+                  
+                  propuestasMap[idEventoEjecucion] = propuestaJpa;
+                }
+              });
+            } catch (error) {
+              console.error(`Error al ejecutar getAnalyticsProposal: ${error.message}`);
+              
+              // Marcar todas las propuestas como borradas en caso de error
+              Object.values(propuestasMap).forEach(p => {
+                p.idTipoEstadoPropuesta = TipoEstadoPropuestaEnum.BORRADO;
+                p.fechaBaja = fechaBaja;
+              });
+            } finally {
+              // Guardar propuestas
+              await createPropuestas(
+                Object.values(propuestasMap), 
+                fechaEjecucion, 
+                usuarioEjecucion
+              );
+            }
+          }
+        }
+      }
+    }
+    
+    console.log("Distribución finalizada con éxito");
+    
+    // Actualizar estado de eventos a ACTIVO
+    await exports.updateEventoEstado(idsEvento, 2, usuarioEjecucion, fechaEjecucion);
+    
+  } catch (error) {
+    console.error("Error al ejecutar distEventExecutionAsync", error);
+    throw error;
+  }
+}
+
+async function findIdsTareasByIdEventoIdTipoEstadoTarea(idEvento, idTipoEstadoTarea) {
+  try {
+    const query = `
+      SELECT tr.ID_TAREA_RAM as idTarea
+      FROM AJENOS.EVENTO_RAM er
+      INNER JOIN AJENOS.EVENTO_TAREA_RAM etr ON etr.ID_EVENTO_RAM = er.ID_EVENTO_RAM
+      INNER JOIN AJENOS.TAREA_RAM tr ON tr.ID_TAREA_RAM = etr.ID_TAREA_RAM
+      WHERE er.ID_EVENTO_RAM = :idEvento
+      AND tr.ID_TIPO_ESTADO_TAREA_RAM IN (:idTipoEstadoTarea)
+    `;
+    
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { 
+        idEvento, 
+        idTipoEstadoTarea 
+      },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    return result.map(item => item.idTarea);
+  } catch (error) {
+    console.error('Error en findIdsTareasByIdEventoIdTipoEstadoTarea:', error);
+    throw error;
+  }
+}
+
+async function findBaseTareaAmbitoAplanadoEventoByIdTarea(idTarea) {
+  try {
+    console.log(`[AMBITOS] INICIO - Buscando ámbitos aplanados para tarea ${idTarea}`);
+    
+    // Consulta original con logging adicional
+    const query = `
+    SELECT 
+      taa.ID_ALIAS as idAlias,
+      taa.ID_ALIAS_ACOPLE as idAliasAcople,
+      taa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
+      aaj.ID_AJENO as idAjeno,
+      ar.UNIDADES_EMPAQUETADO as unidadesEmpaquetado,
+      ar.MULTIPLO_MINIMO as multiploMinimo,
+      slr.FECHA_HORA_EJECUCION_STOCK_RECUENTOS as fechaHoraEjecucionStockRecuentos,
+      slr.STOCK_MAXIMO as stockMaximo,
+      slr.CAPACIDAD_MAXIMA as capacidadMaxima,
+      slr.STOCK_RECUENTOS as stockRecuentos,
+      slr.STOCK_MINIMO as stockMinimo
+    FROM AJENOS.TAREA_AMBITO ta
+    JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+    JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+    JOIN AJENOS.ALIAS_AJENO aaj ON aaj.ID_ALIAS = a.ID_ALIAS
+    JOIN AJENOS.AJENO_RAM ar ON ar.ID_AJENO = aaj.ID_AJENO
+    LEFT JOIN AJENOS.STOCK_LOCALIZACION_RAM slr ON slr.ID_ALIAS = COALESCE(taa.ID_ALIAS_ACOPLE, taa.ID_ALIAS)
+      AND slr.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+    WHERE ta.ID_TAREA_RAM = :idTarea
+      AND taa.FECHA_BAJA IS NULL
+      AND ar.ID_TIPO_ESTADO_AJENO_RAM = 1
+      AND aaj.ID_TIPO_ESTADO_AJENO_RAM = 1
+  `;
+    
+    // Verificar cada join por separado para identificar dónde falla la consulta
+    const diagnosticos = [
+      {
+        nombre: 'Tarea ámbito',
+        query: `SELECT COUNT(*) as total FROM AJENOS.TAREA_AMBITO ta WHERE ta.ID_TAREA_RAM = :idTarea`
+      },
+      {
+        nombre: 'Tarea ámbito aplanado',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL
+        `
+      },
+      {
+        nombre: 'Localización compra',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.LOCALIZACION_COMPRA_RAM lcr ON lcr.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1
+        `
+      },
+      {
+        nombre: 'Tienda',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.LOCALIZACION_COMPRA_RAM lcr ON lcr.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+          INNER JOIN AJENOS.LOCALIZACION_COMPRA lc ON lc.ID_LOCALIZACION_COMPRA = lcr.ID_LOCALIZACION_COMPRA
+          INNER JOIN MAESTROS.TIENDA t ON t.ID_TIENDA = lc.ID_LOCALIZACION
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 AND lc.FECHA_BAJA IS NULL
+        `
+      },
+      {
+        nombre: 'Alias',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+        `
+      },
+      {
+        nombre: 'Alias ámbito',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+        `
+      },
+      {
+        nombre: 'Alias ámbito aplanado',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO 
+            AND aaa.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+            AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 AND aaa.FECHA_BAJA IS NULL
+        `
+      },
+      {
+        nombre: 'Ajeno RAM',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO 
+            AND aaa.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+          INNER JOIN AJENOS.AJENO_RAM ar ON ar.ID_AJENO = aaa.ID_AJENO_SECCION_GLOBAL
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+            AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 AND aaa.FECHA_BAJA IS NULL 
+            AND aaa.ID_AJENO_SECCION_GLOBAL IS NOT NULL AND ar.ID_TIPO_ESTADO_AJENO_RAM = 1
+        `
+      },
+      {
+        nombre: 'Alias ajeno',
+        query: `
+          SELECT COUNT(*) as total 
+          FROM AJENOS.TAREA_AMBITO ta
+          INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+          INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO 
+            AND aaa.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+          INNER JOIN AJENOS.AJENO_RAM ar ON ar.ID_AJENO = aaa.ID_AJENO_SECCION_GLOBAL
+          INNER JOIN AJENOS.ALIAS_AJENO aaj ON aaj.ID_ALIAS = taa.ID_ALIAS AND aaj.ID_AJENO = aaa.ID_AJENO_SECCION_GLOBAL
+          WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+            AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 AND aaa.FECHA_BAJA IS NULL
+            AND aaa.ID_AJENO_SECCION_GLOBAL IS NOT NULL AND ar.ID_TIPO_ESTADO_AJENO_RAM = 1
+            AND aaj.ID_TIPO_ESTADO_AJENO_RAM = 1
+        `
+      }
+    ];
+    
+    // Ejecutar diagnósticos para identificar el problema
+    console.log(`[AMBITOS] DIAGNÓSTICO - Ejecutando diagnósticos para tarea ${idTarea}`);
+    
+    for (const diag of diagnosticos) {
+      try {
+        const [result] = await sequelizeAjenos.query(diag.query, {
+          replacements: { idTarea },
+          type: sequelizeAjenos.QueryTypes.SELECT
+        });
+        
+        console.log(`[AMBITOS] DIAGNÓSTICO - ${diag.nombre}: ${result.total} resultados`);
+        
+        if (result.total === 0) {
+          console.error(`[AMBITOS] DIAGNÓSTICO - ERROR: No hay resultados para el join "${diag.nombre}"`);
+        }
+      } catch (diagError) {
+        console.error(`[AMBITOS] DIAGNÓSTICO - ERROR en diagnóstico "${diag.nombre}":`, diagError.message);
+      }
+    }
+    
+    // Ejecutar la consulta original
+    const result = await sequelizeAjenos.query(query, {
+      replacements: { idTarea },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    console.log(`[AMBITOS] RESULTADOS - Se encontraron ${result.length} ámbitos aplanados para tarea ${idTarea}`);
+    
+    if (result.length > 0) {
+      console.log(`[AMBITOS] RESULTADOS - Primer ámbito: ${JSON.stringify(result[0])}`);
+    }
+    
+    // Diagnóstico adicional: verificar si faltan IDs de ajeno
+    const sinAjenoQuery = `
+      SELECT COUNT(*) as total
+      FROM AJENOS.TAREA_AMBITO ta
+      INNER JOIN AJENOS.TAREA_AMBITO_APLANADO taa ON ta.ID_TAREA_AMBITO = taa.ID_TAREA_AMBITO
+      INNER JOIN AJENOS.ALIAS a ON a.ID_ALIAS = taa.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS = a.ID_ALIAS
+      INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa ON aaa.ID_ALIAS_AMBITO = aa.ID_ALIAS_AMBITO 
+        AND aaa.ID_LOCALIZACION_COMPRA = taa.ID_LOCALIZACION_COMPRA
+      WHERE ta.ID_TAREA_RAM = :idTarea AND taa.FECHA_BAJA IS NULL AND a.ID_TIPO_ESTADO_ALIAS = 2
+        AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 AND aaa.FECHA_BAJA IS NULL
+        AND aaa.ID_AJENO_SECCION_GLOBAL IS NULL
+    `;
+    
+    const [sinAjenoResult] = await sequelizeAjenos.query(sinAjenoQuery, {
+      replacements: { idTarea },
+      type: sequelizeAjenos.QueryTypes.SELECT
+    });
+    
+    if (sinAjenoResult.total > 0) {
+      console.error(`[AMBITOS] DIAGNÓSTICO - ERROR: Se encontraron ${sinAjenoResult.total} registros donde ID_AJENO_SECCION_GLOBAL es NULL`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`[AMBITOS] ERROR - En findBaseTareaAmbitoAplanadoEventoByIdTarea para tarea ${idTarea}:`, error);
+    console.error(`[AMBITOS] ERROR STACK: ${error.stack}`);
+    throw error;
+  }
+}
+
+async function createEventosEjecucion(eventosEjecucion, fechaAlta, usuarioAlta) {
+  try {
+    // Get next available ID
+    const [maxIdResult] = await sequelizeAjenos.query(
+      "SELECT COALESCE(MAX(ID_EVENTO_EJECUCION_RAM), 0) + 1 as nextId FROM AJENOS.EVENTO_EJECUCION_RAM",
+      { type: sequelizeAjenos.QueryTypes.SELECT }
+    );
+    
+    let nextId = maxIdResult.nextId || 1;
+
+    for (const eventoEjecucion of eventosEjecucion) {
+      const query = `
+        INSERT INTO AJENOS.EVENTO_EJECUCION_RAM (
+          ID_EVENTO_EJECUCION_RAM, ID_EVENTO_RAM, COD_EJECUCION, ID_TIPO_ESTADO_EVENTO_EJECUCION_RAM,
+          FECHA_HORA_INICIO_EJECUCION, FECHA_HORA_FIN_EJECUCION, ID_AJENO,
+          ID_LOCALIZACION_COMPRA, FECHA_ALTA, USUARIO_ALTA, ID_TIPO_EJECUCION_RAM
+        ) VALUES (
+          :idEventoEjecucion, :idEvento, :codEjecucion, :idTipoEstadoEventoEjecucion,
+          :fechaHoraInicioEjecucion, :fechaHoraFinEjecucion, :idAjeno,
+          :idLocalizacionCompra, :fechaAlta, :usuarioAlta, 1
+        )
+      `;
+      
+      await sequelizeAjenos.query(query, {
+        replacements: {
+          idEventoEjecucion: nextId++,
+          idEvento: eventoEjecucion.idEvento,
+          codEjecucion: eventoEjecucion.codEjecucion,
+          idTipoEstadoEventoEjecucion: eventoEjecucion.idTipoEstadoEventoEjecucion,
+          fechaHoraInicioEjecucion: eventoEjecucion.fechaHoraInicioEjecucion,
+          fechaHoraFinEjecucion: eventoEjecucion.fechaHoraFinEjecucion,
+          idAjeno: eventoEjecucion.idAjeno,
+          idLocalizacionCompra: eventoEjecucion.idLocalizacionCompra,
+          fechaAlta: fechaAlta,
+          usuarioAlta: usuarioAlta
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT
+      });
+      
+      // Set the ID in the object for reference
+      eventoEjecucion.idEventoEjecucion = nextId - 1;
+    }
+    
+    return eventosEjecucion;
+  } catch (error) {
+    console.error('Error en createEventosEjecucion:', error);
+    throw error;
+  }
+}
+
+function setProposalRequestBodyValues(proposalRequestBody, tareaAmbitoAplanadoEvento) {
+  // Stock de recuento
+  if (tareaAmbitoAplanadoEvento.stockRecuentos != null) {
+    proposalRequestBody.stockRecuento = 
+      tareaAmbitoAplanadoEvento.stockRecuentos > 0 ? 
+      tareaAmbitoAplanadoEvento.stockRecuentos : null;
+  } else {
+    proposalRequestBody.stockRecuento = null;
+  }
+  
+  // Fecha de validación
+  proposalRequestBody.fechaValidacionUltimoRecuento = 
+    tareaAmbitoAplanadoEvento.fechaHoraEjecucionStockRecuentos ? 
+    formatDateToLocalDate(tareaAmbitoAplanadoEvento.fechaHoraEjecucionStockRecuentos) : null;
+  
+  // Capacidad máxima
+  if (tareaAmbitoAplanadoEvento.capacidadMaxima != null) {
+    proposalRequestBody.capacidadMaxima = 
+      tareaAmbitoAplanadoEvento.capacidadMaxima > 0 ? 
+      tareaAmbitoAplanadoEvento.capacidadMaxima : null;
+  } else {
+    proposalRequestBody.capacidadMaxima = null;
+  }
+  
+  // Stock objetivo
+  proposalRequestBody.stockObjetivo = 
+    tareaAmbitoAplanadoEvento.stockMaximo ? 
+    tareaAmbitoAplanadoEvento.stockMaximo / 100 : null;
+}
+
+function calcularPropuestaFinal(propuesta, unidadesEmpaquetado, multiploMinimo) {
+  if (propuesta != null && propuesta !== 0 && unidadesEmpaquetado && multiploMinimo) {
+    let propuestaFinal = Math.floor(propuesta / unidadesEmpaquetado);
+    
+    if (propuesta % unidadesEmpaquetado !== 0) {
+      propuestaFinal++;
+    }
+    
+    if (propuestaFinal < multiploMinimo) {
+      propuestaFinal = multiploMinimo;
+    }
+    
+    return propuestaFinal * unidadesEmpaquetado;
+  }
+  
+  return propuesta;
+}
+
+async function createPropuestas(propuestas, fechaAlta, usuarioAlta) {
+  try {
+    for (const propuesta of propuestas) {
+      const query = `
+        INSERT INTO AJENOS.PROPUESTA_RAM (
+          ID_ALIAS, ID_LOCALIZACION_COMPRA, ID_TIPO_ESTADO_PROPUESTA_RAM,
+          USUARIO_ALTA, FECHA_ALTA, FECHA_HORA_EJECUCION, ID_EVENTO_EJECUCION_RAM,
+          CANTIDAD_DATA_ANALYTICS, STOCK_TEORICO_DATA_ANALYTICS, FECHA_CALCULO_DATA_ANALYTICS
+        ) VALUES (
+          :idAlias, :idLocalizacionCompra, :idTipoEstadoPropuesta,
+          :usuarioAlta, :fechaAlta, :fechaHoraEjecucion, :idEventoEjecucion,
+          :cantidadDataAnalytics, :stockTeoricoDataAnalytics, :fechaCalculoDataAnalytics
+        )
+      `;
+      
+      await sequelizeAjenos.query(query, {
+        replacements: {
+          idAlias: propuesta.idAlias,
+          idLocalizacionCompra: propuesta.idLocalizacionCompra,
+          idTipoEstadoPropuesta: propuesta.idTipoEstadoPropuesta,
+          usuarioAlta: propuesta.usuarioAlta,
+          fechaAlta: propuesta.fechaAlta,
+          fechaHoraEjecucion: propuesta.fechaHoraEjecucion,
+          idEventoEjecucion: propuesta.idEventoEjecucion,
+          cantidadDataAnalytics: propuesta.cantidadDataAnalytics,
+          stockTeoricoDataAnalytics: propuesta.stockTeoricoDataAnalytics,
+          fechaCalculoDataAnalytics: propuesta.fechaCalculoDataAnalytics
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error en createPropuestas:', error);
+    throw error;
+  }
+}
+
+// Simulación de llamada a servicio Analytics (en producción sería una llamada real a la API)
+async function getAnalyticsProposal(analyticsProposalRequest) {
+  try {
+    console.log('Llamando a Analytics API con datos:', JSON.stringify(analyticsProposalRequest));
+    
+    const respuesta = {
+      propuestas: {}
+    };
+    
+    Object.keys(analyticsProposalRequest).forEach(idEventoEjecucion => {
+      respuesta.propuestas[idEventoEjecucion] = {
+        unidadesPropuestas: Math.floor(Math.random() * 100) + 10, // Valor aleatorio entre 10 y 109
+        fechaCalculo: new Date().toISOString()
+      };
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return respuesta;
+  } catch (error) {
+    console.error('Error en getAnalyticsProposal:', error);
+    throw error;
+  }
+}
+
+function formatDateToLocalDate(date) {
+  if (!date) return null;
+  
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const TipoEstadoRecuentoEnum = {
+  PENDIENTE: 1,
+  RECOGIDO: 2,
+  RESPUESTA: 3,
+  VALIDADO: 4,
+  DESCARTADO: 5
+};
+
+async function ejecutarEventosRecuento(idsEvento, codEjecucion, idIdioma, usuarioEjecucion, fechaEjecucion) {
+  try {
+    for (const idEvento of idsEvento) {
+      console.log(`[RECUENTO] EVENTO ${idEvento} - Comenzando procesamiento`);
+      
+      const idsTareaActivas = await findIdsTareasByIdEventoIdTipoEstadoTarea(
+        idEvento, 
+        [TipoEstadoTareaRamEnum.PUBLICADA]
+      );
+      
+      if (!idsTareaActivas || idsTareaActivas.length === 0) {
+        console.error(`[RECUENTO] EVENTO ${idEvento} - ERROR: No se encontraron tareas activas, verificar si las tareas están en estado PUBLICADA`);
+        continue;
+      }
+      
+      for (const idTarea of idsTareaActivas) {
+
+        const tareaAmbitoAplanadoElegible = await findBaseTareaAmbitoAplanadoEventoByIdTarea(idTarea);
+        
+        const recuentos = tareaAmbitoAplanadoElegible.map((taa, index) => {
+          const recuento = {
+            codEjecucion: codEjecucion,
+            idAlias: taa.idAlias,
+            idLocalizacionCompra: taa.idLocalizacionCompra,
+            idAjeno: taa.idAjeno,
+            idEvento: idEvento,
+            stockTeoricoEnviado: 0,
+            orden: index,
+            usuarioAlta: usuarioEjecucion,
+            fechaAlta: fechaEjecucion,
+            idTipoEstadoRecuento: TipoEstadoRecuentoEnum.PENDIENTE
+          };
+          console.log(`[RECUENTO] RECUENTO ${index} - Creado objeto: ${JSON.stringify(recuento)}`);
+          return recuento;
+        });
+          
+        const eventosEjecucion = tareaAmbitoAplanadoElegible.map((taa, index) => {
+          const evento = {
+            idEventoEjecucion: null, // Se asignará después
+            codEjecucion: codEjecucion,
+            idEvento: idEvento,
+            idAjeno: taa.idAjeno,
+            idLocalizacionCompra: taa.idLocalizacionCompra,
+            idTipoEstadoEventoEjecucion: TipoEstadoEventoEjecucionEnum.COMPLETADO,
+            fechaHoraInicioEjecucion: fechaEjecucion,
+            fechaHoraFinEjecucion: fechaEjecucion,
+            usuarioAlta: usuarioEjecucion,
+            fechaAlta: fechaEjecucion,
+            idAlias: taa.idAlias
+          };
+          return evento;
+        });
+          
+        try {
+          await deleteCurrentPendingCounts(recuentos, fechaEjecucion, usuarioEjecucion);
+          console.log(`[RECUENTO] TAREA ${idTarea} - Recuentos pendientes eliminados con éxito`);
+        } catch (deletePendingError) {
+          console.error(`[RECUENTO] ERROR - Al eliminar recuentos pendientes para tarea ${idTarea}:`, deletePendingError);
+          console.error(`[RECUENTO] ERROR DETALLE: ${deletePendingError.message}`);
+          console.error(`[RECUENTO] ERROR STACK: ${deletePendingError.stack}`);
+        }
+        
+        try {
+          await createRecuentos(recuentos, fechaEjecucion, usuarioEjecucion);
+          console.log(`[RECUENTO] TAREA ${idTarea} - Recuentos creados con éxito`);
+          
+          
+        } catch (createRecuentosError) {
+          console.error(`[RECUENTO] ERROR CRÍTICO - Al crear recuentos para tarea ${idTarea}:`, createRecuentosError);
+          console.error(`[RECUENTO] ERROR DETALLE: ${createRecuentosError.message}`);
+          console.error(`[RECUENTO] ERROR STACK: ${createRecuentosError.stack}`);
+          throw createRecuentosError; // Este error sí es crítico, detener la ejecución
+        }
+          
+        try {
+          await createEventosEjecucion(eventosEjecucion, fechaEjecucion, usuarioEjecucion);
+                    
+        } catch (createEjecucionError) {
+          console.error(`[RECUENTO] ERROR CRÍTICO - Al crear ejecuciones para tarea ${idTarea}:`, createEjecucionError);
+          console.error(`[RECUENTO] ERROR DETALLE: ${createEjecucionError.message}`);
+          console.error(`[RECUENTO] ERROR STACK: ${createEjecucionError.stack}`);
+          throw createEjecucionError; // Este error sí es crítico, detener la ejecución
+        }
+      }
+    }
+      
+    await exports.updateEventoEstado(idsEvento, 2, usuarioEjecucion, fechaEjecucion);
+    
+      
+  } catch (error) {
+    console.error(`[RECUENTO] ERROR FATAL - Al ejecutar eventos de recuento: ${error.message}`, error);
+    console.error(`[RECUENTO] ERROR DETALLE: ${error.stack}`);
+    throw error;
+  }
+}
+
+async function deleteCurrentPendingCounts(recuentos, fechaModificacion, usuarioModificacion) {
+  try {
+    console.log(`[RECUENTO] DELETE PENDING - Iniciando eliminación de ${recuentos.length} recuentos pendientes`);
+    
+    for (const recuento of recuentos) {
+      console.log(`[RECUENTO] DELETE PENDING - Eliminando recuento: Alias=${recuento.idAlias}, Loc=${recuento.idLocalizacionCompra}`);
+      
+      const query = `
+        UPDATE AJENOS.RECUENTO_RAM 
+        SET ID_TIPO_ESTADO_RECUENTO_RAM = ${TipoEstadoRecuentoEnum.DESCARTADO}, 
+          USUARIO_MODIFICACION = :usuarioModificacion, 
+          FECHA_MODIFICACION = :fechaModificacion 
+        WHERE ID_ALIAS = :idAlias 
+        AND ID_LOCALIZACION_COMPRA = :idLocalizacionCompra 
+        AND ID_TIPO_ESTADO_RECUENTO_RAM IN (${TipoEstadoRecuentoEnum.PENDIENTE}, ${TipoEstadoRecuentoEnum.RECOGIDO})
+      `;
+      
+      const [result, metadata] = await sequelizeAjenos.query(query, {
+        replacements: {
+          usuarioModificacion,
+          fechaModificacion,
+          idAlias: recuento.idAlias,
+          idLocalizacionCompra: recuento.idLocalizacionCompra
+        },
+        type: sequelizeAjenos.QueryTypes.UPDATE
+      });
+      
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`[RECUENTO] DELETE PENDING ERROR - ${error.message}`, error);
+    throw error;
+  }
+}
+
+async function createRecuentos(recuentos, fechaAlta, usuarioAlta) {
+  try {
+    console.log(`[RECUENTO] CREATE - Iniciando creación de ${recuentos.length} recuentos`);
+    
+    const [maxIdResult] = await sequelizeAjenos.query(
+      "SELECT COALESCE(MAX(ID_RECUENTO_RAM), 0) + 1 as nextId FROM AJENOS.RECUENTO_RAM",
+      { type: sequelizeAjenos.QueryTypes.SELECT }
+    );
+    
+    let nextId = maxIdResult.nextId || 1;
+    
+    for (const recuento of recuentos) {
+      const query = `
+        INSERT INTO AJENOS.RECUENTO_RAM (
+          ID_RECUENTO_RAM,
+          COD_EJECUCION, ID_ALIAS, ID_LOCALIZACION_COMPRA, ID_AJENO, ID_EVENTO_RAM,
+          STOCK_TEORICO_ENVIADO, ORDEN, USUARIO_ALTA, FECHA_ALTA, ID_TIPO_ESTADO_RECUENTO_RAM
+        ) VALUES (
+          :idRecuentoRam,
+          :codEjecucion, :idAlias, :idLocalizacionCompra, :idAjeno, :idEvento,
+          :stockTeoricoEnviado, :orden, :usuarioAlta, :fechaAlta, :idTipoEstadoRecuento
+        )
+      `;
+      
+      await sequelizeAjenos.query(query, {
+        replacements: {
+          idRecuentoRam: nextId++,
+          codEjecucion: recuento.codEjecucion,
+          idAlias: recuento.idAlias,
+          idLocalizacionCompra: recuento.idLocalizacionCompra,
+          idAjeno: recuento.idAjeno,
+          idEvento: recuento.idEvento,
+          stockTeoricoEnviado: recuento.stockTeoricoEnviado || 0,
+          orden: recuento.orden,
+          usuarioAlta,
+          fechaAlta,
+          idTipoEstadoRecuento: recuento.idTipoEstadoRecuento
+        },
+        type: sequelizeAjenos.QueryTypes.INSERT
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`[RECUENTO] CREATE ERROR GENERAL - ${error.message}`, error);
+    throw error;
+  }
+}

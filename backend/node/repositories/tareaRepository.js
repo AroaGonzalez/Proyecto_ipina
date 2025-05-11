@@ -302,9 +302,8 @@ exports.updateEstadoTarea = async (idTarea, idTipoEstadoTarea) => {
   }
 };
 
-exports.findAliasWithAcoples = async (idIdioma = 1, idTipoTarea) => {
+exports.findAliasWithAcoples = async (idIdioma = 1) => {
   try {
-    const idTipoAlias = [parseInt(idTipoTarea)];
     
     const sqlQuery = `
       SELECT a.ID_ALIAS as idAlias, ai.NOMBRE as nombre, a.ID_TIPO_ALIAS as idTipoAlias, 
@@ -326,14 +325,12 @@ exports.findAliasWithAcoples = async (idIdioma = 1, idTipoTarea) => {
       AND (teai_acople.DESCRIPCION IS NULL OR UPPER(teai_acople.DESCRIPCION) NOT IN ('ELIMINADO', 'DELETED'))
       AND (a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS = 1 OR a.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS IS NULL)
       AND a.FECHA_BAJA IS NULL
-      AND a.ID_TIPO_ALIAS IN (:idTipoAlias)
       ORDER BY a.ID_ALIAS ASC
     `;
     
     const result = await sequelizeAjenos.query(sqlQuery, {
       replacements: { 
-        idIdioma,
-        idTipoAlias
+        idIdioma
       },
       type: sequelizeAjenos.QueryTypes.SELECT
     });

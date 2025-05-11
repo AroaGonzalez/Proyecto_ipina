@@ -15,6 +15,106 @@
   overflow: hidden;
 }
 
+/* Add these styles to your eventos.css file */
+
+.execute-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #fff;
+  border: 1px solid #167a39;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #167a39;
+}
+
+.execute-button:hover:not(:disabled) {
+  background-color: #eefaf5;
+}
+
+.execute-button.disabled {
+  color: #aaa;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* You might also want to add styles for an execution confirmation modal */
+.execution-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.execution-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 4px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.execution-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.execution-modal-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.execution-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+
+.execution-modal-body {
+  margin-bottom: 20px;
+}
+
+.execution-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.execution-modal-button {
+  padding: 8px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.execution-modal-button.cancel {
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.execution-modal-button.confirm {
+  background-color: #167a39;
+  border: none;
+  color: white;
+}
+
 .eventos-header {
   display: flex;
   justify-content: space-between;

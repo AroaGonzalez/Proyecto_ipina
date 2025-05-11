@@ -159,13 +159,9 @@ exports.updateEstadoTarea = async (req, res) => {
 
 exports.getAliasAndAcoples = async (req, res) => {
   try {
-    const { idIdioma = 1, idTipoTarea } = req.query;
+    const { idIdioma = 1 } = req.query;
     
-    if (!idTipoTarea) {
-      return res.status(400).json({ message: 'El parámetro idTipoTarea es requerido' });
-    }
-    
-    const result = await tareaRepository.findAliasWithAcoples(parseInt(idIdioma), idTipoTarea);
+    const result = await tareaRepository.findAliasWithAcoples(parseInt(idIdioma));
     
     res.json(result);
   } catch (error) {
