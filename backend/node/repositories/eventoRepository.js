@@ -1646,14 +1646,22 @@ function calcularPropuestaFinal(propuesta, unidadesEmpaquetado, multiploMinimo) 
 
 async function createPropuestas(propuestas, fechaAlta, usuarioAlta) {
   try {
+    // Obtener el siguiente ID disponible
+    const [maxIdResult] = await sequelizeAjenos.query(
+      "SELECT COALESCE(MAX(ID_PROPUESTA_RAM), 0) + 1 as nextId FROM AJENOS.PROPUESTA_RAM",
+      { type: sequelizeAjenos.QueryTypes.SELECT }
+    );
+    
+    let nextId = maxIdResult.nextId || 1;
+    
     for (const propuesta of propuestas) {
       const query = `
         INSERT INTO AJENOS.PROPUESTA_RAM (
-          ID_ALIAS, ID_LOCALIZACION_COMPRA, ID_TIPO_ESTADO_PROPUESTA_RAM,
+          ID_PROPUESTA_RAM, ID_ALIAS, ID_LOCALIZACION_COMPRA, ID_TIPO_ESTADO_PROPUESTA_RAM,
           USUARIO_ALTA, FECHA_ALTA, FECHA_HORA_EJECUCION, ID_EVENTO_EJECUCION_RAM,
           CANTIDAD_DATA_ANALYTICS, STOCK_TEORICO_DATA_ANALYTICS, FECHA_CALCULO_DATA_ANALYTICS
         ) VALUES (
-          :idAlias, :idLocalizacionCompra, :idTipoEstadoPropuesta,
+          :idPropuestaRam, :idAlias, :idLocalizacionCompra, :idTipoEstadoPropuesta,
           :usuarioAlta, :fechaAlta, :fechaHoraEjecucion, :idEventoEjecucion,
           :cantidadDataAnalytics, :stockTeoricoDataAnalytics, :fechaCalculoDataAnalytics
         )
@@ -1661,6 +1669,7 @@ async function createPropuestas(propuestas, fechaAlta, usuarioAlta) {
       
       await sequelizeAjenos.query(query, {
         replacements: {
+          idPropuestaRam: nextId++,
           idAlias: propuesta.idAlias,
           idLocalizacionCompra: propuesta.idLocalizacionCompra,
           idTipoEstadoPropuesta: propuesta.idTipoEstadoPropuesta,
@@ -1683,7 +1692,6 @@ async function createPropuestas(propuestas, fechaAlta, usuarioAlta) {
   }
 }
 
-// Simulación de llamada a servicio Analytics (en producción sería una llamada real a la API)
 async function getAnalyticsProposal(analyticsProposalRequest) {
   try {
     console.log('Llamando a Analytics API con datos:', JSON.stringify(analyticsProposalRequest));

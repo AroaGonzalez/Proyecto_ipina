@@ -205,7 +205,7 @@ exports.findPropuestasByFilter = async (propuestaFilter, tipoAlias = []) => {
       countQuery += ` AND eej1_0.COD_EJECUCION IN (${propuestaFilter.idsEjecucion.join(',')}) `;
     }
    
-    if (propuestaFilter.idsTipoEstadoPropuesta && propuestaFilter.idsEjecucion.length > 0) {
+    if (propuestaFilter.idsTipoEstadoPropuesta && propuestaFilter.idsTipoEstadoPropuesta.length > 0) {
       sqlQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
       countQuery += ` AND pj1_0.ID_TIPO_ESTADO_PROPUESTA_RAM IN (${propuestaFilter.idsTipoEstadoPropuesta.join(',')}) `;
     }

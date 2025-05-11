@@ -510,12 +510,12 @@ const Propuestas = () => {
                 <td className="id-column">{propuesta.idEvento}</td>
                 <td className="medium-text-column">{propuesta.nombreEvento}</td>
                 <td className="short-text-column">
-                  {propuesta.mercado.id} - {propuesta.mercado.descripcion}
+                  {propuesta.mercado.id} - {normalizeText(propuesta.mercado.descripcion)}
                 </td>
                 <td className="id-column">{propuesta.localizacionCompra.id}</td>
                 <td className="medium-text-column">{normalizeText(propuesta.localizacionCompra.descripcion)}</td>
                 <td className="id-column">{propuesta.idAjeno}</td>
-                <td className="medium-text-column">{propuesta.descripcionAjeno}</td>
+                <td className="medium-text-column">{normalizeText(propuesta.descripcionAjeno)}</td>
                 <td className="short-text-column">{propuesta.cantidad}</td>
                 <td className="id-column">{propuesta.idAlias}</td>
                 <td className="long-text-column">{propuesta.descripcionAlias}</td>
