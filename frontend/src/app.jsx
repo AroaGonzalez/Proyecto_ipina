@@ -26,6 +26,7 @@ import NuevoEvento from './components/nuevoEvento';
 import EditEvento from './components/editEvento';
 import Propuestas from './components/propuestas';
 import Recuentos from './components/recuentos';
+import ConsultaStocks from './components/consultaStocks';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -99,6 +100,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <EditarTarea />
+                </PrivateRoute>
+              }
+            />
+            <Route 
+              path="/consulta-stocks"
+              element={
+                <PrivateRoute>
+                  <ConsultaStocks />
                 </PrivateRoute>
               }
             />

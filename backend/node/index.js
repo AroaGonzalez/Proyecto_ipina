@@ -93,6 +93,7 @@ const aliasRelacionesRoutes = require('./routes/aliasRelacionesRoutes');
 const eventoRoutes = require('./routes/eventoRoutes');
 const propuestaRoutes = require('./routes/propuestaRoutes');
 const recuentoRoutes = require('./routes/recuentoRoutes');
+const stockRoutes = require('./routes/stockRoutes');
 
 const User = require('./models/user')(sequelizeAjenos);
 
@@ -261,6 +262,7 @@ app.put('/profile/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+app.use('/stock', stockRoutes);
 app.use('/ajenos', ajenoRamRoutes);
 app.use('/inventario', ajenoRamRoutes);
 app.use('/tiendas', tiendaRoutes);
