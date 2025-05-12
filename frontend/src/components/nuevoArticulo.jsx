@@ -24,6 +24,42 @@ const NuevoArticulo = () => {
   const { languageId } = useContext(LanguageContext);
   const [formValid, setFormValid] = useState(false);
 
+  const normalizeText = (text) => {
+    if (!text) return '';
+    
+    let normalizedText = String(text);
+    
+    normalizedText = normalizedText
+      .replace(/ESPA.?.'A/g, 'ESPAÑA')
+      .replace(/ESPA.?.A/g, 'ESPAÑA')
+      .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+      .replace(/PEQUE.?.A/g, 'PEQUEÑA')
+      .replace(/CAMPA.?.A/g, 'CAMPAÑA')
+      .replace(/PEQUE.?.OS/g, 'PEQUEÑOS');
+  
+    const replacements = {
+      'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+      'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+      'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+      'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+      'Âº': 'º', 'Âª': 'ª',
+      'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+      'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+      'â‚¬': '€',
+      'â€"': '–', 'â€"': '—',
+      'â€œ': '"', 'â€': '"',
+      'â€¢': '•',
+      'â€¦': '…',
+      'Â¡': '¡', 'Â¿': '¿'
+    };
+  
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+      normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+  
+    return normalizedText;
+  };
+
   useEffect(() => {
     const fetchAllAjenos = async () => {
       try {
@@ -88,17 +124,24 @@ const NuevoArticulo = () => {
   };
 
   const handleSelectItem = (article) => {
-    setPreselectedArticles(prev => {
-      if (prev.some(a => a.idAjeno === article.idAjeno)) {
-        return prev.filter(a => a.idAjeno !== article.idAjeno);
-      }
-      return [...prev, {
-        ...article,
-        unidadesBox: '',
-        unidadEmpaquetado: '',
-        multiploMinimo: ''
-      }];
-    });
+    const existsInTable = selectedArticles.some(a => a.idAjeno === article.idAjeno);
+    
+    if (existsInTable) {
+      setSelectedArticles(prev => prev.filter(a => a.idAjeno !== article.idAjeno));
+      setPreselectedArticles(prev => prev.filter(a => a.idAjeno !== article.idAjeno));
+    } else {
+      setPreselectedArticles(prev => {
+        if (prev.some(a => a.idAjeno === article.idAjeno)) {
+          return prev.filter(a => a.idAjeno !== article.idAjeno);
+        }
+        return [...prev, {
+          ...article,
+          unidadesBox: '',
+          unidadEmpaquetado: '',
+          multiploMinimo: ''
+        }];
+      });
+    }
   };
 
   const handleAddSelected = () => {
@@ -121,11 +164,15 @@ const NuevoArticulo = () => {
 
   const handleRemoveArticle = (id) => {
     setSelectedArticles(selectedArticles.filter(article => article.idAjeno !== id));
+    setPreselectedArticles(prev => prev.filter(article => article.idAjeno !== id));
   };
 
   const handleSelectAllResults = () => {
     if (!selectAll) {
-      setPreselectedArticles(searchResults.map(item => ({
+      const itemsNotInTable = searchResults.filter(
+        item => !selectedArticles.some(a => a.idAjeno === item.idAjeno)
+      );
+      setPreselectedArticles(itemsNotInTable.map(item => ({
         ...item, 
         unidadesBox: '',
         unidadEmpaquetado: '',
@@ -214,18 +261,27 @@ const NuevoArticulo = () => {
     };
   }, []);
 
+  const isArticleInTable = (articleId) => {
+    return selectedArticles.some(a => a.idAjeno === articleId);
+  };
+
+  const isArticleChecked = (article) => {
+    return isArticleInTable(article.idAjeno) || 
+           preselectedArticles.some(a => a.idAjeno === article.idAjeno);
+  };
+
   return (
     <div className="nuevo-articulo-container">
       <div className="nuevo-articulo-header">
         <h1>
-  {t('NUEVOS ARTÍCULOS')} 
-  <div className="tooltip-container">
-    <FaInfoCircle className="info-icon" />
-    <div className="tooltip-text">
-      Los campos de "UNIDADES BOX", "UNIDADES DE EMPAQUETADO" y "MÚLTIPLO MÍNIMO" son obligatorios para la creación de un artículo
-    </div>
-  </div>
-</h1>
+          {t('NUEVOS ARTÍCULOS')} 
+          <div className="tooltip-container">
+            <FaInfoCircle className="info-icon" />
+            <div className="tooltip-text">
+              Los campos de "UNIDADES BOX", "UNIDADES DE EMPAQUETADO" y "MÚLTIPLO MÍNIMO" son obligatorios para la creación de un artículo
+            </div>
+          </div>
+        </h1>
         <p>{t('BUSCAR Y AÑADIR LOS ARTÍCULOS QUE SE INCLUIRÁN EN LA APLICACIÓN RAM')}</p>
       </div>
 
@@ -252,14 +308,15 @@ const NuevoArticulo = () => {
           {showResults && searchResults.length > 0 && (
             <div className="search-results">
               {searchResults.map(article => (
-                <div key={article.idAjeno} className="search-result-item">
+                <div key={article.idAjeno} className="search-result-item" onClick={() => handleSelectItem(article)}>
                   <input
                     type="checkbox"
-                    checked={preselectedArticles.some(a => a.idAjeno === article.idAjeno)}
+                    checked={isArticleChecked(article)}
                     onChange={() => handleSelectItem(article)}
+                    onClick={(e) => e.stopPropagation()}
                     className="result-checkbox"
                   />
-                  <span className="result-text">{article.idAjeno} - {article.nombreAjeno}</span>
+                  <span className="result-text">{article.idAjeno} - {normalizeText(article.nombreAjeno)}</span>
                 </div>
               ))}
               <div className="search-result-all">

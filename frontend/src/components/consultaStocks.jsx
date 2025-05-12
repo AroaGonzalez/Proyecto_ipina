@@ -11,7 +11,6 @@ const ConsultaStocks = () => {
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
 
-  // Estados para los filtros
   const [idAlias, setIdAlias] = useState('');
   const [tipoAlias, setTipoAlias] = useState('');
   const [idLocalizacion, setIdLocalizacion] = useState('');
@@ -19,19 +18,15 @@ const ConsultaStocks = () => {
   const [idGrupoCadena, setIdGrupoCadena] = useState('');
   const [idCadena, setIdCadena] = useState('');
   
-  // Estados para búsquedas en dropdowns
   const [aliasSearch, setAliasSearch] = useState('');
   const [tipoAliasSearch, setTipoAliasSearch] = useState('');
   const [mercadoSearch, setMercadoSearch] = useState('');
   const [grupoCadenaSearch, setGrupoCadenaSearch] = useState('');
   const [cadenaSearch, setCadenaSearch] = useState('');
   
-  // Estado para controlar qué dropdown está abierto
   const [openFilter, setOpenFilter] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
-  const [showExpandedInfo, setShowExpandedInfo] = useState(false);
 
-  // Estados para datos y carga
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,7 +34,6 @@ const ConsultaStocks = () => {
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
   const [totalElements, setTotalElements] = useState(0);
 
-  // Referencias y paginación
   const dropdownRef = useRef(null);
   const tableContainerRef = useRef();
   const [paginaActual, setPaginaActual] = useState(0);
@@ -47,24 +41,30 @@ const ConsultaStocks = () => {
   const [hasMore, setHasMore] = useState(true);
   const [tamañoPagina] = useState(50);
 
-  // Datos para los dropdowns
   const [aliases, setAliases] = useState([]);
   const [tiposAlias, setTiposAlias] = useState([]);
   const [mercados, setMercados] = useState([]);
   const [gruposCadena, setGruposCadena] = useState([]);
   const [cadenas, setCadenas] = useState([]);
   
-  // Estados para los valores seleccionados en los dropdowns
-  const [selectedAlias, setSelectedAlias] = useState('');
-  const [selectedTipoAlias, setSelectedTipoAlias] = useState('');
-  const [selectedMercado, setSelectedMercado] = useState('');
-  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState('');
-  const [selectedCadena, setSelectedCadena] = useState('');
+  const [selectedAlias, setSelectedAlias] = useState([]);
+  const [selectedTipoAlias, setSelectedTipoAlias] = useState([]);
+  const [selectedMercado, setSelectedMercado] = useState([]);
+  const [selectedGrupoCadena, setSelectedGrupoCadena] = useState([]);
+  const [selectedCadena, setSelectedCadena] = useState([]);
   
-  // Estado para el stock seleccionado para expandir
   const [selectedStock, setSelectedStock] = useState(null);
+  const [selectedStocks, setSelectedStocks] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [canRequestRecount, setCanRequestRecount] = useState(false);
+  const [modifiedItems, setModifiedItems] = useState({});
+  const [saveEnabled, setSaveEnabled] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Cargar datos iniciales
+  useEffect(() => {
+    setSaveEnabled(Object.keys(modifiedItems).length > 0);
+  }, [modifiedItems]);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -101,7 +101,6 @@ const ConsultaStocks = () => {
     fetchInitialData();
   }, [languageId]);
 
-  // Detectar clics fuera de los dropdowns para cerrarlos
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openFilter && !event.target.closest('.filter-dropdown')) {
@@ -115,7 +114,6 @@ const ConsultaStocks = () => {
     };
   }, [openFilter]);
 
-  // Manejar el scroll infinito
   useEffect(() => {
     if (!loading && !loadingMore && hasMore) {
       const container = tableContainerRef.current;
@@ -138,7 +136,25 @@ const ConsultaStocks = () => {
     }
   }, [loading, loadingMore, hasMore, stocks]);
 
-  // Cargar más stocks al hacer scroll
+  useEffect(() => {
+    const selectedStockIds = selectedStocks;
+    if (selectedStockIds.length === 0) {
+      setCanRequestRecount(false);
+      return;
+    }
+
+    const allEligible = selectedStockIds.every(stockId => {
+      const [idAlias, idLocalizacionCompra] = stockId.split('-');
+      const stock = stocks.find(s => 
+        s.idAlias === parseInt(idAlias) && 
+        s.idLocalizacionCompra === parseInt(idLocalizacionCompra)
+      );
+      return stock && isStockEligibleForRecount(stock);
+    });
+
+    setCanRequestRecount(allEligible);
+  }, [selectedStocks, stocks]);
+
   const loadMoreStocks = async () => {
     if (!hasMore || loadingMore) return;
     
@@ -148,12 +164,12 @@ const ConsultaStocks = () => {
       const nextPage = paginaActual + 1;
       
       const filter = {
-        idAlias: selectedAlias || null,
-        idTipoAlias: selectedTipoAlias || null,
+        idsAlias: selectedAlias.length > 0 ? selectedAlias : null,
+        idsTipoAlias: selectedTipoAlias.length > 0 ? selectedTipoAlias : null,
         idLocalizacion: idLocalizacion || null,
-        idMercado: selectedMercado || null,
-        idGrupoCadena: selectedGrupoCadena || null,
-        idCadena: selectedCadena || null
+        idsMercado: selectedMercado.length > 0 ? selectedMercado : null,
+        idsGrupoCadena: selectedGrupoCadena.length > 0 ? selectedGrupoCadena : null,
+        idsCadena: selectedCadena.length > 0 ? selectedCadena : null
       };
       
       const page = { number: nextPage, size: tamañoPagina };
@@ -181,7 +197,6 @@ const ConsultaStocks = () => {
     }
   };
 
-  // Normalizar el texto para evitar problemas con caracteres especiales
   const normalizeText = (text) => {
     if (!text) return '';
     
@@ -218,12 +233,214 @@ const ConsultaStocks = () => {
     return normalizedText;
   };
 
-  // Abrir/cerrar un dropdown específico
+  const isStockEligibleForRecount = (stock) => {
+    return (
+      stock.descripcionTipoEstadoAlias && 
+      (stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCIÓN') || 
+      stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCION') ||
+      stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVO') || 
+      stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVA')) &&
+      
+      stock.descripcionTipoEstadoAjenoCompras && 
+      (stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02.ACTIVO') || 
+      stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVO') ||
+      stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVO')) &&
+      
+      stock.descripcionTipoEstadoAjenoRam && 
+      (stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVO') || 
+      stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVA')) &&
+      
+      stock.descripcionTipoEstadoAliasAjeno && 
+      (stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVO') || 
+      stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVA')) &&
+      
+      stock.descripcionTipoEstadoRelacion && 
+      (stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVA')) &&
+      
+      stock.estadoTiendaMtu && 
+      stock.estadoTiendaMtu.toUpperCase().includes('ABIERTA') &&
+      
+      stock.descripcionTipoEstadoLocalizacionRam && 
+      (stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVA'))
+    );
+  };
+
+  const handleStockRecuentoChange = (idAlias, idLocalizacionCompra, value) => {
+  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+  const originalItem = stocks.find(s => 
+    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+  );
+  const originalValue = originalItem?.stockRecuentos?.toString() || '';
+  
+  if (value !== originalValue) {
+    setModifiedItems(prev => ({
+      ...prev,
+      [stockKey]: {
+        ...prev[stockKey],
+        stockRecuentos: value,
+        idAlias,
+        idLocalizacionCompra
+      }
+    }));
+  } else {
+    removeModification(stockKey, 'stockRecuentos');
+  }
+};
+
+const handleCapacidadMaximaChange = (idAlias, idLocalizacionCompra, value) => {
+  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+  const originalItem = stocks.find(s => 
+    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+  );
+  const originalValue = originalItem?.capacidadMaxima?.toString() || '';
+  
+  if (value !== originalValue) {
+    setModifiedItems(prev => ({
+      ...prev,
+      [stockKey]: {
+        ...prev[stockKey],
+        capacidadMaxima: value,
+        idAlias,
+        idLocalizacionCompra
+      }
+    }));
+  } else {
+    removeModification(stockKey, 'capacidadMaxima');
+  }
+};
+
+const handlePropuestaMinChange = (idAlias, idLocalizacionCompra, value) => {
+  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+  const originalItem = stocks.find(s => 
+    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+  );
+  const originalValue = originalItem?.stockMinimo?.toString() || '';
+  
+  if (value !== originalValue) {
+    setModifiedItems(prev => ({
+      ...prev,
+      [stockKey]: {
+        ...prev[stockKey],
+        stockMinimo: value,
+        idAlias,
+        idLocalizacionCompra
+      }
+    }));
+  } else {
+    removeModification(stockKey, 'stockMinimo');
+  }
+};
+
+  const handleStockLimiteChange = (idAlias, idLocalizacionCompra, value) => {
+    const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+    const originalItem = stocks.find(s => 
+      s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+    );
+    const originalValue = originalItem?.stockMaximo?.toString() || '';
+    
+    if (value !== originalValue) {
+      setModifiedItems(prev => ({
+        ...prev,
+        [stockKey]: {
+          ...prev[stockKey],
+          stockMaximo: value,
+          idAlias,
+          idLocalizacionCompra
+        }
+      }));
+    } else {
+      removeModification(stockKey, 'stockMaximo');
+    }
+  };
+
+  const removeModification = (stockKey, field) => {
+    setModifiedItems(prev => {
+      const newModifiedItems = { ...prev };
+      if (newModifiedItems[stockKey]) {
+        delete newModifiedItems[stockKey][field];
+        
+        if (Object.keys(newModifiedItems[stockKey]).filter(k => k !== 'idAlias' && k !== 'idLocalizacionCompra').length === 0) {
+          delete newModifiedItems[stockKey];
+        }
+      }
+      return newModifiedItems;
+    });
+  };
+
+  const handleSaveChanges = () => {
+    if (!saveEnabled || Object.keys(modifiedItems).length === 0) return;
+    
+    setSaving(true);
+    
+    const stocksToUpdate = Object.entries(modifiedItems).map(([key, changes]) => {
+      const originalItem = stocks.find(s => 
+        s.idAlias === changes.idAlias && 
+        s.idLocalizacionCompra === changes.idLocalizacionCompra
+      );
+      
+      return {
+        idAlias: changes.idAlias,
+        idLocalizacionCompra: changes.idLocalizacionCompra,
+        stockRecuentos: changes.stockRecuentos !== undefined 
+          ? parseInt(changes.stockRecuentos) 
+          : originalItem.stockRecuentos,
+        capacidadMaxima: changes.capacidadMaxima !== undefined 
+          ? parseInt(changes.capacidadMaxima) 
+          : originalItem.capacidadMaxima,
+        stockMinimo: changes.stockMinimo !== undefined 
+          ? parseInt(changes.stockMinimo) 
+          : originalItem.stockMinimo,
+        stockMaximo: changes.stockMaximo !== undefined 
+          ? parseInt(changes.stockMaximo) 
+          : originalItem.stockMaximo
+      };
+    });
+    
+    axios
+      .put(`${BASE_URL}/stock/update?idIdioma=${languageId}`, { 
+        stocks: stocksToUpdate 
+      })
+      .then(response => {
+        console.log('Cambios guardados:', response.data);
+        alert(t(`${response.data.updatedCount} stocks actualizados correctamente`));
+        setModifiedItems({});
+        handleSearch();
+      })
+      .catch(error => {
+        console.error('Error al guardar cambios:', error);
+        alert(t('Error al guardar los cambios'));
+      })
+      .finally(() => {
+        setSaving(false);
+      });
+  };
+
+  const handleSelectAll = () => {
+    if (!selectAll) {
+      const allStockIds = stocks.map(stock => `${stock.idAlias}-${stock.idLocalizacionCompra}`);
+      setSelectedStocks(allStockIds);
+      setSelectAll(true);
+    } else {
+      setSelectedStocks([]);
+      setSelectAll(false);
+    }
+  };
+
+  const handleSelectStock = (idAlias, idLocalizacionCompra) => {
+    const stockId = `${idAlias}-${idLocalizacionCompra}`;
+    setSelectedStocks(prev => {
+      if (prev.includes(stockId)) {
+        return prev.filter(id => id !== stockId);
+      } else {
+        return [...prev, stockId];
+      }
+    });
+  };
+
   const toggleFilter = (filterName) => {
     setOpenFilter(openFilter === filterName ? null : filterName);
   };
 
-  // Filtrar elementos según término de búsqueda
   const filterBySearch = (items, searchTerm, field = null) => {
     if (!items) return [];
     
@@ -249,7 +466,6 @@ const ConsultaStocks = () => {
     });
   };
 
-  // Buscar stocks
   const handleSearch = async () => {
     try {
       setLoading(true);
@@ -258,12 +474,12 @@ const ConsultaStocks = () => {
       setPaginaActual(0);
     
       const filter = {
-        idAlias: selectedAlias || null,
-        idTipoAlias: selectedTipoAlias || null,
+        idsAlias: selectedAlias.length > 0 ? selectedAlias : null,
+        idsTipoAlias: selectedTipoAlias.length > 0 ? selectedTipoAlias : null,
         idLocalizacion: idLocalizacion || null,
-        idMercado: selectedMercado || null,
-        idGrupoCadena: selectedGrupoCadena || null,
-        idCadena: selectedCadena || null
+        idsMercado: selectedMercado.length > 0 ? selectedMercado : null,
+        idsGrupoCadena: selectedGrupoCadena.length > 0 ? selectedGrupoCadena : null,
+        idsCadena: selectedCadena.length > 0 ? selectedCadena : null
       };
       
       const page = { number: 0, size: tamañoPagina };
@@ -294,69 +510,72 @@ const ConsultaStocks = () => {
     }
   };
 
-  // Limpiar todos los filtros
   const clearFilters = () => {
     setIdAlias('');
-    setSelectedAlias('');
+    setSelectedAlias([]);
     setTipoAlias('');
-    setSelectedTipoAlias('');
+    setSelectedTipoAlias([]);
     setIdLocalizacion('');
     setIdMercado('');
-    setSelectedMercado('');
+    setSelectedMercado([]);
     setIdGrupoCadena('');
-    setSelectedGrupoCadena('');
+    setSelectedGrupoCadena([]);
     setIdCadena('');
-    setSelectedCadena('');
+    setSelectedCadena([]);
     setShowResults(false);
     setStocks([]);
   };
 
-  // Mostrar/ocultar filtros
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
   
-  // Formatear la hora
   const formatTime = (date) => {
     return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Manejar selección de dropdown
   const handleFilterSelect = (filterType, value) => {
     switch (filterType) {
       case 'alias':
-        setSelectedAlias(value === selectedAlias ? '' : value);
+        if (selectedAlias.includes(value)) {
+          setSelectedAlias(selectedAlias.filter(item => item !== value));
+        } else {
+          setSelectedAlias([...selectedAlias, value]);
+        }
         break;
       case 'tipoAlias':
-        setSelectedTipoAlias(value === selectedTipoAlias ? '' : value);
+        if (selectedTipoAlias.includes(value)) {
+          setSelectedTipoAlias(selectedTipoAlias.filter(item => item !== value));
+        } else {
+          setSelectedTipoAlias([...selectedTipoAlias, value]);
+        }
         break;
       case 'mercado':
-        setSelectedMercado(value === selectedMercado ? '' : value);
+        if (selectedMercado.includes(value)) {
+          setSelectedMercado(selectedMercado.filter(item => item !== value));
+        } else {
+          setSelectedMercado([...selectedMercado, value]);
+        }
         break;
       case 'grupoCadena':
-        setSelectedGrupoCadena(value === selectedGrupoCadena ? '' : value);
+        if (selectedGrupoCadena.includes(value)) {
+          setSelectedGrupoCadena(selectedGrupoCadena.filter(item => item !== value));
+        } else {
+          setSelectedGrupoCadena([...selectedGrupoCadena, value]);
+        }
         break;
       case 'cadena':
-        setSelectedCadena(value === selectedCadena ? '' : value);
+        if (selectedCadena.includes(value)) {
+          setSelectedCadena(selectedCadena.filter(item => item !== value));
+        } else {
+          setSelectedCadena([...selectedCadena, value]);
+        }
         break;
       default:
         break;
     }
   };
 
-  // Mostrar información expandida
-  const handleExpandInfo = (stock) => {
-    setSelectedStock(stock);
-    setShowExpandedInfo(true);
-  };
-
-  // Cerrar información expandida
-  const handleCloseExpandedInfo = () => {
-    setShowExpandedInfo(false);
-    setSelectedStock(null);
-  };
-
-  // Mensaje de error
   if (error) {
     return (
       <div className="consulta-stocks-error">
@@ -368,158 +587,53 @@ const ConsultaStocks = () => {
     );
   }
 
-  // Componente para mostrar estados con etiquetas de colores
   const StatusTag = ({ status, type }) => {
     let className = 'status-tag';
     
-    if (status === 'ACTIVO' || status === 'ACTIVA' || status === 'ABIERTA') {
+    const normalizedStatus = status ? status.toUpperCase().trim() : '';
+    
+    if (normalizedStatus === 'ACTIVO' || normalizedStatus === 'ACTIVA' || 
+        normalizedStatus === '02 ACTIVO' || normalizedStatus === '02.ACTIVO' ||
+        normalizedStatus === 'ABIERTA') {
       className += ' status-active';
-    } else if (status === 'PROVISIONAL') {
+    } else if (normalizedStatus === 'PROVISIONAL') {
       className += ' status-provisional';
-    } else if (status === 'CERRADA DEFINITIVAMENTE' || status === 'PAUSADA') {
+    } else if (normalizedStatus === 'CERRADA DEFINITIVAMENTE') {
       className += ' status-closed';
-    } else if (status === 'PRODUCCIÓN') {
+    } else if (normalizedStatus === 'PAUSADA' || normalizedStatus === 'PAUSADO') {
+      className += ' status-paused';
+    } else if (normalizedStatus === 'PRODUCCIÓN' || normalizedStatus === 'PRODUCCION' || 
+               normalizedStatus === '-' || !status) {
       className += ' status-production';
     }
     
-    return <div className={className}>{status}</div>;
+    return <div className={className}>{status || '-'}</div>;
   };
 
-  // Componente de detalles expandidos
-  const ExpandedInfo = ({ stock }) => {
-    if (!stock) return null;
-    
-    return (
-      <div className="expanded-info-overlay">
-        <div className="expanded-info-container">
-          <div className="expanded-info-header">
-            <h2>Información detallada</h2>
-            <button className="close-button" onClick={handleCloseExpandedInfo}>
-              <FaTimes />
-            </button>
-          </div>
-          
-          <div className="expanded-info-content">
-            <div className="expanded-info-section">
-              <h3>Información general</h3>
-              <div className="expanded-info-grid">
-                <div className="info-row">
-                  <span className="info-label">ID Alias:</span>
-                  <span className="info-value">{stock.idAlias}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Nombre Alias:</span>
-                  <span className="info-value">{normalizeText(stock.nombreAlias)}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Tipo Alias:</span>
-                  <span className="info-value">{stock.tipoAlias}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">ID Localización:</span>
-                  <span className="info-value">{stock.idLocalizacion}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Localización:</span>
-                  <span className="info-value">{normalizeText(stock.nombreLocalizacion)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="expanded-info-section">
-              <h3>Datos de stock</h3>
-              <div className="expanded-info-grid">
-                <div className="info-row">
-                  <span className="info-label">Stock:</span>
-                  <span className="info-value">{stock.stock || '-'}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Capacidad Máxima:</span>
-                  <span className="info-value">{stock.capacidadMaxima || '-'}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Stock Teórico:</span>
-                  <span className="info-value">{stock.stockTeorico || '-'}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="expanded-info-section">
-              <h3>Fechas</h3>
-              <div className="expanded-info-grid">
-                <div className="info-row">
-                  <span className="info-label">Fecha de Recuento:</span>
-                  <span className="info-value">{stock.fechaRecuento || '-'}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Fecha Stock Teórico:</span>
-                  <span className="info-value">{stock.fechaStockTeorico || '-'}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Fecha Edición:</span>
-                  <span className="info-value">{stock.fechaEdicion || '-'}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Usuario:</span>
-                  <span className="info-value">{stock.usuario || '-'}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="expanded-info-section">
-              <h3>Estados</h3>
-              <div className="expanded-info-states">
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado Alias:</span>
-                  <StatusTag status={stock.estadoAlias || 'PRODUCCIÓN'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado Artículo SFI:</span>
-                  <StatusTag status={stock.estadoArticuloSFI || '-'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado Artículo RAM:</span>
-                  <StatusTag status={stock.estadoArticuloRAM || '-'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado Artículo en el Alias:</span>
-                  <StatusTag status={stock.estadoArticuloAlias || '-'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado Relación:</span>
-                  <StatusTag status={stock.estadoRelacion || 'ACTIVA'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado de Tienda MTU:</span>
-                  <StatusTag status={stock.estadoTiendaMTU || 'PROVISIONAL'} />
-                </div>
-                <div className="info-state-row">
-                  <span className="info-state-label">Estado de Tienda RAM:</span>
-                  <StatusTag status={stock.estadoTiendaRAM || 'ACTIVA'} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Tabla de resultados
   const StocksTable = ({ stocks, loading }) => {
     if (loading && stocks.length === 0) {
       return <div className="loading-indicator">Cargando...</div>;
     }
-  
+
     if (!stocks || stocks.length === 0) {
       return null;
     }
-  
+
     return (
       <div className="stocks-table-container" ref={tableContainerRef}>
         <table className="stocks-table">
           <thead>
             <tr>
+              <th className="checkbox-column">
+                <div className="checkbox">
+                  <input 
+                    type="checkbox" 
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                    id="select-all"
+                  />
+                </div>
+              </th>
               <th className="id-column">ID ALIAS</th>
               <th className="medium-text-column">ALIAS</th>
               <th className="short-text-column">ALIAS TIPO</th>
@@ -533,35 +647,119 @@ const ConsultaStocks = () => {
               <th className="short-text-column">TIENDA</th>
               <th className="short-text-column">MERCADO</th>
               <th className="short-text-column">CADENA</th>
+              <th className="short-text-column">FECHA DE RECUENTO</th>
+              <th className="short-text-column">FECHA STOCK TEÓRICO</th>
+              <th className="short-text-column">FECHA EDICIÓN</th>
+              <th className="short-text-column">USUARIO</th>
+              <th className="short-text-column">ESTADO ALIAS</th>
+              <th className="short-text-column">ESTADO ARTÍCULO SFI</th>
+              <th className="short-text-column">ESTADO ARTÍCULO RAM</th>
+              <th className="short-text-column">ESTADO ARTÍCULO EN EL ALIAS</th>
+              <th className="short-text-column">ESTADO RELACIÓN</th>
+              <th className="short-text-column">ESTADO DE TIENDA MTU</th>
+              <th className="short-text-column">ESTADO DE TIENDA RAM</th>
             </tr>
           </thead>
           <tbody>
             {stocks.map((stock) => (
               <tr 
-                key={`${stock.idAlias}-${stock.idLocalizacion}`} 
-                onClick={() => handleExpandInfo(stock)}
-                className="stock-row"
+                key={`${stock.idAlias}-${stock.idLocalizacionCompra}`} 
+                className={selectedStocks.includes(`${stock.idAlias}-${stock.idLocalizacionCompra}`) ? 'selected-row' : ''}
               >
+                <td className="checkbox-column">
+                  <div className="checkbox">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedStocks.includes(`${stock.idAlias}-${stock.idLocalizacionCompra}`)}
+                      onChange={() => handleSelectStock(stock.idAlias, stock.idLocalizacionCompra)}
+                      id={`stock-${stock.idAlias}-${stock.idLocalizacionCompra}`}
+                    />
+                  </div>
+                </td>
                 <td className="id-column">{stock.idAlias}</td>
                 <td className="medium-text-column">{normalizeText(stock.nombreAlias)}</td>
-                <td className="short-text-column">{stock.tipoAlias || 'Z BOLSAS GRANDES'}</td>
-                <td className="short-text-column">{stock.relacionadoCon || '1'}</td>
-                <td className="short-text-column">{stock.stockTeorico || '982'}</td>
-                <td className="short-text-column">{stock.stockRecuentos || '-'}</td>
-                <td className="short-text-column">{stock.capacidadMaxima || '-'}</td>
-                <td className="short-text-column">{stock.propuestaMin || '-'}</td>
-                <td className="short-text-column">{stock.stockLimite || '100'}</td>
-                <td className="id-column">{stock.idLocalizacion}</td>
-                <td className="short-text-column">{normalizeText(stock.nombreLocalizacion) || 'SHAN-INPOINT'}</td>
+                <td className="short-text-column">{stock.idTipoAlias}</td>
+                <td className="short-text-column">{stock.relacionAliasLocalizacion}</td>
+                <td className="short-text-column">{stock.stockTeorico}</td>
                 <td className="short-text-column">
-                  {stock.idMercado} - {normalizeText(stock.nombreMercado)}
+                  <div className="quantity-input">
+                    <input
+                      type="number"
+                      value={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockRecuentos ?? (stock.stockRecuentos || '')}
+                      onChange={(e) => handleStockRecuentoChange(stock.idAlias, stock.idLocalizacionCompra, e.target.value)}
+                      className={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockRecuentos !== undefined ? 'modified' : ''}
+                    />
+                  </div>
                 </td>
-                <td className="short-text-column">{normalizeText(stock.nombreCadena) || 'Zara'}</td>
+
+                <td className="short-text-column">
+                  <div className="quantity-input">
+                    <input
+                      type="number"
+                      value={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.capacidadMaxima ?? (stock.capacidadMaxima || '')}
+                      onChange={(e) => handleCapacidadMaximaChange(stock.idAlias, stock.idLocalizacionCompra, e.target.value)}
+                      className={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.capacidadMaxima !== undefined ? 'modified' : ''}
+                    />
+                  </div>
+                </td>
+
+                <td className="short-text-column">
+                  <div className="quantity-input">
+                    <input
+                      type="number"
+                      value={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockMinimo ?? (stock.stockMinimo || '')}
+                      onChange={(e) => handlePropuestaMinChange(stock.idAlias, stock.idLocalizacionCompra, e.target.value)}
+                      className={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockMinimo !== undefined ? 'modified' : ''}
+                    />
+                  </div>
+                </td>
+
+                <td className="short-text-column">
+                  <div className="quantity-input">
+                    <input
+                      type="number"
+                      value={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockMaximo ?? (stock.stockMaximo)}
+                      onChange={(e) => handleStockLimiteChange(stock.idAlias, stock.idLocalizacionCompra, e.target.value)}
+                      className={modifiedItems[`${stock.idAlias}-${stock.idLocalizacionCompra}`]?.stockMaximo !== undefined ? 'modified' : ''}
+                    />
+                  </div>
+                </td>
+                <td className="id-column">{stock.idLocalizacionCompra}</td>
+                <td className="short-text-column">{normalizeText(stock.descripcionLocalizacionCompra)}</td>
+                <td className="short-text-column">
+                  {stock.idPais} - {normalizeText(stock.descripcionPais)}
+                </td>
+                <td className="short-text-column">{normalizeText(stock.nombreCadena)}</td>
+                <td className="medium-text-column">{normalizeText(stock.fechaRecuento)}</td>
+                <td className="medium-text-column">{normalizeText(stock.fechaHoraEjecucionStockTeorico)}</td>
+                <td className="medium-text-column">{normalizeText(stock.fechaModificacion)}</td>
+                <td className="medium-text-column">{normalizeText(stock.usuarioModificacion)}</td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoAlias} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoAjenoCompras} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoAjenoRam} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoAliasAjeno} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoRelacion} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.estadoTiendaMtu} />
+                </td>
+                <td className="medium-text-column">
+                  <StatusTag status={stock.descripcionTipoEstadoLocalizacionRam} />
+                </td>
               </tr>
             ))}
             {loadingMore && (
               <tr>
-                <td colSpan="13" className="loading-more-cell">
+                <td colSpan="25" className="loading-more-cell">
                   <div className="loading-more-indicator">Cargando más resultados...</div>
                 </td>
               </tr>
@@ -594,8 +792,8 @@ const ConsultaStocks = () => {
                 <label className="filter-label">Id o Nombre de Alias</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {selectedAlias 
-                      ? aliases.find(a => a.id === selectedAlias)?.nombre || selectedAlias 
+                    {selectedAlias.length > 0 
+                      ? `${selectedAlias.length} seleccionados` 
                       : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -623,12 +821,30 @@ const ConsultaStocks = () => {
                         >
                           <input 
                             type="checkbox" 
-                            checked={selectedAlias === alias.id}
+                            checked={selectedAlias.includes(alias.id)}
                             readOnly
                           />
-                          <span>{alias.id} - {normalizeText(alias.nombre)}</span>
+                          <span>{alias.id} - {normalizeText(alias.descripcion)}</span>
                         </div>
                       ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedAlias.length === aliases.length) {
+                          setSelectedAlias([]);
+                        } else {
+                          setSelectedAlias(aliases.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAlias.length === aliases.length && aliases.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -643,8 +859,8 @@ const ConsultaStocks = () => {
                 <label className="filter-label">Tipo de Alias</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {selectedTipoAlias 
-                      ? tiposAlias.find(t => t.id === selectedTipoAlias)?.descripcion || selectedTipoAlias
+                    {selectedTipoAlias.length > 0 
+                      ? `${selectedTipoAlias.length} seleccionados` 
                       : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -672,12 +888,30 @@ const ConsultaStocks = () => {
                         >
                           <input 
                             type="checkbox" 
-                            checked={selectedTipoAlias === tipo.id}
+                            checked={selectedTipoAlias.includes(tipoAlias.id)}
                             readOnly
                           />
                           <span>{tipo.id} - {normalizeText(tipo.descripcion)}</span>
                         </div>
                       ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedTipoAlias.length === tiposAlias.length) {
+                          setSelectedTipoAlias([]);
+                        } else {
+                          setSelectedTipoAlias(tiposAlias.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTipoAlias.length === tiposAlias.length && mercados.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -703,8 +937,8 @@ const ConsultaStocks = () => {
                 <label className="filter-label">Id o Mercado</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {selectedMercado 
-                      ? mercados.find(m => m.id === selectedMercado)?.descripcion || selectedMercado
+                    {selectedMercado.length > 0 
+                      ? `${selectedMercado.length} seleccionados` 
                       : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -732,12 +966,30 @@ const ConsultaStocks = () => {
                         >
                           <input 
                             type="checkbox" 
-                            checked={selectedMercado === mercado.id}
+                            checked={selectedMercado.includes(mercado.id)}
                             readOnly
                           />
                           <span>{mercado.id} - {normalizeText(mercado.descripcion)}</span>
                         </div>
                       ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedMercado.length === mercados.length) {
+                          setSelectedMercado([]);
+                        } else {
+                          setSelectedMercado(mercados.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedMercado.length === mercados.length && mercados.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -752,8 +1004,8 @@ const ConsultaStocks = () => {
                 <label className="filter-label">Id o Grupo Cadena (T6)</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {selectedGrupoCadena 
-                      ? gruposCadena.find(g => g.id === selectedGrupoCadena)?.descripcion || selectedGrupoCadena
+                    {selectedGrupoCadena.length > 0 
+                      ? `${selectedGrupoCadena.length} seleccionados` 
                       : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -781,12 +1033,30 @@ const ConsultaStocks = () => {
                         >
                           <input 
                             type="checkbox" 
-                            checked={selectedGrupoCadena === grupo.id}
+                            checked={selectedGrupoCadena.includes(grupo.id)}
                             readOnly
                           />
                           <span>{grupo.id} - {normalizeText(grupo.descripcion)}</span>
                         </div>
                       ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedGrupoCadena.length === gruposCadena.length) {
+                          setSelectedGrupoCadena([]);
+                        } else {
+                          setSelectedGrupoCadena(gruposCadena.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedGrupoCadena.length === gruposCadena.length && gruposCadena.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -801,8 +1071,8 @@ const ConsultaStocks = () => {
                 <label className="filter-label">Id o Cadena</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
-                    {selectedCadena 
-                      ? cadenas.find(c => c.id === selectedCadena)?.nombre || selectedCadena
+                    {selectedCadena.length > 0 
+                      ? `${selectedCadena.length} seleccionados` 
                       : 'Seleccionar'}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
@@ -830,12 +1100,30 @@ const ConsultaStocks = () => {
                         >
                           <input 
                             type="checkbox" 
-                            checked={selectedCadena === cadena.id}
+                            checked={selectedCadena.includes(cadena.id)}
                             readOnly
                           />
-                          <span>{cadena.id} - {normalizeText(cadena.nombre)}</span>
+                          <span>{cadena.id} - {normalizeText(cadena.descripcion)}</span>
                         </div>
                       ))}
+                    </div>
+                    <div 
+                      className="dropdown-item select-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedCadena.length === cadenas.length) {
+                          setSelectedCadena([]);
+                        } else {
+                          setSelectedCadena(cadenas.map(item => item.id));
+                        }
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedCadena.length === cadenas.length && cadenas.length > 0}
+                        readOnly
+                      />
+                      <span>Seleccionar todo</span>
                     </div>
                   </div>
                 )}
@@ -868,14 +1156,22 @@ const ConsultaStocks = () => {
             </span>
           </div>
           <div className="results-actions">
-            <button className="action-button">
-              <span>{t('MOSTRAR LÍNEAS LISTAS PARA RECONTAR')}</span>
+            <button 
+              className={`save-button ${saveEnabled ? 'active' : 'disabled'}`}
+              onClick={handleSaveChanges}
+              disabled={!saveEnabled || saving}
+            >
+              <span role="img" aria-label="document">📄</span>
+              {saving ? t('GUARDANDO...') : t('GUARDAR CAMBIOS')}
             </button>
-            <button className="action-button">
-              <span>{t('DESCARGAR')}</span>
-            </button>
-            <button className="action-button">
-              <span>{t('GUARDAR CAMPOS')}</span>
+            <button 
+              className={`action-button ${canRequestRecount ? 'action-button-enabled' : ''}`}
+              disabled={!canRequestRecount}
+              onClick={() => {
+                console.log('Solicitar recuento para:', selectedStocks);
+              }}
+            >
+              <span>{t('SOLICITAR RECUENTO A TIENDA')}</span>
             </button>
           </div>
         </div>
@@ -901,10 +1197,6 @@ const ConsultaStocks = () => {
           </div>
           <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
         </div>
-      )}
-
-      {showExpandedInfo && selectedStock && (
-        <ExpandedInfo stock={selectedStock} />
       )}
     </div>
   );

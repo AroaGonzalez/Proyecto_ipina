@@ -44,3 +44,26 @@ exports.getStocksByFilter = async (req, res) => {
     });
   }
 };
+
+exports.updateStocks = async (req, res) => {
+  try {
+    const { stocks } = req.body;
+    const usuarioModificacion = req.headers['user'] || 'SYSTEM';
+    const fechaModificacion = new Date();
+    
+    const result = await stockRepository.updateStocks(stocks, usuarioModificacion, fechaModificacion);
+    
+    res.json({
+      success: true,
+      updatedCount: result.updatedCount,
+      message: 'Stocks actualizados correctamente'
+    });
+  } catch (error) {
+    console.error('Error en updateStocks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar stocks',
+      error: error.message
+    });
+  }
+};

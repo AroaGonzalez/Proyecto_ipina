@@ -59,6 +59,22 @@ const ParametrizacionAlias = () => {
     fetchAliases();
   }, [languageId]);
 
+  const StatusTag = ({ status, type }) => {
+      let className = 'status-tag';
+      
+      const normalizedStatus = status ? status.toUpperCase().trim() : '';
+      
+      if (normalizedStatus === '04.BLOQUEADO') {
+        className += ' status-bloqueado';
+      } else if (normalizedStatus === 'PAUSADO') {
+        className += ' status-paused';
+      } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO') {
+        className += ' status-active';
+      }
+      
+      return <div className={className}>{status || '-'}</div>;
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (tableContainerRef.current) {
@@ -129,7 +145,8 @@ const ParametrizacionAlias = () => {
           if (selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)) {
             return {
               ...item,
-              descripcionTipoEstadoAliasAjenoRam: 'ACTIVO'
+              descripcionTipoEstadoAliasAjenoRam: 'ACTIVO',
+              idTipoEstadoAliasAjenoRam: 1  // Agregar también el ID
             };
           }
           return item;
@@ -167,7 +184,8 @@ const ParametrizacionAlias = () => {
           if (selectedItemsAjenos.includes(`${item.idAlias}-${item.idAjeno}`)) {
             return {
               ...item,
-              descripcionTipoEstadoAliasAjenoRam: 'PAUSADO'
+              descripcionTipoEstadoAliasAjenoRam: 'PAUSADO',
+              idTipoEstadoAliasAjenoRam: 2  // Agregar también el ID
             };
           }
           return item;
@@ -236,18 +254,7 @@ const ParametrizacionAlias = () => {
   const shouldDisableActivarButton = () => {
     if (selectedItemsAjenos.length === 0) return true;
     
-    const hasNonActive = selectedItemsAjenos.some(id => {
-      const [idAlias, idAjeno] = id.split('-');
-      const item = aliasAjenos.find(
-        item => item.idAlias == idAlias && item.idAjeno == idAjeno
-      );
-      return item && (
-        item.descripcionTipoEstadoAliasAjenoRam !== 'ACTIVO' && 
-        item.idTipoEstadoAliasAjenoRam !== 1
-      );
-    });
-    
-    const hasActive = selectedItemsAjenos.some(id => {
+    return selectedItemsAjenos.every(id => {
       const [idAlias, idAjeno] = id.split('-');
       const item = aliasAjenos.find(
         item => item.idAlias == idAlias && item.idAjeno == idAjeno
@@ -257,27 +264,12 @@ const ParametrizacionAlias = () => {
         item.idTipoEstadoAliasAjenoRam === 1
       );
     });
-    
-    if (hasActive && hasNonActive) return true;
-    if (hasActive && !hasNonActive) return true;
-    return false;
   };
   
   const shouldDisablePausarButton = () => {
     if (selectedItemsAjenos.length === 0) return true;
     
-    const hasNonPaused = selectedItemsAjenos.some(id => {
-      const [idAlias, idAjeno] = id.split('-');
-      const item = aliasAjenos.find(
-        item => item.idAlias == idAlias && item.idAjeno == idAjeno
-      );
-      return item && (
-        item.descripcionTipoEstadoAliasAjenoRam !== 'PAUSADO' && 
-        item.idTipoEstadoAliasAjenoRam !== 2
-      );
-    });
-    
-    const hasPaused = selectedItemsAjenos.some(id => {
+    return selectedItemsAjenos.every(id => {
       const [idAlias, idAjeno] = id.split('-');
       const item = aliasAjenos.find(
         item => item.idAlias == idAlias && item.idAjeno == idAjeno
@@ -287,10 +279,6 @@ const ParametrizacionAlias = () => {
         item.idTipoEstadoAliasAjenoRam === 2
       );
     });
-    
-    if (hasPaused && hasNonPaused) return true;
-    if (hasPaused && !hasNonPaused) return true;
-    return false;
   };
 
   const loadMoreAjenosData = async () => {
@@ -1331,19 +1319,13 @@ const ParametrizacionAlias = () => {
                       <td>{item.idAjeno}</td>
                       <td>{item.nombreAjeno}</td>
                       <td>
-                        <span className="estado-tag ">
-                          {item.tipoEstadoCompras?.descripcion}
-                        </span>
+                        <StatusTag status={item.tipoEstadoCompras?.descripcion} />
                       </td>
                       <td>
-                        <span className="estado-tag ">
-                          {item.tipoEstadoRam?.descripcion}
-                        </span>
+                        <StatusTag status={item.tipoEstadoRam?.descripcion} />
                       </td>
                       <td>
-                        <span className="estado-tag ">
-                        {item.descripcionTipoEstadoAliasAjenoRam}
-                        </span>
+                        <StatusTag status={item.descripcionTipoEstadoAliasAjenoRam} />
                       </td>
                     </tr>
                   ))}

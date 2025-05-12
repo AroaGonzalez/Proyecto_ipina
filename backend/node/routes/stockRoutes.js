@@ -10,5 +10,6 @@ router.get('/cadenas', aliasController.getCadenas);
 router.get('/mercados', aliasController.getMercados);
 router.get('/grupos-cadena', aliasController.getGruposCadena);
 router.get('/tipos-alias', aliasController.getTiposAlias);
+router.put('/update', stockController.updateStocks);
 
 module.exports = router;
