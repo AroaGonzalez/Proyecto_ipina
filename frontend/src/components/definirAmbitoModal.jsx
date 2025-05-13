@@ -38,7 +38,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
   const [localizacionesInicializadas, setLocalizacionesInicializadas] = useState(false);
 
   const normalizeText = (text) => {
-    // Check if text is a string
     if (!text || typeof text !== 'string') return String(text || '');
   
     try {
@@ -135,9 +134,7 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
 
   useEffect(() => {
     if (localizaciones.length > 0 && !localizacionesInicializadas) {
-      // Extract the group, chain and market IDs from the existing locations
       if (initialSelections.existingLocations && initialSelections.existingLocations.length > 0) {
-        // Get all unique group, chain and market IDs from the existing locations
         const locationData = localizaciones.filter(loc => 
           initialSelections.existingLocations.some(existingLoc => 
             existingLoc.idLocalizacion === loc.idLocalizacion || 
@@ -145,7 +142,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
           )
         );
         
-        // Update selected dropdowns based on existing locations
         if (locationData.length > 0) {
           const uniqueGrupoIds = [...new Set(locationData.map(loc => loc.idGrupoCadena))];
           const uniqueCadenaIds = [...new Set(locationData.map(loc => loc.idCadena))];
@@ -156,7 +152,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
           setSelectedMercados(uniqueMercadoIds);
         }
         
-        // Pre-select the locations
         const existingLocationIds = locationData.map(loc => loc.id);
         setSelectedLocalizaciones(existingLocationIds);
       }
@@ -180,7 +175,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
       const cadenasData = cadenasRes.data || [];
       setCadenas(cadenasData);
       
-      // Actualizar las cadenas filtradas basado en los grupos seleccionados
       updateCadenasBySelectedGrupos(selectedGruposCadena, cadenasData);
       
       const mercadosData = mercadosRes.data || [];
@@ -456,7 +450,6 @@ const filteredLocalizaciones = localizaciones.filter(loc => {
   return true;
 });
 
-// Formatear texto para comboboxes
 const getSelectedGrupoCadenaText = () => {
   if (selectedGruposCadena.length === 0) {
     return 'Id o Grupo Cadena (16)';
@@ -816,15 +809,6 @@ return (
           </div>
         )}
         
-        <div className="ambito-pagination">
-          <span className="pagination-info">1 - 50 de {filteredLocalizaciones.length} elementos</span>
-          <div className="pagination-controls">
-            <button className="pagination-button">&lt;&lt;</button>
-            <button className="pagination-button">&lt;</button>
-            <button className="pagination-button">&gt;</button>
-            <button className="pagination-button">&gt;&gt;</button>
-          </div>
-        </div>
       </div>
       
       <div className="ambito-modal-footer">

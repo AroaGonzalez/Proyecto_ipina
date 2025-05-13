@@ -385,7 +385,6 @@ exports.deletePropuestas = async (idsPropuesta, usuarioBaja, fechaBaja) => {
       type: sequelizeAjenos.QueryTypes.UPDATE
     });
     
-    // Borrar caché relacionada con propuestas
     cache.clear('propuestas_');
     
     return result;

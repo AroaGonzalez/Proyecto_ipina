@@ -267,7 +267,6 @@ const handleMultiploMinimoChange = (idArticulo, value) => {
       return newModifiedItems;
     });
     
-    // Quitar clase visual
     const inputElement = document.querySelector(`#multiploMinimo-${idArticulo}`);
     if (inputElement) {
       inputElement.classList.remove('modified');

@@ -1,4 +1,3 @@
-// backend/node/repositories/tiendaRepository.js
 const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
 
 const CACHE_DURATION = 60 * 60 * 1000;
@@ -84,8 +83,8 @@ const buildWhereClause = (filter) => {
   if (filter.idsGrupoLocalizacion && filter.idsGrupoLocalizacion.length) {
     whereClauses.push(`lc.ID_LOCALIZACION_COMPRA IN 
       (SELECT glclc.ID_LOCALIZACION_COMPRA
-       FROM AJENOS.GRUPO_LOCALIZACION_COMPRA_LOCALIZACION_COMPRA glclc 
-       WHERE glclc.ID_GRUPO_LOCALIZACION_COMPRA IN (:idsGrupoLocalizacion))`);
+        FROM AJENOS.GRUPO_LOCALIZACION_COMPRA_LOCALIZACION_COMPRA glclc 
+        WHERE glclc.ID_GRUPO_LOCALIZACION_COMPRA IN (:idsGrupoLocalizacion))`);
     params.idsGrupoLocalizacion = Array.isArray(filter.idsGrupoLocalizacion) ? filter.idsGrupoLocalizacion : [filter.idsGrupoLocalizacion];
   }
 

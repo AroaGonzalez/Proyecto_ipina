@@ -1,4 +1,3 @@
-// backend/node/controllers/ajenoController.js
 const ajenoRamRepository = require('../repositories/ajenoRamRepository');
 
 exports.searchAjenos = async (req, res) => {

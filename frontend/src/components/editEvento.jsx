@@ -359,9 +359,7 @@ const EditEvento = () => {
         </div>
         
         {selectedTareas.length > 0 ? (
-          <div className="tareas-table-container">
-            <div className="tareas-count">{selectedTareas.length} tareas asociadas</div>
-            
+          <div className="tareas-table-container">            
             {showDeleteAction && (
               <div className="articulos-actions-bar">
                 <div className="articulos-selection-info">

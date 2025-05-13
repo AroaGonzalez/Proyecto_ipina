@@ -1,4 +1,3 @@
-// backend/node/repositories/aliasRepository.js
 const { sequelizeAjenos } = require('../utils/database');
 
 exports.findIdAlias = async (idAlias) => {
@@ -53,7 +52,6 @@ exports.deleteAlias = async (idAlias, usuarioBaja, fechaBaja) => {
 
 exports.deleteAliasAcople = async (idAliasAcople, usuarioBaja, fechaBaja) => {
   try {
-    // 1. Buscar alias principales relacionados con este acople
     const findPrincipalsQuery = `
       SELECT ID_ALIAS
       FROM AJENOS.ALIAS_ACOPLE
@@ -66,7 +64,6 @@ exports.deleteAliasAcople = async (idAliasAcople, usuarioBaja, fechaBaja) => {
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
-    // 2. Eliminar relaciones de acople
     const deleteAcopleQuery = `
       UPDATE AJENOS.ALIAS_ACOPLE
       SET USUARIO_BAJA = :usuarioBaja, 
@@ -80,7 +77,6 @@ exports.deleteAliasAcople = async (idAliasAcople, usuarioBaja, fechaBaja) => {
       type: sequelizeAjenos.QueryTypes.UPDATE
     });
     
-    // 3. Actualizar alias principales
     if (principalAliases && principalAliases.length > 0) {
       const principalIds = principalAliases.map(a => a.ID_ALIAS);
       
@@ -219,7 +215,6 @@ exports.deleteStockLocalizacion = async (idAlias, usuarioBaja, fechaBaja) => {
 
 exports.deleteAliasTarea = async (idAlias, usuarioBaja, fechaBaja) => {
     try {
-      // 1. Marcar como eliminadas las relaciones alias-tarea
       const deleteQuery = `
         UPDATE AJENOS.ALIAS_TAREA 
         SET USUARIO_BAJA = :usuarioBaja, 
@@ -233,7 +228,6 @@ exports.deleteAliasTarea = async (idAlias, usuarioBaja, fechaBaja) => {
         type: sequelizeAjenos.QueryTypes.UPDATE
       });
       
-      // 2. Obtener las tareas afectadas
       const findTareasQuery = `
         SELECT tr.ID_TAREA_RAM
         FROM AJENOS.TAREA_RAM tr
@@ -246,10 +240,8 @@ exports.deleteAliasTarea = async (idAlias, usuarioBaja, fechaBaja) => {
         type: sequelizeAjenos.QueryTypes.SELECT
       });
       
-      // Extraer IDs de tareas
       const tareaIds = tareas.map(t => t.ID_TAREA_RAM);
       
-      // 3. Para cada tarea, verificar si todos sus alias están eliminados
       for (const idTarea of tareaIds) {
         const findAliasesQuery = `
           SELECT a.ID_ALIAS, a.ID_TIPO_ESTADO_ALIAS
@@ -263,14 +255,12 @@ exports.deleteAliasTarea = async (idAlias, usuarioBaja, fechaBaja) => {
           type: sequelizeAjenos.QueryTypes.SELECT
         });
         
-        // Verificar si todos los alias están eliminados (estado 0) o incluyen el alias actual
         const todosEliminados = aliasesResult.every(alias => 
           alias.ID_TIPO_ESTADO_ALIAS === 0 || 
           parseInt(alias.ID_ALIAS) === parseInt(idAlias)
         );
         
         if (todosEliminados) {
-          // Actualizar estado de la tarea a ELIMINADO (estado 2)
           await exports.updateTarea(idTarea, usuarioBaja, fechaBaja);
         }
       }
@@ -289,8 +279,8 @@ exports.updateTarea = async (idTarea, usuarioBaja, fechaBaja) => {
       const query = `
         UPDATE AJENOS.TAREA_RAM 
         SET USUARIO_MODIFICACION = :usuarioBaja, 
-            FECHA_MODIFICACION = :fechaBaja,
-            ID_TIPO_ESTADO_TAREA_RAM = 2
+          FECHA_MODIFICACION = :fechaBaja,
+          ID_TIPO_ESTADO_TAREA_RAM = 2
         WHERE ID_TAREA_RAM = :idTarea
       `;
       
@@ -309,7 +299,6 @@ exports.updateTarea = async (idTarea, usuarioBaja, fechaBaja) => {
 
 exports.deleteAliasAmbito = async (idAlias, usuarioBaja, fechaBaja) => {
     try {
-      // 1. Obtener el ID del ámbito asociado al alias
       const findAmbitoQuery = `
         SELECT ID_ALIAS_AMBITO
         FROM AJENOS.ALIAS_AMBITO
@@ -326,11 +315,10 @@ exports.deleteAliasAmbito = async (idAlias, usuarioBaja, fechaBaja) => {
       if (ambitoResult && ambitoResult.length > 0) {
         idAliasAmbito = ambitoResult[0].ID_ALIAS_AMBITO;
         
-        // 2. Marcar el ámbito como eliminado
         const deleteQuery = `
           UPDATE AJENOS.ALIAS_AMBITO
           SET USUARIO_BAJA = :usuarioBaja, 
-              FECHA_BAJA = :fechaBaja
+            FECHA_BAJA = :fechaBaja
           WHERE ID_ALIAS = :idAlias
           AND FECHA_BAJA IS NULL
         `;
@@ -340,7 +328,6 @@ exports.deleteAliasAmbito = async (idAlias, usuarioBaja, fechaBaja) => {
           type: sequelizeAjenos.QueryTypes.UPDATE
         });
         
-        console.log(`Ámbito del alias ${idAlias} (ID: ${idAliasAmbito}) marcado como eliminado`);
       }
       
       return idAliasAmbito;
@@ -360,7 +347,7 @@ exports.deleteAliasAmbitoAplanado = async (idAliasAmbito, usuarioBaja, fechaBaja
       const query = `
         UPDATE AJENOS.ALIAS_AMBITO_APLANADO
         SET USUARIO_BAJA = :usuarioBaja, 
-            FECHA_BAJA = :fechaBaja
+          FECHA_BAJA = :fechaBaja
         WHERE ID_ALIAS_AMBITO = :idAliasAmbito
         AND FECHA_BAJA IS NULL
       `;
@@ -381,8 +368,8 @@ exports.findBaseTarea = async (idTarea) => {
     try {
       const query = `
         SELECT ID_TAREA_RAM as idTarea, 
-            ID_TIPO_TAREA as idTipoTarea,
-            ID_TIPO_ESTADO_TAREA_RAM as idTipoEstadoTarea
+          ID_TIPO_TAREA as idTipoTarea,
+          ID_TIPO_ESTADO_TAREA_RAM as idTipoEstadoTarea
         FROM AJENOS.TAREA_RAM
         WHERE ID_TAREA_RAM = :idTarea
       `;
@@ -461,7 +448,7 @@ exports.deleteTareaAmbitoAplanado = async (idsTareaAmbitoAplanado, usuarioBaja, 
       const query = `
         UPDATE AJENOS.TAREA_AMBITO_APLANADO
         SET USUARIO_BAJA = :usuarioBaja, 
-            FECHA_BAJA = :fechaBaja
+          FECHA_BAJA = :fechaBaja
         WHERE ID_TAREA_AMBITO_APLANADO IN (:idsTareaAmbitoAplanado)
       `;
       

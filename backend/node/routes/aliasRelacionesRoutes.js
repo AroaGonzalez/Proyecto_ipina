@@ -1,4 +1,3 @@
-// backend/node/routes/aliasRelacionesRoutes.js
 const express = require('express');
 const router = express.Router();
 const aliasRelacionesController = require('../controllers/aliasRelacionesController');

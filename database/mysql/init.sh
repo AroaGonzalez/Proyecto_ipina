@@ -1,4 +1,3 @@
-#!/bin/bash
 set -e
 
 echo "Iniciando ejecución de scripts SQL..."

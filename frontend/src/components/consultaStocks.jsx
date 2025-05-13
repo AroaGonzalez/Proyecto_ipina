@@ -266,70 +266,70 @@ const ConsultaStocks = () => {
   };
 
   const handleStockRecuentoChange = (idAlias, idLocalizacionCompra, value) => {
-  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
-  const originalItem = stocks.find(s => 
-    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
-  );
-  const originalValue = originalItem?.stockRecuentos?.toString() || '';
-  
-  if (value !== originalValue) {
-    setModifiedItems(prev => ({
-      ...prev,
-      [stockKey]: {
-        ...prev[stockKey],
-        stockRecuentos: value,
-        idAlias,
-        idLocalizacionCompra
-      }
-    }));
-  } else {
-    removeModification(stockKey, 'stockRecuentos');
-  }
-};
+    const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+    const originalItem = stocks.find(s => 
+      s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+    );
+    const originalValue = originalItem?.stockRecuentos?.toString() || '';
+    
+    if (value !== originalValue) {
+      setModifiedItems(prev => ({
+        ...prev,
+        [stockKey]: {
+          ...prev[stockKey],
+          stockRecuentos: value,
+          idAlias,
+          idLocalizacionCompra
+        }
+      }));
+    } else {
+      removeModification(stockKey, 'stockRecuentos');
+    }
+  };
 
-const handleCapacidadMaximaChange = (idAlias, idLocalizacionCompra, value) => {
-  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
-  const originalItem = stocks.find(s => 
-    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
-  );
-  const originalValue = originalItem?.capacidadMaxima?.toString() || '';
-  
-  if (value !== originalValue) {
-    setModifiedItems(prev => ({
-      ...prev,
-      [stockKey]: {
-        ...prev[stockKey],
-        capacidadMaxima: value,
-        idAlias,
-        idLocalizacionCompra
-      }
-    }));
-  } else {
-    removeModification(stockKey, 'capacidadMaxima');
-  }
-};
+  const handleCapacidadMaximaChange = (idAlias, idLocalizacionCompra, value) => {
+    const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+    const originalItem = stocks.find(s => 
+      s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+    );
+    const originalValue = originalItem?.capacidadMaxima?.toString() || '';
+    
+    if (value !== originalValue) {
+      setModifiedItems(prev => ({
+        ...prev,
+        [stockKey]: {
+          ...prev[stockKey],
+          capacidadMaxima: value,
+          idAlias,
+          idLocalizacionCompra
+        }
+      }));
+    } else {
+      removeModification(stockKey, 'capacidadMaxima');
+    }
+  };
 
-const handlePropuestaMinChange = (idAlias, idLocalizacionCompra, value) => {
-  const stockKey = `${idAlias}-${idLocalizacionCompra}`;
-  const originalItem = stocks.find(s => 
-    s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
-  );
-  const originalValue = originalItem?.stockMinimo?.toString() || '';
-  
-  if (value !== originalValue) {
-    setModifiedItems(prev => ({
-      ...prev,
-      [stockKey]: {
-        ...prev[stockKey],
-        stockMinimo: value,
-        idAlias,
-        idLocalizacionCompra
-      }
-    }));
-  } else {
-    removeModification(stockKey, 'stockMinimo');
-  }
-};
+  const handlePropuestaMinChange = (idAlias, idLocalizacionCompra, value) => {
+    const stockKey = `${idAlias}-${idLocalizacionCompra}`;
+    const originalItem = stocks.find(s => 
+      s.idAlias === idAlias && s.idLocalizacionCompra === idLocalizacionCompra
+    );
+    const originalValue = originalItem?.stockMinimo?.toString() || '';
+    
+    if (value !== originalValue) {
+      setModifiedItems(prev => ({
+        ...prev,
+        [stockKey]: {
+          ...prev[stockKey],
+          stockMinimo: value,
+          idAlias,
+          idLocalizacionCompra
+        }
+      }));
+    } else {
+      removeModification(stockKey, 'stockMinimo');
+    }
+  };
 
   const handleStockLimiteChange = (idAlias, idLocalizacionCompra, value) => {
     const stockKey = `${idAlias}-${idLocalizacionCompra}`;

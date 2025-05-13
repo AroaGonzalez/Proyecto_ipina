@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { FaChevronDown, FaSearch, FaTrash, FaFilter, FaCalendarAlt, FaUndo, FaRedo, FaDownload } from 'react-icons/fa';
 import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/recuentos.css';
@@ -8,55 +10,189 @@ import '../styles/recuentos.css';
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const Recuentos = () => {
-  const { t } = useTranslation();
-  const { languageId } = useContext(LanguageContext);
+    const { t } = useTranslation();
+    const { languageId } = useContext(LanguageContext);
 
-  const [idLocalizacion, setIdLocalizacion] = useState('');
-  const [idEjecucion, setIdEjecucion] = useState('');
-  const [idAlias, setIdAlias] = useState('');
-  const [inicioFechaCreacion, setInicioFechaCreacion] = useState('');
-  const [finFechaCreacion, setFinFechaCreacion] = useState('');
-  
-  const [mercadoSearch, setMercadoSearch] = useState('');
-  const [grupoCadenaSearch, setGrupoCadenaSearch] = useState('');
-  const [nombreEventoSearch, setNombreEventoSearch] = useState('');
-  const [estadoLineaSearch, setEstadoLineaSearch] = useState('');
-  const [tipoAliasSearch, setTipoAliasSearch] = useState('');
-  const [nombreAliasSearch, setNombreAliasSearch] = useState('');
-  
-  const [openFilter, setOpenFilter] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
+    const [idLocalizacion, setIdLocalizacion] = useState('');
+    const [idEjecucion, setIdEjecucion] = useState('');
+    const [idAlias, setIdAlias] = useState('');
+    const [inicioFechaCreacion, setInicioFechaCreacion] = useState(null);
+    const [finFechaCreacion, setFinFechaCreacion] = useState(null);
 
-  const [recuentos, setRecuentos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [showResults, setShowResults] = useState(false);
-  const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
-  const [totalElements, setTotalElements] = useState(0);
+    const [mercadoSearch, setMercadoSearch] = useState('');
+    const [grupoCadenaSearch, setGrupoCadenaSearch] = useState('');
+    const [nombreEventoSearch, setNombreEventoSearch] = useState('');
+    const [estadoLineaSearch, setEstadoLineaSearch] = useState('');
+    const [tipoAliasSearch, setTipoAliasSearch] = useState('');
+    const [nombreAliasSearch, setNombreAliasSearch] = useState('');
+    
+    const [openFilter, setOpenFilter] = useState(null);
+    const [showFilters, setShowFilters] = useState(true);
 
-  const [selectedRecuentos, setSelectedRecuentos] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
+    const [recuentos, setRecuentos] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [showResults, setShowResults] = useState(false);
+    const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
+    const [totalElements, setTotalElements] = useState(0);
 
-  const dropdownRef = useRef(null);
-  const tableContainerRef = useRef();
+    const [selectedRecuentos, setSelectedRecuentos] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
 
-  const [mercados, setMercados] = useState([]);
-  const [gruposCadena, setGruposCadena] = useState([]);
-  const [eventos, setEventos] = useState([]);
-  const [estadosLinea, setEstadosLinea] = useState([]);
-  const [tiposAlias, setTiposAlias] = useState([]);
-  const [nombreAlias, setNombreAlias] = useState([]);
-  
-  const [selectedMercados, setSelectedMercados] = useState([]);
-  const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
-  const [selectedEventos, setSelectedEventos] = useState([]);
-  const [selectedEstadosLinea, setSelectedEstadosLinea] = useState([]);
-  const [selectedTiposAlias, setSelectedTiposAlias] = useState([]);
-  const [selectedNombreAlias, setSelectedNombreAlias] = useState([]);
-  const [paginaActual, setPaginaActual] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [tamañoPagina] = useState(50);
+    const dropdownRef = useRef(null);
+    const tableContainerRef = useRef();
+
+    const [mercados, setMercados] = useState([]);
+    const [gruposCadena, setGruposCadena] = useState([]);
+    const [eventos, setEventos] = useState([]);
+    const [estadosLinea, setEstadosLinea] = useState([]);
+    const [tiposAlias, setTiposAlias] = useState([]);
+    const [nombreAlias, setNombreAlias] = useState([]);
+    const [modifiedRecuentos, setModifiedRecuentos] = useState({});
+    const [saveEnabled, setSaveEnabled] = useState(false);
+    const [saving, setSaving] = useState(false);
+    
+    const [activeInputId, setActiveInputId] = useState(null);
+    
+    const [selectedMercados, setSelectedMercados] = useState([]);
+    const [selectedGruposCadena, setSelectedGruposCadena] = useState([]);
+    const [selectedEventos, setSelectedEventos] = useState([]);
+    const [selectedEstadosLinea, setSelectedEstadosLinea] = useState([]);
+    const [selectedTiposAlias, setSelectedTiposAlias] = useState([]);
+    const [selectedNombreAlias, setSelectedNombreAlias] = useState([]);
+    const [paginaActual, setPaginaActual] = useState(0);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [tamañoPagina] = useState(50);
+    const [scrollPosition, setScrollPosition] = useState(0);
+
+
+    const StatusTag = ({ status, type }) => {
+        let className = 'status-tag';
+        
+        const normalizedStatus = status ? status.toUpperCase().trim() : '';
+        
+        if (normalizedStatus === 'RECOGIDO') {
+        className += ' status-recogido';
+        } else if (normalizedStatus === 'RESPUESTA') {
+        className += ' status-respuesta';
+        } else if (normalizedStatus === 'VALIDADO') {
+        className += ' status-validado';
+        } else if (normalizedStatus === 'PENDIENTE') {
+        className += ' status-validado';
+        } else if (normalizedStatus === 'DESCARTADO') {
+        className += ' status-descartado';
+        }
+        
+        return <div className={className}>{status || '-'}</div>;
+    };
+
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (container && scrollPosition > 0) {
+            container.scrollTop = scrollPosition;
+        }
+        
+        if (activeInputId) {
+            const activeInput = document.getElementById(activeInputId);
+            if (activeInput) {
+                activeInput.focus();
+            }
+        }
+    }, [recuentos, modifiedRecuentos, scrollPosition, activeInputId]);
+
+    useEffect(() => {
+        setSaveEnabled(Object.keys(modifiedRecuentos).length > 0);
+    }, [modifiedRecuentos]);
+
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (container && scrollPosition > 0) {
+            container.scrollTop = scrollPosition;
+        }
+    }, [recuentos, modifiedRecuentos]);
+
+    const handleStockValidadoChange = (idRecuento, value) => {
+        const container = tableContainerRef.current;
+        if (container) {
+            setScrollPosition(container.scrollTop);
+        }
+
+        const originalItem = recuentos.find(item => item.idRecuento === idRecuento);
+        const originalValue = originalItem?.stockFisicoValidado?.toString() || "";
+        
+        if (value !== originalValue) {
+            setModifiedRecuentos(prev => ({
+                ...prev,
+                [idRecuento]: {
+                    ...prev[idRecuento],
+                    stockFisicoValidado: value
+                }
+            }));
+            
+            const inputElement = document.querySelector(`#stockValidado-${idRecuento}`);
+            if (inputElement) {
+                inputElement.classList.add('modified');
+            }
+        } else {
+            setModifiedRecuentos(prev => {
+                const newModified = { ...prev };
+                if (newModified[idRecuento]) {
+                    delete newModified[idRecuento].stockFisicoValidado;
+                    if (Object.keys(newModified[idRecuento]).length === 0) {
+                        delete newModified[idRecuento];
+                    }
+                }
+                return newModified;
+            });
+            
+            const inputElement = document.querySelector(`#stockValidado-${idRecuento}`);
+            if (inputElement) {
+                inputElement.classList.remove('modified');
+            }
+        }
+    };
+
+    const handleCapacidadMaximaValidadaChange = (idRecuento, value) => {
+        const container = tableContainerRef.current;
+        if (container) {
+            setScrollPosition(container.scrollTop);
+        }
+
+        const originalItem = recuentos.find(item => item.idRecuento === idRecuento);
+        const originalValue = originalItem?.capacidadMaximaFisicaValidada?.toString() || "";
+        
+        if (value !== originalValue) {
+            setModifiedRecuentos(prev => ({
+                ...prev,
+                [idRecuento]: {
+                    ...prev[idRecuento],
+                    capacidadMaximaFisicaValidada: value
+                }
+            }));
+            
+            const inputElement = document.querySelector(`#capacidadValidada-${idRecuento}`);
+            if (inputElement) {
+                inputElement.classList.add('modified');
+            }
+        } else {
+            setModifiedRecuentos(prev => {
+                const newModified = { ...prev };
+                if (newModified[idRecuento]) {
+                    delete newModified[idRecuento].capacidadMaximaFisicaValidada;
+                    if (Object.keys(newModified[idRecuento]).length === 0) {
+                        delete newModified[idRecuento];
+                    }
+                }
+                return newModified;
+            });
+            
+            const inputElement = document.querySelector(`#capacidadValidada-${idRecuento}`);
+            if (inputElement) {
+                inputElement.classList.remove('modified');
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -162,7 +298,7 @@ const Recuentos = () => {
             
             const newRecuentos = response.data.recuentos || [];
             
-            if (newPropuestas.length === 0 || newPropuestas.length < tamañoPagina) {
+            if (newRecuentos.length === 0 || newRecuentos.length < tamañoPagina) {
                 setHasMore(false);
             }
             
@@ -188,68 +324,58 @@ const Recuentos = () => {
   
   const handleDescartar = async () => {
     try {
-      setLoading(true);
-      
-      const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
-        idsRecuento: selectedRecuentos,
-        idTipoEstadoRecuento: ESTADO_RECUENTO.DESCARTADO,
-        usuario: 'frontend_user' // Idealmente, obtener del contexto de autenticación
-      });
-      
-      // Actualizar la UI tras éxito
-      if (response.data.success) {
-        // Refrescar los datos
-        handleSearch();
-        setSelectedRecuentos([]);
-        setSelectAll(false);
-        // Mostrar mensaje de éxito
-        alert(`Se han descartado ${selectedRecuentos.length} recuento(s) correctamente`);
-      }
+        setLoading(true);
+        
+        const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+            idsRecuento: selectedRecuentos,
+            idTipoEstadoRecuento: ESTADO_RECUENTO.DESCARTADO,
+            usuario: 'frontend_user'
+        });
+        
+        if (response.data.success) {
+            handleSearch();
+            setSelectedRecuentos([]);
+            setSelectAll(false);
+            alert(`Se han descartado ${selectedRecuentos.length} recuento(s) correctamente`);
+        }
     } catch (error) {
-      console.error('Error al descartar recuentos:', error);
-      setError('Error al descartar recuentos');
+        console.error('Error al descartar recuentos:', error);
+        setError('Error al descartar recuentos');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
   
   const handleValidar = async () => {
     try {
-      setLoading(true);
+        setLoading(true);
+        
+        const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+            idsRecuento: selectedRecuentos,
+            idTipoEstadoRecuento: ESTADO_RECUENTO.VALIDADO,
+            usuario: 'frontend_user'
+        });
       
-      const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
-        idsRecuento: selectedRecuentos,
-        idTipoEstadoRecuento: ESTADO_RECUENTO.VALIDADO,
-        usuario: 'frontend_user' // Idealmente, obtener del contexto de autenticación
-      });
-      
-      // Actualizar la UI tras éxito
-      if (response.data.success) {
-        // Refrescar los datos
-        handleSearch();
-        setSelectedRecuentos([]);
-        setSelectAll(false);
-        // Mostrar mensaje de éxito
-        alert(`Se han validado ${selectedRecuentos.length} recuento(s) correctamente`);
-      }
+        if (response.data.success) {
+            handleSearch();
+            setSelectedRecuentos([]);
+            setSelectAll(false);
+            alert(`Se han validado ${selectedRecuentos.length} recuento(s) correctamente`);
+        }
     } catch (error) {
-      console.error('Error al validar recuentos:', error);
-      setError('Error al validar recuentos');
+        console.error('Error al validar recuentos:', error);
+        setError('Error al validar recuentos');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
     const handlePublishIn07 = async () => {
         try {
-          // You would typically call an API endpoint to publish to SFI
             console.log("Publishing to SFI:", selectedPropuestas);
             
-            // After successful publishing, update the UI accordingly
-            // This is a placeholder - implement according to your requirements
             alert(`Propuestas ${selectedPropuestas.join(', ')} publicadas en SFI correctamente`);
             
-            // Optionally clear selection after publishing
             setSelectedPropuestas([]);
             setSelectAll(false);
             
@@ -303,61 +429,54 @@ const Recuentos = () => {
         if (!items) return [];
         
         const itemsArray = Array.isArray(items) ? items : 
-          (items && items.content && Array.isArray(items.content)) ? 
-          items.content : [];
+            (items && items.content && Array.isArray(items.content)) ? 
+            items.content : [];
       
         if (!searchTerm || searchTerm.trim() === '') return itemsArray;
         
         const normalizedSearchTerm = searchTerm.toLowerCase().trim();
         
         return itemsArray.filter(item => {
-          if (!item) return false;
-          
-          // This part needs fixing for events
-          const searchField = field ? item[field] : 
-            (item.nombreAlias || item.descripcion || item.nombre || '');
-          
-          // Add special handling for eventos which have idEvento and nombre
-          const searchFieldStr = normalizeText(String(searchField || '').toLowerCase());
-          const idString = item.id ? String(item.id) : 
-                          (item.idEvento ? String(item.idEvento) : '');
-          
-          const nombreEvento = item.nombre ? normalizeText(String(item.nombre).toLowerCase()) : '';
-          
-          return searchFieldStr.includes(normalizedSearchTerm) || 
-                 idString.includes(normalizedSearchTerm) ||
-                 nombreEvento.includes(normalizedSearchTerm);
+            if (!item) return false;
+            
+            const searchField = field ? item[field] : 
+                (item.nombreAlias || item.descripcion || item.nombre || '');
+            
+            const searchFieldStr = normalizeText(String(searchField || '').toLowerCase());
+            const idString = item.id ? String(item.id) : 
+                (item.idEvento ? String(item.idEvento) : '');
+            
+            const nombreEvento = item.nombre ? normalizeText(String(item.nombre).toLowerCase()) : '';
+            
+            return searchFieldStr.includes(normalizedSearchTerm) || 
+                idString.includes(normalizedSearchTerm) ||
+                nombreEvento.includes(normalizedSearchTerm);
         });
     };
 
-    // Función para verificar si todos los recuentos seleccionados tienen un estado específico
     const allSelectedRecuentosHaveState = (stateId) => {
         if (selectedRecuentos.length === 0) return false;
         return selectedRecuentos.every(idRecuento => {
-        const recuento = recuentos.find(r => r.idRecuento === idRecuento);
-        return recuento && recuento.tipoEstadoRecuento.id === stateId;
+            const recuento = recuentos.find(r => r.idRecuento === idRecuento);
+            return recuento && recuento.tipoEstadoRecuento.id === stateId;
         });
     };
     
-    // Función para verificar si algún recuento seleccionado tiene un estado específico
     const anySelectedRecuentosHaveState = (stateId) => {
         if (selectedRecuentos.length === 0) return false;
         return selectedRecuentos.some(idRecuento => {
-        const recuento = recuentos.find(r => r.idRecuento === idRecuento);
-        return recuento && recuento.tipoEstadoRecuento.id === stateId;
+            const recuento = recuentos.find(r => r.idRecuento === idRecuento);
+            return recuento && recuento.tipoEstadoRecuento.id === stateId;
         });
     };
     
-    // Verificar si se puede validar (solo recuentos en estado RESPUESTA)
     const canValidate = selectedRecuentos.length > 0 && selectedRecuentos.every(idRecuento => {
         const recuento = recuentos.find(r => r.idRecuento === idRecuento);
         return recuento && recuento.tipoEstadoRecuento.id === ESTADO_RECUENTO.RESPUESTA;
     });
     
-    // Verificar si se puede descartar (todos los recuentos no están ya descartados o validados)
     const canDiscard = selectedRecuentos.length > 0 && !anySelectedRecuentosHaveState(ESTADO_RECUENTO.DESCARTADO) && !anySelectedRecuentosHaveState(ESTADO_RECUENTO.VALIDADO);
     
-    // Verificar si se puede publicar en 07 (solo recuentos en estado PENDIENTE)
     const canPublish = selectedRecuentos.length > 0 && allSelectedRecuentosHaveState(ESTADO_RECUENTO.PENDIENTE);
 
     const handleSearch = async () => {
@@ -376,8 +495,8 @@ const Recuentos = () => {
                 idsTipoEstadoRecuento: selectedEstadosLinea.length > 0 ? selectedEstadosLinea : [],
                 idsEvento: selectedEventos.length > 0 ? selectedEventos : [],
                 idsEjecucion: idEjecucion ? idEjecucion.split(/\s+/).filter(id => id.trim() !== '') : [],
-                fechaCreacionDesde: inicioFechaCreacion || null,
-                fechaCreacionHasta: finFechaCreacion || null
+                fechaCreacionDesde: inicioFechaCreacion ? inicioFechaCreacion.toISOString().split('T')[0] : null,
+                fechaCreacionHasta: finFechaCreacion ? finFechaCreacion.toISOString().split('T')[0] : null
             };
             
             const page = { number: 0, size: tamañoPagina };
@@ -417,8 +536,8 @@ const Recuentos = () => {
         setIdAlias('');
         setSelectedEstadosLinea([]);
         setSelectedTiposAlias([]);
-        setInicioFechaCreacion('');
-        setFinFechaCreacion('');
+        setInicioFechaCreacion(null);
+        setFinFechaCreacion(null);
         setShowResults(false);
         setRecuentos([]);
         setSelectedRecuentos([]);
@@ -473,9 +592,9 @@ const Recuentos = () => {
     const handleSelectAll = () => {
         setSelectAll(!selectAll);
         if (!selectAll) {
-        setSelectedRecuentos(recuentos.map(recuento => recuento.idRecuento));
+            setSelectedRecuentos(recuentos.map(recuento => recuento.idRecuento));
         } else {
-        setSelectedRecuentos([]);
+            setSelectedRecuentos([]);
         }
     };
   
@@ -567,9 +686,7 @@ const Recuentos = () => {
                                 <td className="id-column">{recuento.evento.id}</td>
                                 <td className="medium-text-column">{normalizeText(recuento.evento.nombre)}</td>
                                 <td className="short-text-column">
-                                    <span className={`estado-${recuento.tipoEstadoRecuento.id}`}>
-                                    {recuento.tipoEstadoRecuento.descripcion}
-                                    </span>
+                                    <StatusTag status={recuento.tipoEstadoRecuento.descripcion} />              
                                 </td>
                                 <td className="id-column">{recuento.localizacionCompra.id}</td>
                                 <td className="medium-text-column">{recuento.localizacionCompra.descripcion}</td>
@@ -577,9 +694,82 @@ const Recuentos = () => {
                                 <td className="medium-text-column">{recuento.alias.nombre}</td>
                                 <td className="short-text-column">{recuento.alias.idTipoAlias}</td>
                                 <td className="short-text-column">{recuento.stockFisico || '-'}</td>
-                                <td className="short-text-column">{recuento.stockFisicoValidado || '-'}</td>
+                                <td className="short-text-column editable-cell">
+                                    <div className="quantity-input">
+                                        <input
+                                            id={`stockValidado-${recuento.idRecuento}`}
+                                            type="number"
+                                            value={modifiedRecuentos[recuento.idRecuento]?.stockFisicoValidado ?? (recuento.stockFisicoValidado || '')}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === '' || /^\d+$/.test(value)) {
+                                                    handleStockValidadoChange(recuento.idRecuento, value);
+                                                }
+                                            }}
+                                            onFocus={(e) => {
+                                                setActiveInputId(`stockValidado-${recuento.idRecuento}`);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight'];
+                                                if (allowedKeys.includes(e.key)) return;
+                                                if (e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+                                                
+                                                if (!/^\d$/.test(e.key)) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onPaste={(e) => {
+                                                e.preventDefault();
+                                                const pastedText = e.clipboardData.getData('text');
+                                                if (/^\d+$/.test(pastedText)) {
+                                                    handleStockValidadoChange(recuento.idRecuento, pastedText);
+                                                }
+                                            }}
+                                            min="0"
+                                            step="1"
+                                            pattern="\d*"
+                                        />
+                                    </div>
+                                </td>
                                 <td className="short-text-column">{recuento.capacidadMaximaFisica || '-'}</td>
-                                <td className="short-text-column">{recuento.capacidadMaximaFisicaValidada || '-'}</td>
+                                <td className="short-text-column editable-cell">
+                                    <div className="quantity-input">
+                                        <input
+                                            id={`capacidadValidada-${recuento.idRecuento}`}
+                                            type="number"
+                                            value={modifiedRecuentos[recuento.idRecuento]?.capacidadMaximaFisicaValidada ?? (recuento.capacidadMaximaFisicaValidada || '')}
+                                           onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === '' || /^\d+$/.test(value)) {
+                                                    handleCapacidadMaximaValidadaChange(recuento.idRecuento, value);
+                                                }
+                                            }}
+                                            onFocus={(e) => {
+                                                setActiveInputId(`capacidadValidada-${recuento.idRecuento}`);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight'];
+                                                if (allowedKeys.includes(e.key)) return;
+                                                
+                                                if (e.ctrlKey && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+                                                
+                                                if (!/^\d$/.test(e.key)) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onPaste={(e) => {
+                                                e.preventDefault();
+                                                const pastedText = e.clipboardData.getData('text');
+                                                if (/^\d+$/.test(pastedText)) {
+                                                    handleCapacidadMaximaValidadaChange(recuento.idRecuento, pastedText);
+                                                }
+                                            }}
+                                            min="0"
+                                            step="1"
+                                            pattern="\d*"
+                                        />
+                                    </div>
+                                </td>
                                 <td className="id-column">{recuento.ajeno.id}</td>
                                 <td className="medium-text-column">{recuento.ajeno.nombre}</td>
                                 <td className="short-text-column">{recuento.codEjecucion}</td>
@@ -1049,32 +1239,40 @@ const Recuentos = () => {
             </div>
             
             <div className="filters-row">
-                <div className="filter-field">
-                <label className="filter-label">Inicio Fecha Creación</label>
-                <div className="date-input-container">
-                    <input
-                    type="text"
-                    placeholder="Inicio Fecha Creación"
-                    value={inicioFechaCreacion}
-                    onChange={(e) => setInicioFechaCreacion(e.target.value)}
-                    className="filter-input"
-                    />
-                    <FaCalendarAlt className="calendar-icon" />
-                </div>
-                </div>
+                <div className="date-fields-group">
+                    <div className="filter-field">
+                        <label className="filter-label">Inicio Fecha Creación</label>
+                        <div className="date-input-container">
+                            <DatePicker
+                            selected={inicioFechaCreacion}
+                            onChange={(date) => setInicioFechaCreacion(date)}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="Inicio Fecha Creación"
+                            className="filter-input"
+                            showIcon
+                            icon={<FaCalendarAlt className="calendar-icon" />}
+                            isClearable
+                            locale="es"
+                            />
+                        </div>
+                    </div>
                 
-                <div className="filter-field">
-                <label className="filter-label">Fin Fecha Creación</label>
-                <div className="date-input-container">
-                    <input
-                    type="text"
-                    placeholder="Fin Fecha Creación"
-                    value={finFechaCreacion}
-                    onChange={(e) => setFinFechaCreacion(e.target.value)}
-                    className="filter-input"
-                    />
-                    <FaCalendarAlt className="calendar-icon" />
-                </div>
+                    <div className="filter-field">
+                        <label className="filter-label">Fin Fecha Creación</label>
+                        <div className="date-input-container">
+                            <DatePicker
+                            selected={finFechaCreacion}
+                            onChange={(date) => setFinFechaCreacion(date)}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="Fin Fecha Creación"
+                            className="filter-input"
+                            showIcon
+                            icon={<FaCalendarAlt className="calendar-icon" />}
+                            isClearable
+                            locale="es"
+                            />
+                        </div>
+                    </div>
                 </div>
                 
                 <div className="search-button-container">
@@ -1141,25 +1339,35 @@ const Recuentos = () => {
         
         {showResults ? (
             loading ? (
+                <div className="results-section">
                 <div className="loading-indicator">Cargando...</div>
+                </div>
             ) : recuentos.length > 0 ? (
                 <RecuentosTable recuentos={recuentos} loading={loading} />
             ) : (
+                <div className="results-section">
                 <div className="no-results">
-                <div className="search-icon">
+                    <div className="search-icon">
                     <FaSearch />
+                    </div>
+                    <p className="no-results-text">
+                    UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+                    </p>
                 </div>
-                <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
                 </div>
             )
             ) : (
-            <div className="no-search-yet">
+            <div className="results-section">
+                <div className="no-search-yet">
                 <div className="search-icon">
-                <FaSearch />
+                    <FaSearch />
                 </div>
-                <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
+                <p className="no-results-text">
+                    UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+                </p>
+                </div>
             </div>
-        )}
+            )}
         </div>
     );
 };

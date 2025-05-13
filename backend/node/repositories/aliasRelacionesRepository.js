@@ -1,4 +1,3 @@
-// backend/node/repositories/aliasRelacionesRepository.js
 const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
 const { QueryTypes } = require('sequelize');
 
@@ -62,8 +61,6 @@ exports.getRelacionesUnidadesCompra = async () => {
     return [];
   }
 };
-
-// Modificación simplificada al repositorio para asegurar que siempre se envían los ajenos
 
 exports.findRelacionesByFilter = async (filter = {}, idsAliasSelected = [], processAllAlias = false, aliasTableOriginalFilter = {}, pageInfo = { page: 0, size: 50 }) => {
   try {
@@ -318,7 +315,6 @@ exports.activateRelaciones = async (relaciones, usuario) => {
 
     const idsAmbitoAplanado = relaciones.map(rel => rel.idAliasAmbitoAplanado);
     
-    // Usar CURRENT_TIMESTAMP en lugar de GETDATE() para compatibilidad
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 1,
@@ -353,20 +349,18 @@ exports.pauseRelaciones = async (relaciones, fechaHoraFinPausa, usuario) => {
 
     const idsAmbitoAplanado = relaciones.map(rel => rel.idAliasAmbitoAplanado);
     
-    // Formatear la fecha correctamente para MySQL
     let formattedDate = null;
     if (fechaHoraFinPausa) {
       const date = new Date(fechaHoraFinPausa);
-      // Formato: YYYY-MM-DD HH:MM:SS
       formattedDate = date.toISOString().slice(0, 19).replace('T', ' ');
     }
     
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 2,
-          FECHA_MODIFICACION = CURRENT_TIMESTAMP,
-          USUARIO_MODIFICACION = :usuario,
-          FECHA_HORA_FIN_PAUSA = :fechaHoraFinPausa
+        FECHA_MODIFICACION = CURRENT_TIMESTAMP,
+        USUARIO_MODIFICACION = :usuario,
+        FECHA_HORA_FIN_PAUSA = :fechaHoraFinPausa
       WHERE ID_ALIAS_AMBITO_APLANADO IN (:idsAmbitoAplanado)
         AND ID_TIPO_ESTADO_LOCALIZACION_RAM = 1
         AND FECHA_BAJA IS NULL
@@ -394,7 +388,6 @@ exports.pauseRelaciones = async (relaciones, fechaHoraFinPausa, usuario) => {
 
 exports.activateExpiredPauses = async () => {
   try {
-    // Usamos DATE() para comparar solo las fechas sin la hora
     const query = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO
       SET ID_TIPO_ESTADO_LOCALIZACION_RAM = 1,
@@ -428,27 +421,21 @@ exports.updateRelaciones = async (relaciones, usuario) => {
       return { success: false, message: 'No se proporcionaron relaciones para actualizar', updatedCount: 0 };
     }
 
-    // Procesar las relaciones en lotes para mayor eficiencia
     const batchSize = 500;
     let updatedCount = 0;
     
-    // Dividir el array en lotes
     for (let i = 0; i < relaciones.length; i += batchSize) {
       const batch = relaciones.slice(i, i + batchSize);
       
-      // Preparar las consultas para el lote
       const queries = batch.map(relacion => {
-        // Manejar el idUnidadComprasGestora cuando es 0 (se debe guardar como NULL)
         const idUnidadComprasGestora = relacion.idUnidadComprasGestora === 0 ? null : relacion.idUnidadComprasGestora;
         
-        // Usamos PATCH logic - solo actualizamos los campos que vienen en la solicitud
         const updateFields = [];
         const replacements = {
           usuario,
           idAliasAmbitoAplanado: relacion.idAliasAmbitoAplanado
         };
         
-        // FECHA_MODIFICACION siempre se actualiza
         updateFields.push("FECHA_MODIFICACION = CURRENT_TIMESTAMP");
         updateFields.push("USUARIO_MODIFICACION = :usuario");
         
@@ -477,7 +464,6 @@ exports.updateRelaciones = async (relaciones, usuario) => {
         return { query, replacements };
       });
       
-      // Ejecutar todas las consultas del lote en paralelo
       const results = await Promise.all(
         queries.map(({ query, replacements }) => 
           sequelizeAjenos.query(query, {
@@ -487,7 +473,6 @@ exports.updateRelaciones = async (relaciones, usuario) => {
         )
       );
       
-      // Contar las filas actualizadas
       const batchUpdated = results.reduce((sum, result) => sum + (result[1] || 0), 0);
       updatedCount += batchUpdated;
     }

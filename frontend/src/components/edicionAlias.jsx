@@ -9,16 +9,16 @@ import '../styles/edicionAlias.css';
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const ESTADO_MAPPING = {
-'1': 'BORRADOR',
-'2': 'PRODUCCION',
-'3': 'PAUSADO',
-'0': 'ELIMINADO',
-'BORRADOR': 'BORRADOR',
-'PAUSADO': 'PAUSADO',
-'PRODUCCION': 'PRODUCCION',
-'Borrador': 'BORRADOR',
-'Pausado': 'PAUSADO',
-'Producción': 'PRODUCCION'
+  '1': 'BORRADOR',
+  '2': 'PRODUCCION',
+  '3': 'PAUSADO',
+  '0': 'ELIMINADO',
+  'BORRADOR': 'BORRADOR',
+  'PAUSADO': 'PAUSADO',
+  'PRODUCCION': 'PRODUCCION',
+  'Borrador': 'BORRADOR',
+  'Pausado': 'PAUSADO',
+  'Producción': 'PRODUCCION'
 };
 
 const EdicionAlias = () => {
@@ -226,6 +226,22 @@ const EdicionAlias = () => {
     });
 
     return normalizedText;
+  };
+
+  const StatusTag = ({ status, type }) => {
+      let className = 'status-tag';
+      
+      const normalizedStatus = status ? status.toUpperCase().trim() : '';
+      
+      if (normalizedStatus === '04.BLOQUEADO') {
+        className += ' status-bloqueado';
+      } else if (normalizedStatus === 'PAUSADO') {
+        className += ' status-paused';
+      } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO') {
+        className += ' status-active';
+      }
+      
+      return <div className={className}>{status || '-'}</div>;
   };
 
   const handleSave = async () => {
@@ -1617,19 +1633,13 @@ const EdicionAlias = () => {
                             <td>{articulo.unidadesEmpaquetado}</td>
                             <td className="text-center">{articulo.multiploMinimo}</td>
                             <td className="estado-column">
-                              <span className="estado-tag activo">
-                                {articulo.tipoEstadoCompras?.descripcion || articulo.descripcionEstadoCompras}
-                              </span>
+                              <StatusTag status={articulo.tipoEstadoCompras?.descripcion} />
                             </td>
                             <td className="estado-column">
-                              <span className="estado-tag activo">
-                                {articulo.tipoEstadoRam?.descripcion || articulo.descripcionTipoEstadoRam}
-                              </span>
+                              <StatusTag status={articulo.tipoEstadoRam?.descripcion} />
                             </td>
                             <td className="estado-column">
-                              <span className="estado-tag activo">
-                                {articulo.descripcionTipoEstadoAliasAjenoRam || 'ACTIVO'}
-                              </span>
+                              <StatusTag status={articulo.descripcionTipoEstadoAliasAjenoRam} />
                             </td>
                             <td>{articulo.fechaAlta}</td>
                             <td>{articulo.idSint || '-'}</td>

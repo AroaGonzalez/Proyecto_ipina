@@ -507,10 +507,10 @@ exports.updateStock = async (recuentosValidados) => {
       
       const [aliasAmbitoAplanado] = await sequelizeAjenos.query(
         `SELECT aaa.*
-         FROM AJENOS.ALIAS_AMBITO_APLANADO aaa
-         INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
-         WHERE aa.ID_ALIAS = :idAlias
-         AND aaa.ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
+          FROM AJENOS.ALIAS_AMBITO_APLANADO aaa
+          INNER JOIN AJENOS.ALIAS_AMBITO aa ON aa.ID_ALIAS_AMBITO = aaa.ID_ALIAS_AMBITO
+          WHERE aa.ID_ALIAS = :idAlias
+          AND aaa.ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
         {
           replacements: {
             idAlias: stockLocalizacion.idAlias,
@@ -543,8 +543,8 @@ exports.updateStock = async (recuentosValidados) => {
       
       const [aliasInfo] = await sequelizeAjenos.query(
         `SELECT a.ID_ALIAS, a.ID_TIPO_ALIAS
-         FROM AJENOS.ALIAS a
-         WHERE a.ID_ALIAS = :idAlias`,
+          FROM AJENOS.ALIAS a
+          WHERE a.ID_ALIAS = :idAlias`,
         {
           replacements: { idAlias: stockLocalizacion.idAlias },
           type: sequelizeAjenos.QueryTypes.SELECT,
@@ -573,7 +573,7 @@ exports.updateStock = async (recuentosValidados) => {
     for (const stock of stockLocalizacionesToUpdate) {
       const [stockEntity] = await sequelizeAjenos.query(
         `SELECT * FROM AJENOS.STOCK_LOCALIZACION 
-         WHERE ID_ALIAS = :idAlias AND ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
+          WHERE ID_ALIAS = :idAlias AND ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
         {
           replacements: {
             idAlias: stock.idAlias,
@@ -587,14 +587,14 @@ exports.updateStock = async (recuentosValidados) => {
       if (stockEntity) {
         await sequelizeAjenos.query(
           `UPDATE AJENOS.STOCK_LOCALIZACION
-           SET STOCK_RECUENTOS = :stockRecuentos,
+            SET STOCK_RECUENTOS = :stockRecuentos,
               STOCK_RECUENTOS_VALIDADOS_BULTOS = :stockRecuentosValidadoBultos,
               FECHA_HORA_EJECUCION_STOCK_RECUENTOS = :fechaHoraEjecucionStockRecuentos,
               CAPACIDAD_MAXIMA = :capacidadMaxima,
               CAPACIDAD_MAXIMA_VALIDADA_BULTOS = :capacidadMaximaValidadaBultos,
               FECHA_MODIFICACION = :fechaModificacion,
               USUARIO_MODIFICACION = :usuarioModificacion
-           WHERE ID_ALIAS = :idAlias AND ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
+            WHERE ID_ALIAS = :idAlias AND ID_LOCALIZACION_COMPRA = :idLocalizacionCompra`,
           {
             replacements: {
               stockRecuentos: stock.stockRecuentos,
@@ -614,26 +614,26 @@ exports.updateStock = async (recuentosValidados) => {
       } else {
         await sequelizeAjenos.query(
           `INSERT INTO AJENOS.STOCK_LOCALIZACION (
-             ID_ALIAS, 
-             ID_LOCALIZACION_COMPRA, 
-             STOCK_RECUENTOS, 
-             STOCK_RECUENTOS_VALIDADOS_BULTOS,
-             FECHA_HORA_EJECUCION_STOCK_RECUENTOS,
-             CAPACIDAD_MAXIMA,
-             CAPACIDAD_MAXIMA_VALIDADA_BULTOS,
-             FECHA_ALTA,
-             USUARIO_ALTA
-           ) VALUES (
-             :idAlias,
-             :idLocalizacionCompra,
-             :stockRecuentos,
-             :stockRecuentosValidadoBultos,
-             :fechaHoraEjecucionStockRecuentos,
-             :capacidadMaxima,
-             :capacidadMaximaValidadaBultos,
-             :fechaAlta,
-             :usuarioAlta
-           )`,
+            ID_ALIAS, 
+            ID_LOCALIZACION_COMPRA, 
+            STOCK_RECUENTOS, 
+            STOCK_RECUENTOS_VALIDADOS_BULTOS,
+            FECHA_HORA_EJECUCION_STOCK_RECUENTOS,
+            CAPACIDAD_MAXIMA,
+            CAPACIDAD_MAXIMA_VALIDADA_BULTOS,
+            FECHA_ALTA,
+            USUARIO_ALTA
+          ) VALUES (
+            :idAlias,
+            :idLocalizacionCompra,
+            :stockRecuentos,
+            :stockRecuentosValidadoBultos,
+            :fechaHoraEjecucionStockRecuentos,
+            :capacidadMaxima,
+            :capacidadMaximaValidadaBultos,
+            :fechaAlta,
+            :usuarioAlta
+          )`,
           {
             replacements: {
               idAlias: stock.idAlias,

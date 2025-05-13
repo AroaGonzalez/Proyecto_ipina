@@ -1,5 +1,3 @@
-/* definirAmbitoModal.css */
-
 .ambito-modal-overlay {
 position: fixed;
 top: 0;
@@ -391,7 +389,6 @@ font-weight: 500;
 font-size: 0.9rem;
 }
 
-/* Z-indices for stacking multiple dropdowns */
 .ambito-dropdown-container:nth-child(1) .ambito-dropdown-content {
 z-index: 9903;
 }
@@ -404,7 +401,6 @@ z-index: 9902;
 z-index: 9901;
 }
 
-/* Responsive adjustments */
 @media (max-width: 992px) {
 .ambito-dropdowns-row {
     flex-direction: column;

@@ -173,7 +173,6 @@ const NuevoEvento = () => {
     setShowTipoTareaDropdown(false);
     setSelectedTareas([]);
     
-    // Si es distribución (id=1), establecer PROPUESTA como estado predeterminado
     if (tipoTarea.id === 1) {
       setEstadoSolicitud('PROPUESTA');
     }
@@ -340,9 +339,7 @@ const NuevoEvento = () => {
         </div>
         
         {selectedTareas.length > 0 ? (
-          <div className="tareas-table-container">
-            <div className="tareas-count">{selectedTareas.length} tareas asociadas</div>
-            
+          <div className="tareas-table-container">                      
             {showDeleteAction && (
               <div className="articulos-actions-bar">
                 <div className="articulos-selection-info">

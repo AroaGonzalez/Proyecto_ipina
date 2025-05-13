@@ -1,4 +1,3 @@
-// backend/node/routes/tiendaRoutes.js
 const express = require('express');
 const router = express.Router();
 const tiendaController = require('../controllers/tiendaController');

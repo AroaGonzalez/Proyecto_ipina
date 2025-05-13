@@ -1,5 +1,3 @@
-/* eventos.css */
-
 .eventos-container {
   display: flex;
   flex-direction: column;
@@ -14,8 +12,6 @@
   height: 100%;
   overflow: hidden;
 }
-
-/* Add these styles to your eventos.css file */
 
 .execute-button {
   display: flex;
@@ -40,7 +36,6 @@
   cursor: not-allowed;
 }
 
-/* You might also want to add styles for an execution confirmation modal */
 .execution-modal {
   position: fixed;
   top: 0;

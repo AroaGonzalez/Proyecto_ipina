@@ -48,7 +48,6 @@ const FilterDropdown = React.memo(({
             />
           </div>
           <div className="dropdown-items-container">
-            <div className="dropdown-items">
               {filteredItems.map((item) => (
                 <div 
                   key={item.id} 
@@ -69,7 +68,6 @@ const FilterDropdown = React.memo(({
                   <span>{itemRenderer ? itemRenderer(item) : `${item.id} - ${item.descripcion}`}</span>
                 </div>
               ))}
-            </div>
             <div 
               className="dropdown-item select-all"
               onClick={(e) => {
@@ -332,6 +330,22 @@ const EdicionRelaciones = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [ui.openFilter]);
+
+  const StatusTag = ({ status, type }) => {
+      let className = 'status-tag';
+      
+      const normalizedStatus = status ? status.toUpperCase().trim() : '';
+      
+      if (normalizedStatus === '04.BLOQUEADO') {
+        className += ' status-bloqueado';
+      } else if (normalizedStatus === 'PAUSADO') {
+        className += ' status-paused';
+      } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO') {
+        className += ' status-active';
+      }
+      
+      return <div className={className}>{status || '-'}</div>;
+  };
 
   useEffect(() => {
     if (data.relaciones.length === 0) return;
@@ -1451,7 +1465,7 @@ const EdicionRelaciones = () => {
             
             <div className="filter-item">
               <div className="filter-input">
-                <span className="filter-label">Id Localización</span>
+                <label className="filter-label">Id Localización</label>
                 <input 
                   type="text" 
                   placeholder="Escribe ID localización"
@@ -1581,7 +1595,7 @@ const EdicionRelaciones = () => {
                 />
               </th>
               <th>{t('ID ALIAS')}</th>
-              <th>{t('ID LOCALIZ')}</th>
+              <th>{t('ID LOCALIZACIÓN')}</th>
               <th>{t('LOCALIZACIÓN')}</th>
               <th>{t('CADENA')}</th>
               <th>{t('MERCADO')}</th>

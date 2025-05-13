@@ -1,4 +1,3 @@
-// backend/node/controllers/aliasController.js
 const aliasRepository = require('../repositories/aliasRepository');
 const deleteAliasRepository = require('../repositories/deleteAliasRepository');
 
@@ -518,10 +517,8 @@ exports.deleteAliasAjeno = async (req, res) => {
         
         console.log(`Procesando eliminación para idAlias: ${idAlias}, idAjeno: ${idAjeno}`);
         
-        // 1. Eliminar la relación alias_ajeno
         await aliasRepository.deleteAliasArticulo(idAjeno, idAlias, usuarioBaja, fechaBaja);
         
-        // 2. Actualizar el ámbito aplanado
         await aliasRepository.updateAliasAmbitoAplanado(idAjeno, idAlias, usuarioBaja, fechaBaja);
         
         successCount++;
@@ -560,13 +557,12 @@ exports.updateAlias = async (req, res) => {
     
     console.log(`Editando alias ID: ${id}`, aliasData);
     
-    const usuarioModificacion = aliasData.usuario || 'WEBAPP'; // Usuario por defecto o del request
+    const usuarioModificacion = aliasData.usuario || 'WEBAPP';
     const fechaModificacion = new Date();
     
     let setAliasUntrained = false;
     let propagateTareaAmbitoAplanado = false;
     
-    // 1. Actualizar el tipo de estado del alias si se proporciona
     if (aliasData.idEstado || aliasData.idTipoEstadoAlias) {
       const idTipoEstadoAlias = aliasData.idEstado || aliasData.idTipoEstadoAlias;
       console.log(`Actualizando estado del alias a: ${idTipoEstadoAlias}`);
@@ -578,7 +574,6 @@ exports.updateAlias = async (req, res) => {
       );
     }
     
-    // 2. Actualizar los idiomas del alias
     if (aliasData.idiomas && Array.isArray(aliasData.idiomas)) {
       console.log(`Actualizando ${aliasData.idiomas.length} idiomas para el alias`);
       
@@ -596,7 +591,6 @@ exports.updateAlias = async (req, res) => {
       );
     }
     
-    // 3. Actualizar los artículos asociados al alias
     if (aliasData.aliasAjeno && Array.isArray(aliasData.aliasAjeno)) {
       console.log(`Actualizando ${aliasData.aliasAjeno.length} artículos para el alias`);
       
@@ -616,7 +610,6 @@ exports.updateAlias = async (req, res) => {
       setAliasUntrained = result || setAliasUntrained;
     }
     
-    // 4. Actualizar los acoples si es un alias de tipo II con conexión ACOPLE
     const idTipoAlias = aliasData.idTipoAlias || 1;
     const idTipoConexion = aliasData.idTipoConexionOrigenDatoAlias || aliasData.idTipoConexion || 1;
     
@@ -627,7 +620,7 @@ exports.updateAlias = async (req, res) => {
         const formattedAcoples = aliasData.acoples.map(acople => ({
           idAlias: acople.idAlias,
           ratioAcople: acople.ratioAcople || 1,
-          idTipoAlias: acople.idTipoAlias || 2 // Por defecto TIPO_II
+          idTipoAlias: acople.idTipoAlias || 2
         }));
         
         const updatedAliasAcople = await aliasRepository.updateAliasAcople(
@@ -638,7 +631,6 @@ exports.updateAlias = async (req, res) => {
         );
         
         if (updatedAliasAcople) {
-          // Actualizar alias_acople_tarea y alias_tarea si hubo cambios en los acoples
           await aliasRepository.updateAliasAcopleTarea(
             parseInt(id),
             formattedAcoples,
@@ -659,7 +651,6 @@ exports.updateAlias = async (req, res) => {
       }
     }
     
-    // 5. Actualizar el ámbito del alias
     if (aliasData.aliasAmbito) {
       console.log('Procesando ámbito del alias');
       
@@ -710,12 +701,10 @@ exports.updateAlias = async (req, res) => {
       }
     }
     
-    // 6. Propagar cambios en ámbitos aplanados de tareas si es necesario
     if (propagateTareaAmbitoAplanado && aliasData.aliasAmbito) {
       console.log('Propagando cambios en ámbitos aplanados de tareas');
       
       if (aliasData.acoples && aliasData.acoples.length > 0) {
-        // Si hay acoples definidos, propagar por alias acople
         await aliasRepository.propagateTareaAmbitoAplanadoByUpdatedAliasAcople(
           parseInt(id),
           aliasData.acoples.map(acople => acople.idAlias),
@@ -724,7 +713,6 @@ exports.updateAlias = async (req, res) => {
           fechaModificacion
         );
       } else {
-        // Si no hay acoples definidos, buscar acoples existentes y propagar
         const aliasAcoples = await aliasRepository.findAcoplesByMainAlias(parseInt(id));
         
         const idsAliasAcople = (aliasAcoples && aliasAcoples.length > 0)
@@ -743,7 +731,6 @@ exports.updateAlias = async (req, res) => {
       }
     }
     
-    // 7. Marcar el alias como no entrenado si es necesario
     if (setAliasUntrained) {
       console.log('Marcando alias como no entrenado');
       await aliasRepository.updateAliasUntrained([parseInt(id)]);
@@ -885,13 +872,10 @@ exports.deleteAlias = async (req, res) => {
       try {
         const parsedIdAlias = parseInt(idAlias);
         
-        // 1. Obtener información básica del alias
         const baseAlias = await deleteAliasRepository.findIdAlias(parsedIdAlias);
         
-        // 2. Marcar alias como eliminado
         await deleteAliasRepository.deleteAlias(parsedIdAlias, usuarioBaja, fechaBaja);
         
-        // 3. Si es un alias tipo II y de conexión ACOPLE
         if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
             baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.ACOPLE) {
           
@@ -899,68 +883,54 @@ exports.deleteAlias = async (req, res) => {
           await deleteAliasRepository.deleteAliasAcopleTarea(parsedIdAlias, usuarioBaja, fechaBaja);
         }
         
-        // 4. Si es un alias tipo II y de conexión PRINCIPAL
         if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
             baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.PRINCIPAL) {
           
           await deleteAliasRepository.deleteAliasAcopleTareaIdPrincipal(parsedIdAlias, usuarioBaja, fechaBaja);
         }
         
-        // 5. Eliminar idiomas asociados
         await deleteAliasRepository.deleteAliasIdioma(parsedIdAlias, usuarioBaja, fechaBaja);
         
-        // 6. Eliminar relaciones con ajenos
         await deleteAliasRepository.deleteAliasAjenoByIdAlias(parsedIdAlias, usuarioBaja, fechaBaja);
         
-        // 7. Eliminar stock localización
         await deleteAliasRepository.deleteStockLocalizacion(parsedIdAlias, usuarioBaja, fechaBaja);
         
-        // 8. Eliminar tareas asociadas y obtener IDs
         const idsTarea = await deleteAliasRepository.deleteAliasTarea(parsedIdAlias, usuarioBaja, fechaBaja);
         
-        // 9. Eliminar ámbito y ámbito aplanado
         const idAliasAmbito = await deleteAliasRepository.deleteAliasAmbito(parsedIdAlias, usuarioBaja, fechaBaja);
         
         if (idAliasAmbito) {
           await deleteAliasRepository.deleteAliasAmbitoAplanado(idAliasAmbito, usuarioBaja, fechaBaja);
         }
         
-        // 10. Procesar ámbitos aplanados de tareas afectadas
         if (idsTarea && idsTarea.length > 0) {
           for (const idTarea of idsTarea) {
-            // Obtener información de la tarea
             const baseTarea = await deleteAliasRepository.findBaseTarea(idTarea);
             
             let idsTareaAmbitoAplanado = [];
             
-            // Procesar según tipo de tarea y alias
             if (baseTarea.idTipoTarea === TIPO_TAREA.DISTRIBUTION) {
-              // Alias tipo II y conexión ACOPLE
               if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
                   baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.ACOPLE) {
                 
                 idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoAcople(idTarea, parsedIdAlias);
               }
               
-              // Alias tipo II y conexión PRINCIPAL
               if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_II && 
                   baseAlias.idTipoConexionOrigenDatoAlias === TIPO_CONEXION_ORIGEN_DATO_ALIAS.PRINCIPAL) {
                 
                 idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
               }
               
-              // Alias tipo I
               if (baseAlias.idTipoAlias === TIPO_ALIAS.TIPO_I) {
                 idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
               }
             }
             
-            // Tarea tipo COUNT
             if (baseTarea.idTipoTarea === TIPO_TAREA.COUNT) {
               idsTareaAmbitoAplanado = await deleteAliasRepository.deleteTareaAmbitoAplanadoPrincipal(idTarea, parsedIdAlias);
             }
             
-            // Eliminar ámbitos aplanados de tarea si existen
             if (idsTareaAmbitoAplanado && idsTareaAmbitoAplanado.length > 0) {
               await deleteAliasRepository.deleteTareaAmbitoAplanado(idsTareaAmbitoAplanado, fechaBaja, usuarioBaja);
             }

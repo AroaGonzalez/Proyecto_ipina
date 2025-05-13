@@ -251,14 +251,10 @@ const Propuestas = () => {
 
   const handlePublishInSFI = async () => {
     try {
-      // You would typically call an API endpoint to publish to SFI
       console.log("Publishing to SFI:", selectedPropuestas);
       
-      // After successful publishing, update the UI accordingly
-      // This is a placeholder - implement according to your requirements
       alert(`Propuestas ${selectedPropuestas.join(', ')} publicadas en SFI correctamente`);
       
-      // Optionally clear selection after publishing
       setSelectedPropuestas([]);
       setSelectAll(false);
       
@@ -1068,23 +1064,33 @@ const Propuestas = () => {
       
       {showResults ? (
         loading ? (
-          <div className="loading-indicator">Cargando...</div>
+          <div className="results-section">
+            <div className="loading-indicator">Cargando...</div>
+          </div>
         ) : propuestas.length > 0 ? (
           <PropuestasTable propuestas={propuestas} loading={loading} />
         ) : (
-          <div className="no-results">
-            <div className="search-icon">
-              <FaSearch />
+          <div className="results-section">
+            <div className="no-results">
+              <div className="search-icon">
+                <FaSearch />
+              </div>
+              <p className="no-results-text">
+                UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+              </p>
             </div>
-            <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
           </div>
         )
       ) : (
-        <div className="no-search-yet">
-          <div className="search-icon">
-            <FaSearch />
+        <div className="results-section">
+          <div className="no-search-yet">
+            <div className="search-icon">
+              <FaSearch />
+            </div>
+            <p className="no-results-text">
+              UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+            </p>
           </div>
-          <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
         </div>
       )}
     </div>

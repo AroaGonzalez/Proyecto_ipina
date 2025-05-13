@@ -49,7 +49,6 @@ const EditarTarea = () => {
         setSelectedAliases(tareaData.alias || []);
         setAmbitosLocalizacion(tareaData.ambitos || []);
         
-        // Fetchear aliases disponibles
         try {
           const aliasesResponse = await axios.get(`${BASE_URL}/edicion/alias-info?idIdioma=${languageId}`);
           setAliasesDisponibles(aliasesResponse.data || []);
@@ -69,24 +68,19 @@ const EditarTarea = () => {
     fetchTareaData();
   }, [id, languageId]);
   
-// Actualizar la función de detección de cambios
-useEffect(() => {
+  useEffect(() => {
     if (tarea) {
-      // Verificación de cambios en nombre y descripción
-        const basicChanges = nombreTarea !== tarea.nombreTarea || 
-            descripcionTarea !== tarea.descripcionTarea;
-      
-      // Verificación de cambios en aliases
-        const originalAliasIds = new Set((tarea.alias || []).map(a => a.idAlias));
-        const currentAliasIds = new Set(selectedAliases.map(a => a.idAlias));
-      
-      // Comparamos si los conjuntos de IDs son diferentes
-        const aliasesChanged = originalAliasIds.size !== currentAliasIds.size || 
-            [...originalAliasIds].some(id => !currentAliasIds.has(id)) ||
-            [...currentAliasIds].some(id => !originalAliasIds.has(id));
-      
-        const ambitosChanged = true;
-      // Actualizamos el estado de cambios
+      const basicChanges = nombreTarea !== tarea.nombreTarea || 
+        descripcionTarea !== tarea.descripcionTarea;
+    
+      const originalAliasIds = new Set((tarea.alias || []).map(a => a.idAlias));
+      const currentAliasIds = new Set(selectedAliases.map(a => a.idAlias));
+    
+      const aliasesChanged = originalAliasIds.size !== currentAliasIds.size || 
+          [...originalAliasIds].some(id => !currentAliasIds.has(id)) ||
+          [...currentAliasIds].some(id => !originalAliasIds.has(id));
+    
+      const ambitosChanged = true;
       setHasChanges(basicChanges || aliasesChanged || ambitosChanged);
     }
   }, [nombreTarea, descripcionTarea, selectedAliases, ambitosLocalizacion, tarea]);
@@ -107,7 +101,6 @@ useEffect(() => {
     try {
       setLoading(true);
       
-      // Preparar datos para la solicitud
       const createTareaAlias = selectedAliases.map(alias => ({
         idAlias: alias.idAlias,
         idTipoAlias: alias.idTipoAlias || alias.tipo,
@@ -120,12 +113,10 @@ useEffect(() => {
         }))
       }));
       
-      // Obtener IDs de localización de los ámbitos
       const idsLocalizacionCompra = ambitosLocalizacion.map(ambito => 
         ambito.idLocalizacionCompra || ambito.idLocalizacion
       );
       
-      // Crear el objeto de solicitud
       const requestData = {
         nombreTarea,
         descripcion: descripcionTarea,
@@ -148,7 +139,6 @@ useEffect(() => {
                 idTipoConexionOrigenDatoAlias: alias.idTipoConexionOrigenDatoAlias || null
               }];
               
-              // Añadir acoples si existen
               const acopleItems = (alias.acoples || []).map(acople => ({
                 idAlias: alias.idAlias,
                 idAliasAcople: acople.idAliasAcople || acople.id,
@@ -168,13 +158,11 @@ useEffect(() => {
       
       console.log('Enviando datos para actualizar tarea:', requestData);
       
-      // Enviar la solicitud al servidor
       const response = await axios.put(`${BASE_URL}/api/tareas/edicion-tarea/${id}`, requestData);
       
       setHasChanges(false);
       setLoading(false);
       
-      // Mostrar mensaje de éxito y navegar de vuelta
       console.log('Tarea actualizada correctamente:', response.data);
       navigate('/tareas');
     } catch (error) {
@@ -211,11 +199,6 @@ useEffect(() => {
     } else {
       setFilteredAliases(aliasesDisponibles);
     }
-  };
-  
-  const clearAliasSearch = () => {
-    setAliasSearchText('');
-    setFilteredAliases(aliasesDisponibles);
   };
   
   const handleAliasSelect = (alias) => {
@@ -376,7 +359,6 @@ useEffect(() => {
                   value={aliasSearchText}
                   onChange={handleAliasSearchChange}
                 />
-                <FaSearch className="search-icon" />
               </div>
               
               <div className="alias-options-container">
@@ -538,7 +520,7 @@ useEffect(() => {
                 }}
                 selectedAliases={selectedAliases}
                 initialSelections={{
-                    existingLocations: ambitosLocalizacion, // Pass the current locations
+                    existingLocations: ambitosLocalizacion,
                     gruposCadena: [...new Set(ambitosLocalizacion.map(loc => loc.idGrupoCadena))],
                     cadenas: [...new Set(ambitosLocalizacion.map(loc => loc.idCadena))],
                     mercados: [...new Set(ambitosLocalizacion.map(loc => loc.idMercado || loc.mercado))]

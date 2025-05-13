@@ -54,6 +54,42 @@ const ParametrizacionAlias = () => {
   const [estacionalidadSearchText, setEstacionalidadSearchText] = useState('');
   const [articulosSearchText, setArticulosSearchText] = useState('');
 
+  const normalizeText = (text) => {
+    if (!text) return '';
+
+    let normalizedText = text;
+
+    normalizedText = normalizedText
+    .replace(/ESPA.?.'A/g, 'ESPAÑA')
+    .replace(/ESPA.?.A/g, 'ESPAÑA')
+    .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
+    .replace(/PEQUE.?.OS/g, 'PEQUEÑOS')
+        .replace(/PEQUE.?.A/g, 'PEQUEÑA')
+
+
+    const replacements = {
+    'Ã\u0081': 'Á', 'Ã\u0089': 'É', 'Ã\u008D': 'Í', 'Ã\u0093': 'Ó', 'Ã\u009A': 'Ú',
+    'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
+    'Ã\u0091': 'Ñ', 'Ã±': 'ñ',
+    'Ã¼': 'ü', 'Ã\u009C': 'Ü',
+    'Âº': 'º', 'Âª': 'ª',
+    'Ã\u0084': 'Ä', 'Ã\u008B': 'Ë', 'Ã\u008F': 'Ï', 'Ã\u0096': 'Ö', 'Ã\u009C': 'Ü',
+    'Ã¤': 'ä', 'Ã«': 'ë', 'Ã¯': 'ï', 'Ã¶': 'ö', 'Ã¼': 'ü',
+    'â‚¬': '€',
+    'â€"': '–', 'â€"': '—',
+    'â€œ': '"', 'â€': '"',
+    'â€¢': '•',
+    'â€¦': '…',
+    'Â¡': '¡', 'Â¿': '¿'
+    };
+
+    Object.entries(replacements).forEach(([badChar, goodChar]) => {
+    normalizedText = normalizedText.replace(new RegExp(badChar, 'g'), goodChar);
+    });
+
+    return normalizedText;
+  };
+
   useEffect(() => {
     fetchFilterOptions();
     fetchAliases();
@@ -146,7 +182,7 @@ const ParametrizacionAlias = () => {
             return {
               ...item,
               descripcionTipoEstadoAliasAjenoRam: 'ACTIVO',
-              idTipoEstadoAliasAjenoRam: 1  // Agregar también el ID
+              idTipoEstadoAliasAjenoRam: 1
             };
           }
           return item;
@@ -185,7 +221,7 @@ const ParametrizacionAlias = () => {
             return {
               ...item,
               descripcionTipoEstadoAliasAjenoRam: 'PAUSADO',
-              idTipoEstadoAliasAjenoRam: 2  // Agregar también el ID
+              idTipoEstadoAliasAjenoRam: 2
             };
           }
           return item;
@@ -827,7 +863,6 @@ const ParametrizacionAlias = () => {
                       />
                     </div>
                     <div className="dropdown-items-container">
-                      <div className="dropdown-items">
                         {filteredAliasOptions.map((alias) => (
                           <div 
                             key={alias.id} 
@@ -845,7 +880,6 @@ const ParametrizacionAlias = () => {
                             <span>{alias.id} - {alias.descripcion}</span>
                           </div>
                         ))}
-                      </div>
                       <div 
                         className="dropdown-item select-all"
                         onClick={(e) => {
@@ -1034,7 +1068,6 @@ const ParametrizacionAlias = () => {
                       />
                     </div>
                     <div className="dropdown-items-container">
-                      <div className="dropdown-items">
                         {filteredArticulos.map((articulo) => (
                           <div 
                             key={articulo.id} 
@@ -1052,7 +1085,6 @@ const ParametrizacionAlias = () => {
                             <span>{articulo.id} - {articulo.descripcion}</span>
                           </div>
                         ))}
-                      </div>
                       <div 
                         className="dropdown-item select-all"
                         onClick={(e) => {
@@ -1317,7 +1349,7 @@ const ParametrizacionAlias = () => {
                       <td>{item.descripcionAlias || item.nombreAlias}</td>
                       <td className="text-center">{item.idTipoAlias}</td>
                       <td>{item.idAjeno}</td>
-                      <td>{item.nombreAjeno}</td>
+                      <td>{normalizeText(item.nombreAjeno)}</td>
                       <td>
                         <StatusTag status={item.tipoEstadoCompras?.descripcion} />
                       </td>

@@ -1,4 +1,3 @@
-// backend/node/controllers/tiendaController.js
 const tiendaRepository = require('../repositories/tiendaRepository');
 
 const queryCache = {

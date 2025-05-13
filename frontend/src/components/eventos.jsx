@@ -27,7 +27,6 @@ const Eventos = () => {
   const tableContainerRef = useRef();
   const [openFilter, setOpenFilter] = useState(null);
   
-  // Filter source data
   const [tiposEvento, setTiposEvento] = useState([]);
   const [estadosEvento, setEstadosEvento] = useState([]);
   const [aliases, setAliases] = useState([]);
@@ -220,7 +219,7 @@ const Eventos = () => {
         if (selectedEventos.includes(evento.idEvento)) {
           return {
             ...evento,
-            idEstadoEvento: 2, // Cambiado de 1 a 2 (ACTIVO)
+            idEstadoEvento: 2, // (ACTIVO)
             descripcionEstadoEvento: 'ACTIVO'
           };
         }
@@ -230,7 +229,7 @@ const Eventos = () => {
       await Promise.all(
         selectedEventos.map(idEvento => 
           axios.put(`${BASE_URL}/eventos/${idEvento}/estado`, {
-            idEstadoEvento: 2, // Cambiado de 1 a 2 (ACTIVO)
+            idEstadoEvento: 2, // (ACTIVO)
             idIdioma: languageId
           })
         )
@@ -247,10 +246,8 @@ const Eventos = () => {
 
   const handleExecuteEventos = async () => {
     try {
-      // Show loading indicator or notification
       setLoading(true);
       
-      // Execute each selected event
       await Promise.all(
         selectedEventos.map(idEvento => 
           axios.post(`${BASE_URL}/eventos/${idEvento}/ejecutar`, {
@@ -259,14 +256,11 @@ const Eventos = () => {
         )
       );
       
-      // Refresh the events list to get updated status
       await fetchEventos();
       
-      // Clear selection
       setSelectedEventos([]);
       setSelectAll(false);
       
-      // Show success notification (you could implement a toast notification system)
       console.log('Eventos ejecutados correctamente');
       
     } catch (error) {
@@ -375,7 +369,7 @@ const Eventos = () => {
         setError(null);
         setPaginaActual(0);
         setHasMore(true);
-        setEventos([]); // Añadir esta línea
+        setEventos([]);
         localStorage.removeItem('eventos-cache');
         
         const params = buildQueryParams();
@@ -1132,7 +1126,7 @@ const Eventos = () => {
               <th className="id-column">{t('ID EVENTO')}</th>
               <th className="nombre-column">{t('EVENTO')}</th>
               <th className="tipo-column">{t('TIPO DE EVENTO')}</th>
-              <th className="estado-column" style={{minWidth: '150px', background: '#f0f0f0'}}>{t('ESTADO DEL EVENTO')}</th>
+              <th className="estado-column">{t('ESTADO DEL EVENTO')}</th>
               <th className="tipo-tarea-column">{t('TIPO DE TAREA')}</th>
               <th className="tareas-column">{t('TAREAS ASOCIADAS')}</th>
               <th className="mercados-column">{t('MERCADOS')}</th>
@@ -1172,7 +1166,7 @@ const Eventos = () => {
                   <td>{evento.idEvento}</td>
                   <td>{normalizeText(evento.nombreEvento)}</td>
                   <td>{renderTipoEvento(evento.idTipoEvento, evento.descripcionTipoEvento)}</td>
-                  <td style={{minWidth: '150px', background: '#f5f5f5'}}>{renderEstadoEvento(evento.idEstadoEvento, evento.descripcionEstadoEvento)}</td>
+                  <td>{renderEstadoEvento(evento.idEstadoEvento, evento.descripcionEstadoEvento)}</td>
                   <td>{renderTipoTarea(evento.idTipoTarea, evento.descripcionTipoTarea)}</td>
                   <td>
                     {evento.tareasAsociadas ? (

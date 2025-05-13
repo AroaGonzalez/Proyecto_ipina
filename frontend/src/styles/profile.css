@@ -242,7 +242,6 @@
   border-left: 4px solid #22c55e;
 }
 
-/* Estilos responsive */
 @media (max-width: 768px) {
   .profile-container {
     padding: 1rem;

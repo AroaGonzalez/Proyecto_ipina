@@ -1,4 +1,3 @@
-// backend/node/repositories/aliasRepository.js
 const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
 const { QueryTypes } = require('sequelize');
 
@@ -2866,7 +2865,6 @@ exports.findAliasInfoById = async (idIdioma) => {
 
 exports.createAlias = async (alias, fechaAlta, usuarioAlta) => {
   try {
-    // Primero, obtén el último ID de alias para incrementarlo
     const getLastIdQuery = `
       SELECT MAX(ID_ALIAS) as maxId FROM AJENOS.ALIAS
     `;
@@ -2877,7 +2875,6 @@ exports.createAlias = async (alias, fechaAlta, usuarioAlta) => {
     
     const newAliasId = (lastIdResult[0].maxId || 0) + 1;
     
-    // Ahora incluye el ID_ALIAS en la consulta de inserción
     const query = `
       INSERT INTO AJENOS.ALIAS (
         ID_ALIAS,
@@ -2924,7 +2921,6 @@ exports.createAlias = async (alias, fechaAlta, usuarioAlta) => {
 
 exports.createAliasIdioma = async (idAlias, idiomas) => {
   try {
-    // Verificar existencia previa para evitar duplicados
     const existingRecords = await sequelizeAjenos.query(`
       SELECT ID_ALIAS, ID_IDIOMA 
       FROM AJENOS.ALIAS_IDIOMA 
@@ -2934,7 +2930,6 @@ exports.createAliasIdioma = async (idAlias, idiomas) => {
       type: sequelizeAjenos.QueryTypes.SELECT
     });
     
-    // Filtrar idiomas que ya existen
     const existingIdiomasMap = new Map(existingRecords.map(r => [`${r.ID_ALIAS}-${r.ID_IDIOMA}`, true]));
     const idiomasToInsert = idiomas.filter(idioma => 
       !existingIdiomasMap.has(`${idAlias}-${idioma.idIdioma}`)
@@ -2945,7 +2940,6 @@ exports.createAliasIdioma = async (idAlias, idiomas) => {
       return true;
     }
     
-    // Preparar consultas para idiomas que no existen
     const queries = idiomasToInsert.map(idioma => `
       INSERT INTO AJENOS.ALIAS_IDIOMA (
         ID_ALIAS, 
@@ -2960,7 +2954,6 @@ exports.createAliasIdioma = async (idAlias, idiomas) => {
       )
     `);
     
-    // Ejecutar las consultas en una transacción
     await sequelizeAjenos.transaction(async (t) => {
       for (const query of queries) {
         await sequelizeAjenos.query(query, { transaction: t });
@@ -2976,7 +2969,6 @@ exports.createAliasIdioma = async (idAlias, idiomas) => {
 
 exports.createAliasAjeno = async (idAlias, fechaAlta, usuarioAlta, aliasAjenos) => {
   try {
-    // Preparar consultas para cada ajeno
     const queries = aliasAjenos.map(ajeno => `
       INSERT INTO AJENOS.ALIAS_AJENO (
         ID_ALIAS, 
@@ -2995,7 +2987,6 @@ exports.createAliasAjeno = async (idAlias, fechaAlta, usuarioAlta, aliasAjenos) 
       )
     `);
     
-    // Ejecutar las consultas en una transacción
     await sequelizeAjenos.transaction(async (t) => {
       for (const query of queries) {
         await sequelizeAjenos.query(query, { transaction: t });
@@ -3011,7 +3002,6 @@ exports.createAliasAjeno = async (idAlias, fechaAlta, usuarioAlta, aliasAjenos) 
 
 exports.createAliasAcople = async (idAlias, fechaAlta, usuarioAlta, aliasAcoples) => {
   try {
-    // Preparar consultas para cada acople
     const insertQueries = aliasAcoples.map(acople => `
       INSERT INTO AJENOS.ALIAS_ACOPLE (
         ID_ALIAS, 
@@ -3030,7 +3020,6 @@ exports.createAliasAcople = async (idAlias, fechaAlta, usuarioAlta, aliasAcoples
       )
     `);
     
-    // Obtener IDs de tarea para alias acople
     const idsAlias = aliasAcoples.map(acople => acople.idAlias);
     const idsTareaQuery = `
       SELECT DISTINCT ID_TAREA_RAM FROM AJENOS.ALIAS_ACOPLE_TAREA 
@@ -3042,7 +3031,6 @@ exports.createAliasAcople = async (idAlias, fechaAlta, usuarioAlta, aliasAcoples
     });
     const idsTarea = idsTareaResult.map(row => row.ID_TAREA);
     
-    // Preparar consultas para alias acople tarea
     const tareaQueries = [];
     for (const idTarea of idsTarea) {
       for (const acople of aliasAcoples) {
@@ -3066,7 +3054,6 @@ exports.createAliasAcople = async (idAlias, fechaAlta, usuarioAlta, aliasAcoples
       }
     }
     
-    // Ejecutar todas las consultas en una transacción
     await sequelizeAjenos.transaction(async (t) => {
       for (const query of insertQueries) {
         await sequelizeAjenos.query(query, { transaction: t });
@@ -3091,7 +3078,6 @@ const TipoReglaAmbito = {
 
 exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
   try {
-    // Primero, obtén el último ID de alias_ambito para incrementarlo
     const getLastIdQuery = `
       SELECT MAX(ID_ALIAS_AMBITO) as maxId FROM AJENOS.ALIAS_AMBITO
     `;
@@ -3102,7 +3088,6 @@ exports.createAliasAmbito = async (idAlias, fechaAlta, usuarioAlta) => {
     
     const newAliasAmbitoId = (lastIdResult[0].maxId || 0) + 1;
     
-    // Ahora incluye el ID_ALIAS_AMBITO en la consulta de inserción
     const query = `
       INSERT INTO AJENOS.ALIAS_AMBITO (
         ID_ALIAS_AMBITO,
@@ -3154,7 +3139,6 @@ exports.createStockLocalizacion = async (idAlias, idsLocalizacion, stockMaximo, 
       )
     `);
     
-    // Ejecutar en una transacción
     await sequelizeAjenos.transaction(async (t) => {
       for (const query of queries) {
         await sequelizeAjenos.query(query, { transaction: t });
@@ -3192,7 +3176,6 @@ exports.deleteAliasArticulo = async (idAjeno, idAlias, usuarioBaja, fechaBaja) =
 
 exports.updateAliasAmbitoAplanado = async (idAjeno, idAlias, usuarioModificacion, fechaModificacion) => {
   try {
-    // Primero obtener los IDs que necesitamos actualizar
     const findIdsQuery = `
       SELECT aaa.ID_ALIAS_AMBITO_APLANADO
       FROM AJENOS.ALIAS_AMBITO aa
@@ -3212,7 +3195,6 @@ exports.updateAliasAmbitoAplanado = async (idAjeno, idAlias, usuarioModificacion
       return false;
     }
     
-    // Luego hacer la actualización con los IDs obtenidos
     const updateQuery = `
       UPDATE AJENOS.ALIAS_AMBITO_APLANADO 
       SET USUARIO_MODIFICACION = :usuarioModificacion, 

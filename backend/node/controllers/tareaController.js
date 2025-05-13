@@ -1,4 +1,3 @@
-// backend/node/controllers/tareaController.js
 const tareaRepository = require('../repositories/tareaRepository');
 
 exports.getTareas = async (req, res) => {
@@ -378,16 +377,8 @@ exports.getTareaById = async (req, res) => {
   try {
     const { id } = req.params;
     const { idIdioma = 1 } = req.query;
-    
-    console.log(`[CONTROLLER] Iniciando getTareaById - id: ${id}, idIdioma: ${idIdioma}`);
-    
-    // Limpiar caché para esta tarea específica
-    const { cache } = require('../repositories/tareaRepository');
-    console.log(`[CONTROLLER] Caché limpiada para tarea ${id}`);
-    
+        
     const tareaInfo = await tareaRepository.findTareaInfoUpdate(parseInt(id), parseInt(idIdioma));
-    
-    console.log(`[CONTROLLER] Resultado de findTareaInfoUpdate:`, JSON.stringify(tareaInfo, null, 2));
     
     if (!tareaInfo) {
       console.log(`[CONTROLLER] No se encontró la tarea con id: ${id}`);
@@ -421,7 +412,6 @@ exports.updateTarea = async (req, res) => {
     
     console.log(`[CONTROLLER] Iniciando updateTarea - id: ${id}`);
     
-    // Actualizar nombre de la tarea
     await tareaRepository.updateNombreTarea(
       parseInt(id), 
       request.nombreTarea, 
@@ -429,7 +419,6 @@ exports.updateTarea = async (req, res) => {
       fechaModificacion
     );
     
-    // Actualizar descripción de la tarea
     await tareaRepository.updateDescripcionTarea(
       parseInt(id), 
       request.descripcion, 
@@ -437,7 +426,6 @@ exports.updateTarea = async (req, res) => {
       fechaModificacion
     );
     
-    // Actualizar aliases de la tarea
     await tareaRepository.updateTareaAlias(
       parseInt(id), 
       request.alias || request.createTareaAlias, 
@@ -445,7 +433,6 @@ exports.updateTarea = async (req, res) => {
       fechaModificacion
     );
     
-    // Obtener el ID del ámbito de la tarea
     const idTareaAmbito = await tareaRepository.findTareaAmbitoByIdTarea(parseInt(id));
     
     if (!idTareaAmbito) {
@@ -456,7 +443,6 @@ exports.updateTarea = async (req, res) => {
     
     let tareaAmbitoAplanados = [];
     
-    // Obtener IDs de localización
     const idsLocalizacionCompra = request.idsLocalizacionCompra || 
       (request.createTareaAmbito && request.createTareaAmbito.createTareaAmbitoAplanado 
         ? [...new Set(request.createTareaAmbito.createTareaAmbitoAplanado.map(item => item.idLocalizacionCompra))] 

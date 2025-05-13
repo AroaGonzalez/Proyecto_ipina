@@ -1,4 +1,3 @@
-// backend/node/repositories/tareaRepository.js
 const { sequelizeAjenos } = require('../utils/database');
 
 const CACHE_DURATION = 30 * 1000;
@@ -778,13 +777,13 @@ exports.findTareaAmbitoAplanadoDistribution = async (ambitoAplanados, idTareaAmb
       AND a.FECHA_BAJA IS NULL 
       AND aaa.FECHA_BAJA IS NULL
       AND EXISTS (
-          SELECT 1
-          FROM AJENOS.ALIAS_AMBITO aa2
-          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa2 ON aa2.ID_ALIAS_AMBITO = aaa2.ID_ALIAS_AMBITO
-          WHERE aa2.ID_ALIAS = ac.ID_ALIAS_ACOPLE
-          AND aaa2.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA
-          AND aaa2.FECHA_BAJA IS NULL 
-          AND aa2.FECHA_BAJA IS NULL
+        SELECT 1
+        FROM AJENOS.ALIAS_AMBITO aa2
+        INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa2 ON aa2.ID_ALIAS_AMBITO = aaa2.ID_ALIAS_AMBITO
+        WHERE aa2.ID_ALIAS = ac.ID_ALIAS_ACOPLE
+        AND aaa2.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA
+        AND aaa2.FECHA_BAJA IS NULL 
+        AND aa2.FECHA_BAJA IS NULL
       )
     `;
     
@@ -966,8 +965,8 @@ exports.deleteTareas = async (idsTarea, usuarioBaja, fechaBaja) => {
     const query = `
       UPDATE AJENOS.TAREA_RAM 
       SET USUARIO_BAJA = :usuarioBaja, 
-          FECHA_BAJA = :fechaBaja, 
-          ID_TIPO_ESTADO_TAREA_RAM = 3
+        FECHA_BAJA = :fechaBaja, 
+        ID_TIPO_ESTADO_TAREA_RAM = 3
       WHERE ID_TAREA_RAM IN (:idsTarea)
     `;
     
@@ -1035,8 +1034,8 @@ exports.updateEvento = async (idEvento, usuarioBaja, fechaBaja) => {
     const query = `
       UPDATE AJENOS.EVENTO_RAM 
       SET USUARIO_MODIFICACION = :usuarioBaja, 
-          FECHA_MODIFICACION = :fechaBaja, 
-          ID_TIPO_ESTADO_EVENTO_RAM = 1
+        FECHA_MODIFICACION = :fechaBaja, 
+        ID_TIPO_ESTADO_EVENTO_RAM = 1
       WHERE ID_EVENTO_RAM = :idEvento
     `;
     
@@ -1285,16 +1284,13 @@ const findAliasWithAcoplesByTareaId = async (idTarea, idIdioma = 1) => {
   }
 };
 
-// backend/node/repositories/tareaRepository.js (métodos adicionales para editar tarea)
-
-// Actualizar nombre de tarea
 exports.updateNombreTarea = async (idTarea, nombreTarea, usuarioModificacion, fechaModificacion) => {
   try {
     const query = `
       UPDATE AJENOS.TAREA_RAM 
       SET NOMBRE = :nombreTarea, 
-          USUARIO_MODIFICACION = :usuarioModificacion, 
-          FECHA_MODIFICACION = :fechaModificacion
+        USUARIO_MODIFICACION = :usuarioModificacion, 
+        FECHA_MODIFICACION = :fechaModificacion
       WHERE ID_TAREA_RAM = :idTarea
     `;
     
@@ -1315,14 +1311,13 @@ exports.updateNombreTarea = async (idTarea, nombreTarea, usuarioModificacion, fe
   }
 };
 
-// Actualizar descripción de tarea
 exports.updateDescripcionTarea = async (idTarea, descripcion, usuarioModificacion, fechaModificacion) => {
   try {
     const query = `
       UPDATE AJENOS.TAREA_RAM 
       SET DESCRIPCION = :descripcion, 
-          USUARIO_MODIFICACION = :usuarioModificacion, 
-          FECHA_MODIFICACION = :fechaModificacion
+        USUARIO_MODIFICACION = :usuarioModificacion, 
+        FECHA_MODIFICACION = :fechaModificacion
       WHERE ID_TAREA_RAM = :idTarea
     `;
     
@@ -1343,7 +1338,6 @@ exports.updateDescripcionTarea = async (idTarea, descripcion, usuarioModificacio
   }
 };
 
-// Encontrar el ID del ámbito de tarea
 exports.findTareaAmbitoByIdTarea = async (idTarea) => {
   try {
     const query = `
@@ -1365,17 +1359,14 @@ exports.findTareaAmbitoByIdTarea = async (idTarea) => {
   }
 };
 
-// Actualizar aliases de tarea
 exports.updateTareaAlias = async (idTarea, createTareaAlias, usuarioModificacion, fechaModificacion) => {
   try {
     if (!createTareaAlias || !Array.isArray(createTareaAlias) || createTareaAlias.length === 0) {
       return;
     }
     
-    // Obtener aliases existentes
     const existingAliases = await findTareaAliasByIdTarea(idTarea);
     
-    // Identificar aliases nuevos para agregar
     const newAliases = createTareaAlias.filter(alias => 
       !existingAliases.some(existing => 
         existing.idAlias === alias.idAlias && 
@@ -1383,14 +1374,12 @@ exports.updateTareaAlias = async (idTarea, createTareaAlias, usuarioModificacion
       )
     );
     
-    // Identificar aliases existentes a eliminar
     const aliasesToRemove = existingAliases.filter(existing => 
       !createTareaAlias.some(alias => 
         alias.idAlias === existing.idAlias
       )
     );
     
-    // Identificar aliases a restaurar (previamente dados de baja)
     const aliasesToRestore = existingAliases.filter(existing => 
       createTareaAlias.some(alias => 
         alias.idAlias === existing.idAlias && 
@@ -1398,18 +1387,15 @@ exports.updateTareaAlias = async (idTarea, createTareaAlias, usuarioModificacion
       )
     );
     
-    // Restaurar aliases dados de baja
     if (aliasesToRestore.length > 0) {
       const idsToRestore = aliasesToRestore.map(alias => alias.idAlias);
       await restoreAliasTarea(idsToRestore, idTarea, usuarioModificacion, fechaModificacion);
     }
     
-    // Agregar nuevos aliases
     if (newAliases.length > 0) {
       await insertAliasTarea(idTarea, newAliases, usuarioModificacion, fechaModificacion);
     }
     
-    // Eliminar aliases
     if (aliasesToRemove.length > 0) {
       await deleteAliasTarea(aliasesToRemove, usuarioModificacion, fechaModificacion);
     }
@@ -1421,14 +1407,13 @@ exports.updateTareaAlias = async (idTarea, createTareaAlias, usuarioModificacion
   }
 };
 
-// Funciones auxiliares para updateTareaAlias
 const findTareaAliasByIdTarea = async (idTarea) => {
   try {
     const query = `
       SELECT at.ID_ALIAS as idAlias, at.ID_TAREA_RAM as idTarea, 
-             at.ID_TIPO_ALIAS as idTipoAlias, 
-             at.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
-             at.FECHA_BAJA as fechaBaja
+        at.ID_TIPO_ALIAS as idTipoAlias, 
+        at.ID_TIPO_CONEXION_ORIGEN_DATO_ALIAS as idTipoConexionOrigenDatoAlias,
+        at.FECHA_BAJA as fechaBaja
       FROM AJENOS.ALIAS_TAREA at
       WHERE at.ID_TAREA_RAM = :idTarea
     `;
@@ -1450,9 +1435,9 @@ const restoreAliasTarea = async (idsAlias, idTarea, usuarioModificacion, fechaMo
     const query = `
       UPDATE AJENOS.ALIAS_TAREA 
       SET FECHA_BAJA = NULL, 
-          USUARIO_BAJA = NULL,
-          USUARIO_MODIFICACION = :usuarioModificacion,
-          FECHA_MODIFICACION = :fechaModificacion
+        USUARIO_BAJA = NULL,
+        USUARIO_MODIFICACION = :usuarioModificacion,
+        FECHA_MODIFICACION = :fechaModificacion
       WHERE ID_TAREA_RAM = :idTarea 
       AND ID_ALIAS IN (:idsAlias)
     `;
@@ -1519,7 +1504,7 @@ const deleteAliasTarea = async (aliases, usuarioBaja, fechaBaja) => {
     const query = `
       UPDATE AJENOS.ALIAS_TAREA 
       SET FECHA_BAJA = :fechaBaja, 
-          USUARIO_BAJA = :usuarioBaja
+        USUARIO_BAJA = :usuarioBaja
       WHERE ID_TAREA_RAM IN (:idsTarea) 
       AND ID_ALIAS IN (:idsAlias)
     `;
@@ -1549,7 +1534,6 @@ exports.findTareaAmbitoAplanadoDistributionEdit = async (idsLocalizacion, idTare
     
     const resultados = [];
     
-    // Principales
     const principalesQuery = `
       SELECT DISTINCT 
         aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
@@ -1583,7 +1567,6 @@ exports.findTareaAmbitoAplanadoDistributionEdit = async (idsLocalizacion, idTare
     
     resultados.push(...principales);
     
-    // Compartidos
     const compartidosQuery = `
       SELECT DISTINCT 
         aaa.ID_LOCALIZACION_COMPRA as idLocalizacionCompra,
@@ -1606,13 +1589,13 @@ exports.findTareaAmbitoAplanadoDistributionEdit = async (idsLocalizacion, idTare
       AND a.FECHA_BAJA IS NULL 
       AND aaa.FECHA_BAJA IS NULL
       AND EXISTS (
-          SELECT 1
-          FROM AJENOS.ALIAS_AMBITO aa2
-          INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa2 ON aa2.ID_ALIAS_AMBITO = aaa2.ID_ALIAS_AMBITO
-          WHERE aa2.ID_ALIAS = ac.ID_ALIAS_ACOPLE
-          AND aaa2.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA
-          AND aaa2.FECHA_BAJA IS NULL 
-          AND aa2.FECHA_BAJA IS NULL
+        SELECT 1
+        FROM AJENOS.ALIAS_AMBITO aa2
+        INNER JOIN AJENOS.ALIAS_AMBITO_APLANADO aaa2 ON aa2.ID_ALIAS_AMBITO = aaa2.ID_ALIAS_AMBITO
+        WHERE aa2.ID_ALIAS = ac.ID_ALIAS_ACOPLE
+        AND aaa2.ID_LOCALIZACION_COMPRA = aaa.ID_LOCALIZACION_COMPRA
+        AND aaa2.FECHA_BAJA IS NULL 
+        AND aa2.FECHA_BAJA IS NULL
       )
     `;
     
@@ -1641,7 +1624,6 @@ exports.findTareaAmbitoAplanadoCountEdit = async (idsLocalizacion, idTareaAmbito
     
     const resultados = [];
     
-    // Principales
     const principalesQuery = `
       SELECT DISTINCT 
         a.ID_ALIAS as idAlias,
@@ -1674,7 +1656,6 @@ exports.findTareaAmbitoAplanadoCountEdit = async (idsLocalizacion, idTareaAmbito
     
     resultados.push(...principales);
     
-    // Acoples
     const acoplesQuery = `
       SELECT DISTINCT 
         aAcople.ID_ALIAS as idAlias,
@@ -1725,10 +1706,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
       return;
     }
     
-    console.log(`Datos recibidos para updateTareaAmbitoAplanado: idTareaAmbito=${idTareaAmbito}, idTarea=${idTarea}, idTipoTarea=${idTipoTarea}`);
-    console.log(`Ámbitos a procesar: ${JSON.stringify(createTareaAmbito.createTareaAmbitoAplanado)}`);
-    
-    // Obtener los ámbitos existentes
     const existingAmbitos = await exports.findTareaAmbitoAplanadoByIdTareaAmbito(idTareaAmbito);
     console.log(`Ámbitos existentes encontrados: ${existingAmbitos.length}`);
     
@@ -1740,7 +1717,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
     
     if (idTipoTarea === 2) { // COUNT type
       
-      // Identificar elementos añadidos
       added = createTareaAmbito.createTareaAmbitoAplanado.filter(newAmbito => 
         !existingAmbitos.some(existing => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1749,7 +1725,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
         )
       );
       
-      // Identificar elementos eliminados
       removed = existingAmbitos.filter(existing => 
         !createTareaAmbito.createTareaAmbitoAplanado.some(newAmbito => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1757,7 +1732,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
         )
       );
       
-      // Identificar elementos restaurados
       restored = existingAmbitos.filter(existing => 
         createTareaAmbito.createTareaAmbitoAplanado.some(newAmbito => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1768,7 +1742,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
       
     } else if (idTipoTarea === 1) { // DISTRIBUTION type
       
-      // Identificar elementos añadidos
       added = createTareaAmbito.createTareaAmbitoAplanado.filter(newAmbito => 
         !existingAmbitos.some(existing => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1779,7 +1752,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
         )
       );
       
-      // Identificar elementos eliminados
       removed = existingAmbitos.filter(existing => 
         !createTareaAmbito.createTareaAmbitoAplanado.some(newAmbito => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1789,7 +1761,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
         )
       );
       
-      // Identificar elementos restaurados
       restored = existingAmbitos.filter(existing => 
         createTareaAmbito.createTareaAmbitoAplanado.some(newAmbito => 
           existing.idAlias === newAmbito.idAlias &&
@@ -1801,7 +1772,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
       );
     }
     
-    // Añadir nuevos elementos
     if (added.length > 0) {
       console.log(`Añadiendo ${added.length} registros nuevos de ámbito aplanado`);
       await exports.createTareaAmbitoAplanado(
@@ -1812,7 +1782,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
       );
     }
     
-    // Eliminar elementos
     if (removed.length > 0) {
       console.log(`Eliminando ${removed.length} registros de ámbito aplanado`);
       const idsToRemove = removed.map(item => item.idTareaAmbitoAplanado);
@@ -1823,7 +1792,6 @@ exports.updateTareaAmbitoAplanado = async (idTareaAmbito, idTarea, idTipoTarea, 
       );
     }
     
-    // Restaurar elementos
     if (restored.length > 0) {
       console.log(`Restaurando ${restored.length} registros de ámbito aplanado`);
       const idsToRestore = restored.map(item => item.idTareaAmbitoAplanado);

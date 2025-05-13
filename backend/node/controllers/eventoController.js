@@ -1,4 +1,3 @@
-// backend/node/controllers/eventoController.js
 const eventoRepository = require('../repositories/eventoRepository');
 
 exports.getEventosFilter = async (req, res) => {
@@ -90,123 +89,123 @@ function parseIntArray(param) {
 }
 
 exports.getEventos = async (req, res) => {
-    try {
-      const { idsTarea } = req.query;
-      
-      const idsTareaArray = idsTarea ? parseIntArray(idsTarea) : null;
+  try {
+    const { idsTarea } = req.query;
+    
+    const idsTareaArray = idsTarea ? parseIntArray(idsTarea) : null;
 
-      const result = await eventoRepository.findEventosByTarea(idsTareaArray);
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error en getEventosByTarea:', error);
-      res.status(500).json({ message: 'Error del servidor', error: error.message });
-    }
+    const result = await eventoRepository.findEventosByTarea(idsTareaArray);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getEventosByTarea:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
 };
 
 exports.getTiposEstadoEvento = async (req, res) => {
-    try {
-      const { idIdioma = 1 } = req.query;
-      
-      const result = await eventoRepository.getTiposEstadoEvento(parseInt(idIdioma));
+  try {
+    const { idIdioma = 1 } = req.query;
+    
+    const result = await eventoRepository.getTiposEstadoEvento(parseInt(idIdioma));
 
-      res.json(result);
-    } catch (error) {
-      console.error('Error en getTiposEstadoEvento:', error);
-      res.status(500).json({ message: 'Error del servidor', error: error.message });
-    }
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getTiposEstadoEvento:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
 };
 
 exports.getTiposEvento = async (req, res) => {
-    try {
-      const { idIdioma = 1 } = req.query;
-      
-      const result = await eventoRepository.getTiposEvento(parseInt(idIdioma));
-      console.log('Tipos de evento obtenidos:', result.length);
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error en getTiposEvento:', error);
-      res.status(500).json({ message: 'Error del servidor', error: error.message });
-    }
+  try {
+    const { idIdioma = 1 } = req.query;
+    
+    const result = await eventoRepository.getTiposEvento(parseInt(idIdioma));
+    console.log('Tipos de evento obtenidos:', result.length);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getTiposEvento:', error);
+    res.status(500).json({ message: 'Error del servidor', error: error.message });
+  }
 };
 
 exports.updateEventoEstado = async (req, res) => {
-    try {
-      const { idEstadoEvento } = req.body;
-      const idsEvento = req.params.id ? [parseInt(req.params.id)] : parseIntArray(req.body.idsEvento);
-      
-      const usuario = req.user?.username || 'sistema';
-      
-      if (!idsEvento || idsEvento.length === 0) {
-        return res.status(400).json({ 
-          message: 'Se requiere al menos un ID de evento' 
-        });
-      }
-      
-      if (!idEstadoEvento) {
-        return res.status(400).json({ 
-          message: 'Se requiere el ID del tipo de estado del evento' 
-        });
-      }
-      
-      console.log(`Actualizando estado de eventos ${idsEvento.join(', ')} a ${idEstadoEvento}`);
-      
-      const result = await eventoRepository.updateEventoEstado(
-        idsEvento,
-        idEstadoEvento,
-        usuario
-      );
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error en updateEventoEstado:', error);
-      res.status(500).json({ 
-        message: 'Error al actualizar el estado del evento', 
-        error: error.message 
+  try {
+    const { idEstadoEvento } = req.body;
+    const idsEvento = req.params.id ? [parseInt(req.params.id)] : parseIntArray(req.body.idsEvento);
+    
+    const usuario = req.user?.username || 'sistema';
+    
+    if (!idsEvento || idsEvento.length === 0) {
+      return res.status(400).json({ 
+        message: 'Se requiere al menos un ID de evento' 
       });
     }
+    
+    if (!idEstadoEvento) {
+      return res.status(400).json({ 
+        message: 'Se requiere el ID del tipo de estado del evento' 
+      });
+    }
+    
+    console.log(`Actualizando estado de eventos ${idsEvento.join(', ')} a ${idEstadoEvento}`);
+    
+    const result = await eventoRepository.updateEventoEstado(
+      idsEvento,
+      idEstadoEvento,
+      usuario
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en updateEventoEstado:', error);
+    res.status(500).json({ 
+      message: 'Error al actualizar el estado del evento', 
+      error: error.message 
+    });
+  }
 };
 
 exports.getTareasByTipo = async (req, res) => {
-    try {
-      const { idIdioma = 1, idTipoTarea } = req.query;
-      
-      if (!idTipoTarea) {
-        return res.status(400).json({ 
-          message: 'Se requiere el tipo de tarea' 
-        });
-      }
-      
-      const result = await eventoRepository.findTareasByTipoTarea(
-        parseInt(idIdioma),
-        parseInt(idTipoTarea)
-      );
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error en getTareasByTipo:', error);
-      res.status(500).json({ 
-        message: 'Error al obtener las tareas', 
-        error: error.message 
+  try {
+    const { idIdioma = 1, idTipoTarea } = req.query;
+    
+    if (!idTipoTarea) {
+      return res.status(400).json({ 
+        message: 'Se requiere el tipo de tarea' 
       });
     }
+    
+    const result = await eventoRepository.findTareasByTipoTarea(
+      parseInt(idIdioma),
+      parseInt(idTipoTarea)
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getTareasByTipo:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener las tareas', 
+      error: error.message 
+    });
+  }
 };
 
 exports.getTiposTarea = async (req, res) => {
-    try {
-      const { idIdioma = 1 } = req.query;
-      
-      const result = await eventoRepository.getTiposTarea(parseInt(idIdioma));
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error en getTiposTarea:', error);
-      res.status(500).json({ 
-        message: 'Error al obtener tipos de tarea', 
-        error: error.message 
-      });
-    }
+  try {
+    const { idIdioma = 1 } = req.query;
+    
+    const result = await eventoRepository.getTiposTarea(parseInt(idIdioma));
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error en getTiposTarea:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener tipos de tarea', 
+      error: error.message 
+    });
+  }
 };
 
 exports.createEvento = async (req, res) => {
