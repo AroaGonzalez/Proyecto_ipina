@@ -1,4 +1,3 @@
-// controllers/inventarioController.js
 const ajenoRamRepository = require('../repositories/ajenoRamRepository.js');
 
 exports.getInventario = async (req, res) => {

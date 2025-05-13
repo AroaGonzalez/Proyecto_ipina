@@ -1335,7 +1335,6 @@ const EdicionAlias = () => {
                 {openDropdown === 'idiomas' && (
                   <div className="idiomas-dropdown-menu">
                     <div className="idiomas-dropdown-search">
-                      <FaSearch className="search-icon" />
                       <input 
                         type="text" 
                         placeholder={t('Buscar idioma...')}
@@ -1395,7 +1394,7 @@ const EdicionAlias = () => {
                         <div className="custom-checkbox">
                           {checkAll && <FaCheck className="checkbox-icon" />}
                         </div>
-                        <span>{t(' Seleccionar todo')}</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -1457,7 +1456,7 @@ const EdicionAlias = () => {
         </div>
         <div className="edicion-alias-section">
           <div className="paso-title">
-            <span>{t('PASO 2')}</span> - <span className="paso-descripcion">{t('ARTÍCULOS*')}</span>
+            <span>{t('PASO 2')}</span> - <span className="paso-descripcion">{t('ARTÍCULOS')}</span>
             <FaCircle className="paso-icon completed" />
           </div>
           <div className="paso-content">
@@ -1541,7 +1540,7 @@ const EdicionAlias = () => {
                           <div className="custom-checkbox">
                             {checkAllArticulos && <FaCheck className="checkbox-icon" />}
                           </div>
-                          <span>{t(' Seleccionar todo')}</span>
+                          <span>{t('Seleccionar todo')}</span>
                         </div>
                       </>
                     )}
@@ -1771,7 +1770,7 @@ const EdicionAlias = () => {
                           <FaCheck className="checkbox-icon" />
                         }
                       </div>
-                      <span>{t(' Seleccionar todo')}</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 </div>
@@ -1911,7 +1910,7 @@ const EdicionAlias = () => {
                           )
                         ) && <FaCheck className="checkbox-icon" />}
                       </div>
-                      <span>{t(' Seleccionar todo')}</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 </div>
@@ -2044,7 +2043,7 @@ const EdicionAlias = () => {
                           )
                         ) && <FaCheck className="checkbox-icon" />}
                       </div>
-                      <span>{t(' Seleccionar todo')}</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ import '../styles/consultaTienda.css';
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
+  const { t } = useTranslation();  
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const selectRef = useRef(null);
@@ -54,19 +55,21 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
     : uniqueOptions;
 
     const getDisplayValue = () => {
-      if (!value || (Array.isArray(value) && value.length === 0)) return 'Seleccionar';
-   
+      const { t } = useTranslation();
+      
+      if (!value || (Array.isArray(value) && value.length === 0)) return t('Seleccionar');
+
       if (Array.isArray(value)) {
-        if (value.length === uniqueOptions.length) return 'Seleccionar todo';
+        if (value.length === uniqueOptions.length) return t('Seleccionar todo');
         if (value.length === 1) {
           const selectedOption = uniqueOptions.find(option => option.id.toString() === value[0]);
-          return selectedOption ? selectedOption.descripcion : 'Seleccionar';
+          return selectedOption ? selectedOption.descripcion : t('Seleccionar');
         }
-        return `${value.length} seleccionados`;
+        return t('{{count}} seleccionados', { count: value.length });
       }
-   
+
       const selectedOption = uniqueOptions.find(option => option.id.toString() === value);
-      return selectedOption ? selectedOption.descripcion : 'Seleccionar';
+      return selectedOption ? selectedOption.descripcion : t('Seleccionar');
     };
 
     const toggleDropdown = () => {
@@ -168,7 +171,7 @@ const CustomSelect = ({ id, options, value, onChange, disabled = false }) => {
                   }}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <span>Seleccionar todo</span>
+                <span>{t('Seleccionar todo')}</span>
             </div>
           </div>
         </div>
@@ -519,11 +522,21 @@ const ConsultaTienda = () => {
     if (!estado || estado === 'Sin estado') return 'estado-desconocido';
     
     const estadoLower = estado.toLowerCase();
+    
     if (estadoLower.includes('activ')) return 'estado-activa';
     if (estadoLower.includes('reform')) return 'estado-reforma';
     if (estadoLower.includes('abiert')) return 'estado-abierta';
     if (estadoLower.includes('cerrad')) return 'estado-cerrada';
     if (estadoLower.includes('pausad')) return 'estado-pausada';
+    
+    if (estadoLower.includes('active')) return 'estado-activa';
+    if (estadoLower.includes('reform')) return 'estado-reforma';
+    if (estadoLower.includes('open')) return 'estado-abierta';
+    if (estadoLower.includes('closed')) return 'estado-cerrada';
+    if (estadoLower.includes('permanently closed')) return 'estado-cerrada';
+    if (estadoLower.includes('paused')) return 'estado-pausada';
+    if (estadoLower.includes('in reform')) return 'estado-reforma';
+    
     return 'estado-otro';
   };
 
@@ -633,7 +646,7 @@ const ConsultaTienda = () => {
           <div className="filtros-tienda">
             <div className="filtro-row-tienda">
               <div className="filtro-column-tienda">
-                <label className="filtro-label-tienda">Id o Mercado</label>
+                <label className="filtro-label-tienda">{t('Id o Mercado')}</label>
                 <CustomSelect
                   id="mercados"
                   options={mercados}
@@ -644,7 +657,7 @@ const ConsultaTienda = () => {
               </div>
 
               <div className="filtro-column-tienda">
-                <label className="filtro-label-tienda">Id Localización</label>
+                <label className="filtro-label-tienda">{t('Id Localización')}</label>
                 <input 
                   type="text" 
                   className="filtro-input-tienda"
@@ -654,7 +667,7 @@ const ConsultaTienda = () => {
               </div>
 
               <div className="filtro-column-tienda">
-                <label className="filtro-label-tienda">Id o Grupo de Localizaciones</label>
+                <label className="filtro-label-tienda">{t('Id o Grupo de Localizaciones')}</label>
                 <CustomSelect
                   id="gruposLocalizacion"
                   options={gruposLocalizacion}
@@ -665,7 +678,7 @@ const ConsultaTienda = () => {
               </div>
 
               <div className="filtro-column-tienda">
-                <label className="filtro-label-tienda">Id o Grupo Cadena (T6)</label>
+                <label className="filtro-label-tienda">{t('Id o Grupo Cadena (T6)')}</label>
                 <CustomSelect
                   id="gruposCadena"
                   options={gruposCadena}
@@ -676,7 +689,7 @@ const ConsultaTienda = () => {
               </div>
 
               <div className="filtro-column-tienda">
-                <label className="filtro-label-tienda">Id o Cadena</label>
+                <label className="filtro-label-tienda">{t('Id o Cadena')}</label>
                 <CustomSelect
                   id="cadenas"
                   options={cadenas}
@@ -692,7 +705,7 @@ const ConsultaTienda = () => {
                   onClick={handleSearch}
                   disabled={loading}
                 >
-                  <FaSearch /> BUSCAR
+                  <FaSearch /> {t('BUSCAR')}
                 </button>
               </div>
             </div>

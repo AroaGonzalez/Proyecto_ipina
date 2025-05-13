@@ -773,10 +773,10 @@ const ConsultaStocks = () => {
   return (
     <div className="consulta-stocks-container">
       <div className="consulta-stocks-header">
-        <h1 className="consulta-stocks-title">CONSULTA STOCKS</h1>
+        <h1 className="consulta-stocks-title">{t('CONSULTA STOCKS')}</h1>
         <div className="filter-toggle">
           <button className="filter-button" onClick={toggleFilters}>
-            <FaFilter /> {showFilters ? 'OCULTAR FILTROS' : 'MOSTRAR FILTROS'}
+            <FaFilter /> {showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}
           </button>
         </div>
       </div>
@@ -1139,7 +1139,7 @@ const ConsultaStocks = () => {
                 onClick={handleSearch}
                 disabled={loading}
               >
-                BUSCAR
+                {t('BUSCAR')}
               </button>
             </div>
           </div>

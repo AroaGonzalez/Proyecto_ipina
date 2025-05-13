@@ -289,11 +289,29 @@ margin-top: 0;
 }
 
 .idiomas-dropdown-search {
-padding: 10px;
-border-bottom: 1px solid #000;
-display: flex;
-align-items: center;
-background-color: #fff;
+width: 90%;
+border: 1px solid #ddd;
+border-radius: 0;
+font-size: 14px;
+color: #000;
+}
+
+.status-tag {
+ display: inline-block;
+ padding: 4px 8px;
+ border-radius: 4px;
+ font-size: 12px;
+ font-weight: 600;
+ text-align: center;
+ color: white;
+}
+
+.status-active {
+ background-color: #0d9f1e;
+}
+
+.status-paused {
+ background-color: #717171;
 }
 
 .idiomas-dropdown-search input {

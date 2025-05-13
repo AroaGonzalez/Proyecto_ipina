@@ -96,19 +96,21 @@ const ParametrizacionAlias = () => {
   }, [languageId]);
 
   const StatusTag = ({ status, type }) => {
-      let className = 'status-tag';
-      
-      const normalizedStatus = status ? status.toUpperCase().trim() : '';
-      
-      if (normalizedStatus === '04.BLOQUEADO') {
-        className += ' status-bloqueado';
-      } else if (normalizedStatus === 'PAUSADO') {
-        className += ' status-paused';
-      } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO') {
-        className += ' status-active';
-      }
-      
-      return <div className={className}>{status || '-'}</div>;
+    let className = 'status-tag';
+    
+    const normalizedStatus = status ? status.toUpperCase().trim() : '';
+    
+    if (normalizedStatus === '04.BLOQUEADO' || normalizedStatus === '04.LOCKED' || normalizedStatus === 'LOCKED') {
+      className += ' status-bloqueado';
+    } else if (normalizedStatus === 'PAUSADO' || normalizedStatus === 'PAUSED') {
+      className += ' status-paused';
+    } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO'  || normalizedStatus === '02.ACTIVE'  || normalizedStatus === 'ACTIVE') {
+      className += ' status-active';
+    } else if (normalizedStatus === 'PRODUCCIÓN' || normalizedStatus === 'PRODUCTION') {
+      className += ' status-produccion';
+    }
+    
+    return <div className={className}>{status || '-'}</div>;
   };
 
   useEffect(() => {
@@ -773,12 +775,12 @@ const ParametrizacionAlias = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('tipoAlias')}
               >
-                <span className="filter-label">Tipo de Alias</span>
+                <span className="filter-label">{t('Tipo de Alias')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedTiposAlias.length > 0 
-                      ? `${selectedTiposAlias.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedTiposAlias.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -787,7 +789,7 @@ const ParametrizacionAlias = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar tipo de alias..." 
+                        placeholder={t("Buscar tipo de alias...")} 
                         value={tipoAliasSearchText}
                         onChange={(e) => handleSearchTextChange(e, setTipoAliasSearchText)}
                         onClick={(e) => e.stopPropagation()}
@@ -829,7 +831,7 @@ const ParametrizacionAlias = () => {
                           checked={selectedTiposAlias.length === tiposAlias.length && tiposAlias.length > 0}
                           readOnly
                         />
-                        <span>Seleccionar todo</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -842,12 +844,12 @@ const ParametrizacionAlias = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('nombreAlias')}
               >
-                <span className="filter-label">Id o Nombre de Alias</span>
+                <span className="filter-label">{t('Id o Nombre de Alias')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedNombresAlias.length > 0 
-                      ? `${selectedNombresAlias.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedNombresAlias.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -856,7 +858,7 @@ const ParametrizacionAlias = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar alias..." 
+                        placeholder={t("Buscar alias...")} 
                         value={searchText}
                         onChange={(e) => handleSearchTextChange(e, setSearchText)}
                         onClick={(e) => e.stopPropagation()}
@@ -896,7 +898,7 @@ const ParametrizacionAlias = () => {
                           checked={selectedNombresAlias.length === aliasOptions.length && aliasOptions.length > 0}
                           readOnly
                         />
-                        <span>Seleccionar todo</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -909,12 +911,12 @@ const ParametrizacionAlias = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('estadoAlias')}
               >
-                <span className="filter-label">Estado del Alias</span>
+                <span className="filter-label">{t('Estado del Alias')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedEstadosAlias.length > 0 
-                      ? `${selectedEstadosAlias.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedEstadosAlias.length }) 
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -923,7 +925,7 @@ const ParametrizacionAlias = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar estado..." 
+                        placeholder={t("Buscar estado...")}
                         value={estadoAliasSearchText}
                         onChange={(e) => handleSearchTextChange(e, setEstadoAliasSearchText)}
                         onClick={(e) => e.stopPropagation()}
@@ -965,7 +967,7 @@ const ParametrizacionAlias = () => {
                           checked={selectedEstadosAlias.length === estadosAlias.length && estadosAlias.length > 0}
                           readOnly
                         />
-                        <span>Seleccionar todo</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -978,12 +980,12 @@ const ParametrizacionAlias = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('estacionalidad')}
               >
-                <span className="filter-label">Estacionalidad</span>
+                <span className="filter-label">{t('Estacionalidad')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedEstacionalidades.length > 0 
-                      ? `${selectedEstacionalidades.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedEstacionalidades.length})
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -992,7 +994,7 @@ const ParametrizacionAlias = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar estacionalidad..." 
+                        placeholder={t("Buscar estacionalidad...")} 
                         value={estacionalidadSearchText}
                         onChange={(e) => handleSearchTextChange(e, setEstacionalidadSearchText)}
                         onClick={(e) => e.stopPropagation()}
@@ -1034,7 +1036,7 @@ const ParametrizacionAlias = () => {
                           checked={selectedEstacionalidades.length === estacionalidades.length && estacionalidades.length > 0}
                           readOnly
                         />
-                        <span>Seleccionar todo</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -1047,12 +1049,12 @@ const ParametrizacionAlias = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('articulos')}
               >
-                <span className="filter-label">Id o Artículos</span>
+                <span className="filter-label">{t('Id o Artículos')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedArticulos.length > 0 
-                      ? `${selectedArticulos.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedArticulos.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -1061,7 +1063,7 @@ const ParametrizacionAlias = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar artículos..." 
+                        placeholder={t("Buscar artículos...")}
                         value={articulosSearchText}
                         onChange={(e) => handleSearchTextChange(e, setArticulosSearchText)}
                         onClick={(e) => e.stopPropagation()}
@@ -1101,7 +1103,7 @@ const ParametrizacionAlias = () => {
                           checked={selectedArticulos.length === articulos.length && articulos.length > 0}
                           readOnly
                         />
-                        <span>Seleccionar todo</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -1167,8 +1169,15 @@ const ParametrizacionAlias = () => {
           <div className="selection-info">
             <span>
               {activeTab === 'ALIAS' 
-                ? `Seleccionados ${selectedItems.length} resultados de ${totalElements} encontrados` 
-                : `Seleccionados ${selectedItemsAjenos.length} resultados de ${totalElementsAjenos} encontrados`}
+                ? t('Seleccionados {{count}} resultados de {{total}} encontrados', { 
+                    count: selectedItems.length, 
+                    total: totalElements 
+                  })
+                : t('Seleccionados {{count}} resultados de {{total}} encontrados', { 
+                    count: selectedItemsAjenos.length, 
+                    total: totalElementsAjenos 
+                  })
+              }
             </span>
           </div>
           <div className="selection-actions">
@@ -1181,7 +1190,7 @@ const ParametrizacionAlias = () => {
                   <FaTrash className="action-icon" />
                 </button>
                 <button className="action-button relation-button" onClick={handleEditRelations}>
-                  <span>EDITAR RELACIONES</span>
+                  <span>{t('EDITAR RELACIONES')}</span>
                 </button>
               </>
             ) : (
@@ -1262,14 +1271,10 @@ const ParametrizacionAlias = () => {
                       <td>{alias.nombreAlias}</td>
                       <td>{alias.descripcion}</td>
                       <td>
-                        <span className="tipo-tag produccion">
-                          {alias.tipo}
-                        </span>
+                        {alias.idTipo}
                       </td>
                       <td>
-                        <span className="estado-tag">
-                          {alias.estado}
-                        </span>
+                        <StatusTag status={alias.estado} /> 
                       </td>
                       <td>{alias.numArticulos}</td>
                       <td>

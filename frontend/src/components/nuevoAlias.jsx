@@ -80,95 +80,113 @@ const CreacionAlias = () => {
   const aliasesDropdownRef = useRef(null);
 
   useEffect(() => {
-      function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-          setOpenDropdown(null);
-      }
-      if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
-          setIsArticulosDropdownOpen(false);
-      }
-      if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
-          setIsGrupoCadenaDropdownOpen(false);
-      }
-      if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
-          setIsCadenaDropdownOpen(false);
-      }
-      if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
-          setIsMercadoDropdownOpen(false);
-      }
-      if (aliasesDropdownRef.current && !aliasesDropdownRef.current.contains(event.target)) {
-        setIsAliasesDropdownOpen(false);
-      }
-      }
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      };
+    function handleClickOutside(event) {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+    }
+    if (articulosDropdownRef.current && !articulosDropdownRef.current.contains(event.target)) {
+        setIsArticulosDropdownOpen(false);
+    }
+    if (grupoCadenaDropdownRef.current && !grupoCadenaDropdownRef.current.contains(event.target)) {
+        setIsGrupoCadenaDropdownOpen(false);
+    }
+    if (cadenaDropdownRef.current && !cadenaDropdownRef.current.contains(event.target)) {
+        setIsCadenaDropdownOpen(false);
+    }
+    if (mercadoDropdownRef.current && !mercadoDropdownRef.current.contains(event.target)) {
+        setIsMercadoDropdownOpen(false);
+    }
+    if (aliasesDropdownRef.current && !aliasesDropdownRef.current.contains(event.target)) {
+      setIsAliasesDropdownOpen(false);
+    }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  const StatusTag = ({ status, type }) => {
+    let className = 'status-tag';
+    
+    const normalizedStatus = status ? status.toUpperCase().trim() : '';
+    
+    if (normalizedStatus === '04.BLOQUEADO' || normalizedStatus === '04.LOCKED' || normalizedStatus === 'LOCKED') {
+      className += ' status-bloqueado';
+    } else if (normalizedStatus === 'PAUSADO' || normalizedStatus === 'PAUSED') {
+      className += ' status-paused';
+    } else if (normalizedStatus === 'ACTIVO' || normalizedStatus === '02.ACTIVO'  || normalizedStatus === '02.ACTIVE'  || normalizedStatus === 'ACTIVE') {
+      className += ' status-active';
+    } else if (normalizedStatus === 'PRODUCCIÓN' || normalizedStatus === 'PRODUCTION') {
+      className += ' status-produccion';
+    }
+    
+    return <div className={className}>{status || '-'}</div>;
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
-        setLoading(true);
-        try {
-            const [
-                tiposAliasRes,
-                estacionalidadesRes,
-                idiomasRes,
-                articulosRes,
-                gruposCadenaRes,
-                cadenasRes,
-                mercadosRes,
-                tiposConexionRes,
-                aliasesResponse
-            ] = await Promise.all([
-                axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/idiomas?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/ajenos?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
-                axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`),
-                axios.get(`${BASE_URL}/creacion/alias-info?idIdioma=${languageId}`)
-            ]);
+      setLoading(true);
+      try {
+        const [
+          tiposAliasRes,
+          estacionalidadesRes,
+          idiomasRes,
+          articulosRes,
+          gruposCadenaRes,
+          cadenasRes,
+          mercadosRes,
+          tiposConexionRes,
+          aliasesResponse
+        ] = await Promise.all([
+          axios.get(`${BASE_URL}/creacion/tipos-alias?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/tipos-estacionalidad?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/idiomas?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/ajenos?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/grupos-cadena?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/cadenas?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/mercados?idIdioma=${languageId}`),                
+          axios.get(`${BASE_URL}/creacion/tipo-Conexion-Origen-Dato?idIdioma=${languageId}`),
+          axios.get(`${BASE_URL}/creacion/alias-info?idIdioma=${languageId}`)
+        ]);
 
-            setTiposAlias(tiposAliasRes.data || []);
-            setEstacionalidades(estacionalidadesRes.data || []);
-            setIdiomas(idiomasRes.data || []);
-            setAliasesPrincipales(aliasesResponse.data || []);
-            
-            if (idiomasRes.data) {
-                const principalesIds = [1, 3];
-                setSelectedIdiomas(principalesIds);
-                
-                const idiomasValues = {};
-                principalesIds.forEach(id => {
-                  idiomasValues[id] = { nombre: '', descripcion: '' };
-                });
-                setIdiomasAliasValues(idiomasValues);
-            }
-            
-            setArticulosDisponibles(articulosRes.data || []);
-            setFilteredArticulos(articulosRes.data || []);
-            setTiposConexion(tiposConexionRes.data || []);
-            const gruposCadena = gruposCadenaRes.data || [];
-            setGruposCadenaDisponibles(gruposCadena);
-            setFilteredGruposCadena(gruposCadena);
-            
-            const cadenas = cadenasRes.data || [];
-            setCadenasDisponibles(cadenas);
-            setFilteredCadenas(cadenas);
-            
-            const mercados = mercadosRes.data || [];
-            setMercadosDisponibles(mercados);
-            setFilteredMercados(mercados);
-
-        } catch (error) {
-            console.error('Error fetching initial data:', error);
-            setError('No se pudieron cargar los datos iniciales');
-        } finally {
-            setLoading(false);
+        setTiposAlias(tiposAliasRes.data || []);
+        setEstacionalidades(estacionalidadesRes.data || []);
+        setIdiomas(idiomasRes.data || []);
+        setAliasesPrincipales(aliasesResponse.data || []);
+          
+        if (idiomasRes.data) {
+          const principalesIds = [1, 3];
+          setSelectedIdiomas(principalesIds);
+          
+          const idiomasValues = {};
+          principalesIds.forEach(id => {
+            idiomasValues[id] = { nombre: '', descripcion: '' };
+          });
+          setIdiomasAliasValues(idiomasValues);
         }
+          
+        setArticulosDisponibles(articulosRes.data || []);
+        setFilteredArticulos(articulosRes.data || []);
+        setTiposConexion(tiposConexionRes.data || []);
+        const gruposCadena = gruposCadenaRes.data || [];
+        setGruposCadenaDisponibles(gruposCadena);
+        setFilteredGruposCadena(gruposCadena);
+        
+        const cadenas = cadenasRes.data || [];
+        setCadenasDisponibles(cadenas);
+        setFilteredCadenas(cadenas);
+        
+        const mercados = mercadosRes.data || [];
+        setMercadosDisponibles(mercados);
+        setFilteredMercados(mercados);
+
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+        setError('No se pudieron cargar los datos iniciales');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchInitialData();
@@ -1039,14 +1057,13 @@ const CreacionAlias = () => {
                   className="idiomas-dropdown-field" 
                   onClick={() => handleDropdownToggle('idiomas')}
                 >
-                  <span>{selectedIdiomas.length} {t('seleccionados')}</span>
+                  <span>{t('{{count}} seleccionados', { count: selectedIdiomas.length })}</span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
                 
                 {openDropdown === 'idiomas' && (
                   <div className="idiomas-dropdown-menu">
                     <div className="idiomas-dropdown-search">
-                      <FaSearch className="search-icon" />
                       <input 
                         type="text" 
                         placeholder={t('Buscar idioma...')}
@@ -1106,7 +1123,7 @@ const CreacionAlias = () => {
                         <div className="custom-checkbox">
                           {checkAll && <FaCheck className="checkbox-icon" />}
                         </div>
-                        <span>{t(' Seleccionar todo')}</span>
+                        <span>{t('Seleccionar todo')}</span>
                       </div>
                     </div>
                   </div>
@@ -1174,7 +1191,7 @@ const CreacionAlias = () => {
 
         <div className="creacion-alias-section">
         <div className="paso-title">
-            <span>{t('PASO 2')}</span> - <span className="paso-descripcion">{t('ARTÍCULOS*')}</span>
+            <span>{t('PASO 2')}</span> - <span className="paso-descripcion">{t('ARTÍCULOS')}</span>
         </div>
         <div className="paso-content">
             <p className="section-description">{t('Busca y añade los artículos que desea incluir en el alias.')}</p>
@@ -1258,7 +1275,7 @@ const CreacionAlias = () => {
                             <div className="custom-checkbox">
                             {checkAllArticulos && <FaCheck className="checkbox-icon" />}
                             </div>
-                            <span>{t(' Seleccionar todo')}</span>
+                            <span>{t('Seleccionar todo')}</span>
                         </div>
                         </>
                     )}
@@ -1289,7 +1306,7 @@ const CreacionAlias = () => {
                 <div className="empty-icon">
                 <FaSearch size={30} />
                 </div>
-                <p>{t('UTILIZAR EL CAMPO "BUSCAR POR ID O NOMBRE DE ARTÍCULO" PARA SELECCIONAR Y AGREGAR ARTÍCULOS AL ALIAS')}</p>
+                <p>{t('UTILIZAR EL CAMPO BUSCAR POR ID O NOMBRE DE ARTÍCULO PARA SELECCIONAR Y AGREGAR ARTÍCULOS AL ALIAS')}</p>
             </div>
             ) : (
             <div className="articulos-table-container">
@@ -1301,71 +1318,66 @@ const CreacionAlias = () => {
                     <th className="articulo-column">{t('ARTÍCULO')}</th>
                     <th className="unidades-column">{t('UNIDADES BOX')}</th>
                     <th className="unidad-column">
-                        <div>{t('UNIDAD DE')}</div>
-                        <div>{t('EMPAQUETADO')}</div>
+                      <div>{t('UNIDAD DE')}</div>
+                      <div>{t('EMPAQUETADO')}</div>
                     </th>
                     <th className="multiplo-column">
-                        <div>{t('MÚLTIPLO')}</div>
-                        <div>{t('MÍNIMO')}</div>
+                      <div>{t('MÚLTIPLO')}</div>
+                      <div>{t('MÍNIMO')}</div>
                     </th>
                     <th className="estado-spi-column">
-                        <div>{t('ESTADO ARTÍCULO')}</div>
-                        <div>{t('SFI')}</div>
+                      <div>{t('ESTADO ARTÍCULO')}</div>
+                      <div>{t('SFI')}</div>
                     </th>
                     <th className="estado-ram-column">
-                        <div>{t('ESTADO ARTÍCULO')}</div>
-                        <div>{t('RAM')}</div>
+                      <div>{t('ESTADO ARTÍCULO')}</div>
+                      <div>{t('RAM')}</div>
                     </th>
                     <th className="estado-alias-column">
-                        <div>{t('ESTADO ARTÍCULO')}</div>
-                        <div>{t('EN EL ALIAS')}</div>
+                      <div>{t('ESTADO ARTÍCULO')}</div>
+                      <div>{t('EN EL ALIAS')}</div>
                     </th>
                     <th className="fecha-column">
-                        <div>{t('FECHA DE')}</div>
-                        <div>{t('ALTA')}</div>
+                      <div>{t('FECHA DE ALTA')}</div>
                     </th>
                     <th className="sint-column">{t('ID SINT')}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {articulos.map(articulo => (
+                  {articulos.map(articulo => (
                     <tr key={articulo.idAjeno || articulo.id}>
-                        <td className="checkbox-column">
-                            <div className="custom-checkbox" onClick={() => handleArticuloCheckboxChange(articulo.idAjeno || articulo.id)}>
-                                {selectedArticulosIds.includes(articulo.idAjeno || articulo.id) && <FaCheck className="checkbox-icon" />}
-                            </div>
-                        </td>
-                        <td>{articulo.idAjeno || articulo.id}</td>
-                        <td className="articulo-name">
-                            {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
-                        </td>
-                        <td className="unidades-box">{articulo.unidadesMedida?.descripcion || articulo.descripcionUnidadesMedida}</td>
-                        <td>{articulo.unidadesEmpaquetado}</td>
-                        <td className="text-center">{articulo.multiploMinimo}</td>
-                        <td className="estado-column">
-                            <span className={`estado-tag ${articulo.descripcionEstadoCompras?.toLowerCase().includes("activo") ? "activo" : ""}`}>
-                                {articulo.descripcionEstadoCompras}
-                            </span>
-                        </td>
-                        <td className="estado-column">
-                            <span className={`estado-tag ${articulo.descripcionTipoEstadoRam?.toLowerCase().includes("activo") ? "activo" : ""}`}>
-                                {normalizeText(articulo.descripcionTipoEstadoRam)}
-                            </span>
-                        </td>
-                        <td className="estado-column">
-                            <span className="estado-tag activo">
-                                ACTIVO
-                            </span>
-                        </td>
-                        <td>{articulo.fechaAlta || new Date().toISOString().split('T')[0]}</td>
-                        <td>{articulo.idSint || '-'}</td>
+                      <td className="checkbox-column">
+                        <div className="custom-checkbox" onClick={() => handleArticuloCheckboxChange(articulo.idAjeno || articulo.id)}>
+                          {selectedArticulosIds.includes(articulo.idAjeno || articulo.id) && <FaCheck className="checkbox-icon" />}
+                        </div>
+                      </td>
+                      <td>{articulo.idAjeno || articulo.id}</td>
+                      <td className="articulo-name">
+                        {articulo.nombreAjeno || articulo.descripcion || articulo.nombre}
+                      </td>
+                      <td className="unidades-box">{articulo.unidadesMedida?.descripcion || articulo.descripcionUnidadesMedida}</td>
+                      <td>{articulo.unidadesEmpaquetado}</td>
+                      <td className="text-center">{articulo.multiploMinimo}</td>
+                      <td>
+                        <StatusTag status={articulo.descripcionEstadoCompras} /> 
+                      </td>
+                      <td>
+                        <StatusTag status={articulo.descripcionTipoEstadoRam} /> 
+                      </td>
+                      <td>
+                        <span className="estado-tag activo">
+                          {t('ACTIVO')}
+                        </span>
+                      </td>
+                      <td>{articulo.fechaAlta || new Date().toISOString().split('T')[0]}</td>
+                      <td>{articulo.idSint || '-'}</td>
                     </tr>
-                    ))}
+                  ))}
                 </tbody>
                 </table>
             </div>
             )}
-        </div>
+          </div>
         </div>
 
         <div className="creacion-alias-section">
@@ -1382,7 +1394,7 @@ const CreacionAlias = () => {
 
             <div className="ambito-row">
               <div className="ambito-field grupo-cadena-field" ref={grupoCadenaDropdownRef}>
-                <label className="ambito-label">{t('Id o Grupo Cadena (T6)*')}</label>
+                <label className="ambito-label">{t('Id o Grupo Cadena (T6)')}</label>
                 <div 
                   className="dropdown-field" 
                   onClick={toggleGrupoCadenaDropdown}
@@ -1454,7 +1466,7 @@ const CreacionAlias = () => {
                 )}
             </div>              
             <div className="ambito-field cadena-field" ref={cadenaDropdownRef}>
-                <label className="ambito-label">{t('Id o Cadena*')}</label>
+                <label className="ambito-label">{t('Id o Cadena')}</label>
                 <div 
                     className={`dropdown-field ${selectedGruposCadena.length === 0 ? 'disabled' : ''}`} 
                     onClick={selectedGruposCadena.length > 0 ? toggleCadenaDropdown : null}
@@ -1475,55 +1487,55 @@ const CreacionAlias = () => {
                 
                 {isCadenaDropdownOpen && (
                     <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
+                      <div className="dropdown-search">
                         <input 
-                            type="text" 
-                            placeholder={t('Buscar cadena...')}
-                            value={cadenaSearchText}
-                            onChange={handleCadenaSearchChange}
-                            onClick={(e) => e.stopPropagation()}
+                          type="text" 
+                          placeholder={t('Buscar cadena...')}
+                          value={cadenaSearchText}
+                          onChange={handleCadenaSearchChange}
+                          onClick={(e) => e.stopPropagation()}
                         />
                         </div>
                         
                         <div className="dropdown-items">
-                        {filteredCadenas.map((cadena) => (
+                          {filteredCadenas.map((cadena) => (
                             <div 
-                            key={cadena.id} 
-                            className={`dropdown-item ${selectedCadenas.includes(cadena.id) ? 'selected' : ''}`}
-                            onClick={(e) => {
+                              key={cadena.id} 
+                              className={`dropdown-item ${selectedCadenas.includes(cadena.id) ? 'selected' : ''}`}
+                              onClick={(e) => {
                                 e.stopPropagation();
                                 handleCadenaSelect(cadena);
-                            }}
+                              }}
                             >
-                            <input 
+                              <input 
                                 type="checkbox" 
                                 checked={selectedCadenas.includes(cadena.id)} 
                                 onChange={() => {}} 
                                 onClick={(e) => e.stopPropagation()} 
-                            />
-                            <span className="dropdown-item-text">
+                              />
+                              <span className="dropdown-item-text">
                                 {cadena.id} - {normalizeText(cadena.descripcion)}
-                            </span>
+                              </span>
                             </div>
-                        ))}
+                          ))}
                         </div>
                         
                         <div className="select-all-fixed">
-                        <div className="dropdown-item select-all" onClick={() => handleSelectAllCadenas()}>
+                          <div className="dropdown-item select-all" onClick={() => handleSelectAllCadenas()}>
                             <input 
-                            type="checkbox" 
-                            checked={filteredCadenas.length > 0 && filteredCadenas.every(c => selectedCadenas.includes(c.id))} 
-                            onChange={() => {}}
-                            onClick={(e) => e.stopPropagation()} 
+                              type="checkbox" 
+                              checked={filteredCadenas.length > 0 && filteredCadenas.every(c => selectedCadenas.includes(c.id))} 
+                              onChange={() => {}}
+                              onClick={(e) => e.stopPropagation()} 
                             />
-                            <span>Seleccionar todo</span>
-                        </div>
+                              <span>{t('Seleccionar todo')}</span>
+                          </div>
                         </div>
                     </div>
                 )}
               </div>              
               <div className="ambito-field mercado-field" ref={mercadoDropdownRef}>
-                <label className="ambito-label">{t('Id o Mercado*')}</label>
+                <label className="ambito-label">{t('Id o Mercado')}</label>
                 <div 
                   className="dropdown-field" 
                   onClick={toggleMercadoDropdown}
@@ -1543,56 +1555,56 @@ const CreacionAlias = () => {
                 </div>
                 
                 {isMercadoDropdownOpen && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder={t('Buscar mercado...')}
-                            value={mercadoSearchText}
-                            onChange={handleMercadoSearchChange}
-                            onClick={(e) => e.stopPropagation()}
+                  <div className="filter-dropdown-content">
+                    <div className="dropdown-search">
+                      <input 
+                        type="text" 
+                        placeholder={t('Buscar mercado...')}
+                        value={mercadoSearchText}
+                        onChange={handleMercadoSearchChange}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      {mercadoSearchText && (
+                        <FaTimes 
+                          className="clear-search-icon" 
+                          onClick={clearMercadoSearch} 
                         />
-                        {mercadoSearchText && (
-                            <FaTimes 
-                            className="clear-search-icon" 
-                            onClick={clearMercadoSearch} 
-                            />
-                        )}
-                        </div>
-                        
-                        <div className="dropdown-items">
-                        {filteredMercados.map((mercado) => (
-                            <div 
-                            key={mercado.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleMercadoSelect(mercado);
-                            }}
-                            >
-                            <div className="custom-checkbox">
-                                {selectedMercados?.includes(mercado.id) && <FaCheck className="checkbox-icon" />}
-                            </div>
-                            <span className="dropdown-item-text">
-                                {mercado.id} - {normalizeText(mercado.descripcion)}
-                            </span>
-                            </div>
-                        ))}
-                        </div>
-                        
-                        <div className="select-all-fixed">
-                        <div className="dropdown-item select-all">
-                            <div className="custom-checkbox">
-                            {filteredMercados.length > 0 && 
-                                filteredMercados.every(m => selectedMercados?.includes(m.id)) && 
-                                <FaCheck className="checkbox-icon" />
-                            }
-                            </div>
-                            <span>{t('Seleccionar todo')}</span>
-                        </div>
-                        </div>
+                      )}
                     </div>
-                    )}
+                        
+                    <div className="dropdown-items">
+                      {filteredMercados.map((mercado) => (
+                        <div 
+                          key={mercado.id} 
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMercadoSelect(mercado);
+                          }}
+                        >
+                          <div className="custom-checkbox">
+                            {selectedMercados?.includes(mercado.id) && <FaCheck className="checkbox-icon" />}
+                          </div>
+                          <span className="dropdown-item-text">
+                            {mercado.id} - {normalizeText(mercado.descripcion)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                        
+                    <div className="select-all-fixed">
+                      <div className="dropdown-item select-all">
+                        <div className="custom-checkbox">
+                          {filteredMercados.length > 0 && 
+                            filteredMercados.every(m => selectedMercados?.includes(m.id)) && 
+                            <FaCheck className="checkbox-icon" />
+                          }
+                        </div>
+                        <span>{t('Seleccionar todo')}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
                             
