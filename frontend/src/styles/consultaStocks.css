@@ -329,6 +329,7 @@
  vertical-align: middle;
  word-wrap: break-word;
  word-break: normal;
+ border-right: 1px solid #eee;
 }
 
 .stocks-table th {
@@ -440,27 +441,50 @@
 }
 
 .no-results, .no-search-yet {
- text-align: center;
- color: #777;
- padding: 60px 0;
- display: flex;
- flex-direction: column;
- align-items: center;
- gap: 20px;
- width: 100%;
+  text-align: center;
+  color: #777;
+  padding: 60px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .search-icon {
- font-size: 80px;
- color: #ddd;
- margin-bottom: 20px;
+  font-size: 80px;
+  color: #ddd;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-icon svg {
+  width: 80px;
+  height: 80px;
+  color: #ddd;
+}
+
+.results-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
 }
 
 .no-results-text {
- font-size: 14px;
- max-width: 400px;
- text-transform: uppercase;
- margin: 0;
+  font-size: 14px;
+  max-width: 400px;
+  text-transform: uppercase;
+  margin: 0;
+  color: #777;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .consulta-stocks-error {

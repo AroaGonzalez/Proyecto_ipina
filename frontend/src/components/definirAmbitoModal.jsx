@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { FaSearch, FaChevronDown, FaTimes, FaCheck } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/definirAmbitoModal.css';
@@ -8,6 +9,7 @@ const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], initialSelections = {} }) => {
   const { languageId } = useContext(LanguageContext);
+  const { t } = useTranslation();
   const [gruposCadena, setGruposCadena] = useState([]);
   const [cadenas, setCadenas] = useState([]);
   const [mercados, setMercados] = useState([]);
@@ -87,8 +89,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
         selectedCadenas.length > 0 && 
         selectedMercados.length > 0 && 
         selectedAliases.length > 0) {
-      console.log('¡CUMPLE CONDICIONES! Llamando a fetchTareaAmbitoData');
-      console.log('selectedAliases:', JSON.stringify(selectedAliases));
       fetchTareaAmbitoData();
     } else {
       console.log('NO cumple condiciones para fetch. Razones:', {
@@ -216,9 +216,6 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
         alias: aliasData
       };
       
-      console.log('Sending request payload:', JSON.stringify(requestPayload));
-  
-      console.log('URL:', `${BASE_URL}/api/tareas/tareas-ambito-multiselect?idIdioma=${languageId}`);
       const response = await axios.post(
         `${BASE_URL}/api/tareas/tareas-ambito-multiselect?idIdioma=${languageId}`, 
         requestPayload
@@ -340,8 +337,8 @@ const DefinirAmbitoModal = ({ isOpen, onClose, onSave, selectedAliases = [], ini
       const searchValue = value.toLowerCase();
       const filtered = mercados.filter(
         mercado => 
-            mercado.id?.toString().toLowerCase().includes(searchValue) || 
-            mercado.descripcion?.toLowerCase().includes(searchValue)
+          mercado.id?.toString().toLowerCase().includes(searchValue) || 
+          mercado.descripcion?.toLowerCase().includes(searchValue)
     );
     setFilteredMercados(filtered);
   } else {
@@ -452,34 +449,34 @@ const filteredLocalizaciones = localizaciones.filter(loc => {
 
 const getSelectedGrupoCadenaText = () => {
   if (selectedGruposCadena.length === 0) {
-    return 'Id o Grupo Cadena (16)';
+    return t('Id o Grupo Cadena (16)');
   } else if (selectedGruposCadena.length === 1) {
     const grupo = gruposCadena.find(g => g.id === selectedGruposCadena[0]);
     return `${selectedGruposCadena[0]} - ${grupo?.descripcion || 'Zara'}`;
   } else {
-    return `${selectedGruposCadena.length} seleccionados`;
+    return t('{{count}} seleccionados', { count: selectedGruposCadena.length });
   }
 };
 
 const getSelectedCadenaText = () => {
   if (selectedCadenas.length === 0) {
-    return 'Id o Cadena';
+    return t('Id o Cadena');
   } else if (selectedCadenas.length === 1) {
     const cadena = cadenas.find(c => c.id === selectedCadenas[0]);
     return `${selectedCadenas[0]} - ${cadena?.descripcion || 'Zara'}`;
   } else {
-    return `${selectedCadenas.length} seleccionados`;
+    return t('{{count}} seleccionados', { count: selectedCadenas.length });
   }
 };
 
 const getSelectedMercadoText = () => {
   if (selectedMercados.length === 0) {
-    return 'Id o Mercado';
+    return t('Id o Mercado');
   } else if (selectedMercados.length === 1) {
     const mercado = mercados.find(m => m.id === selectedMercados[0]);
     return `${selectedMercados[0]} - ${normalizeText(mercado?.descripcion || 'ESPAÑA')}`;
   } else {
-    return `${selectedMercados.length} seleccionados`;
+    return t('{{count}} seleccionados', { count: selectedMercados.length });
   }
 };
 
@@ -489,7 +486,7 @@ return (
   <div className="ambito-modal-overlay">
     <div ref={modalRef} className="ambito-modal-content">
       <div className="ambito-modal-header">
-        <h2>DEFINIR ÁMBITO LOCALIZACIÓN</h2>
+        <h2>{t('DEFINIR ÁMBITO LOCALIZACIÓN')}</h2>
         <button onClick={onClose} className="ambito-close-btn">
           <FaTimes />
         </button>
@@ -497,7 +494,7 @@ return (
       
       <div className="ambito-modal-body">
         <p className="ambito-description">
-          Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.
+          {t('Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.')}
         </p>
         
         <div className="ambito-dropdowns-row">
@@ -512,7 +509,7 @@ return (
                 <div className="ambito-dropdown-search">
                   <input 
                     type="text" 
-                    placeholder="Buscar grupo cadena..."
+                    placeholder={t("Buscar grupo cadena...")}
                     value={grupoSearchText}
                     onChange={handleGrupoSearchChange}
                     onClick={(e) => e.stopPropagation()}
@@ -569,7 +566,7 @@ return (
                         <FaCheck className="checkbox-icon" />
                       }
                     </div>
-                    <span>Seleccionar todo</span>
+                    <span>{t('Seleccionar todo')}</span>
                   </div>
                 </div>
               </div>
@@ -587,7 +584,7 @@ return (
                 <div className="ambito-dropdown-search">
                   <input 
                     type="text" 
-                    placeholder="Buscar cadena..."
+                    placeholder={t("Buscar cadena...")}
                     value={cadenaSearchText}
                     onChange={handleCadenaSearchChange}
                     onClick={(e) => e.stopPropagation()}
@@ -640,7 +637,7 @@ return (
                         selectedCadenas.includes(cadena.id)
                       ) && <FaCheck className="checkbox-icon" />}
                     </div>
-                    <span>Seleccionar todo</span>
+                    <span>{t('Seleccionar todo')}</span>
                   </div>
                 </div>
               </div>
@@ -658,7 +655,7 @@ return (
                 <div className="ambito-dropdown-search">
                   <input 
                     type="text" 
-                    placeholder="Buscar mercado..."
+                    placeholder={t("Buscar mercado...")}
                     value={mercadoSearchText}
                     onChange={handleMercadoSearchChange}
                     onClick={(e) => e.stopPropagation()}
@@ -708,7 +705,7 @@ return (
                         selectedMercados.includes(mercado.id)
                       ) && <FaCheck className="checkbox-icon" />}
                     </div>
-                    <span>Seleccionar todo</span>
+                    <span>{t('Seleccionar todo')}</span>
                   </div>
                 </div>
               </div>
@@ -717,12 +714,15 @@ return (
         </div>
         
         <p className="ambito-subheading">
-          Selecciona las localizaciones que deseas incluir en la tarea.
+          {t('Selecciona las localizaciones que deseas incluir en la tarea.')}
         </p>
         
         <div className="ambito-toggles-row">
           <div className="localizaciones-count">
-            {selectedLocalizaciones.length} localizaciones seleccionadas de {filteredLocalizaciones.length} disponibles
+            {t('{{count}} localizaciones seleccionadas de {{total}} disponibles', {
+              count: selectedLocalizaciones.length,
+              total: filteredLocalizaciones.length
+            })}
           </div>
           
           <div className="ambito-toggles">
@@ -735,7 +735,7 @@ return (
                 />
                 <span className="toggle-slider"></span>
               </span>
-              <span className="toggle-label">MOSTRAR LOCALIZACIONES SELECCIONADAS</span>
+              <span className="toggle-label">{t('MOSTRAR LOCALIZACIONES SELECCIONADAS')}</span>
             </label>
             
             <label className="toggle-container">
@@ -752,7 +752,7 @@ return (
         
         {loading ? (
           <div className="ambito-loading">
-            <p>Cargando localizaciones...</p>
+            <p>{t('Cargando localizaciones...')}</p>
           </div>
         ) : filteredLocalizaciones.length > 0 ? (
           <div className="ambito-table-container">
@@ -764,17 +764,17 @@ return (
                       type="checkbox" 
                       onChange={handleSelectAll}
                       checked={filteredLocalizaciones.length > 0 && 
-                              filteredLocalizaciones.every(loc => 
-                                selectedLocalizaciones.includes(loc.id)
-                              )}
+                        filteredLocalizaciones.every(loc => 
+                          selectedLocalizaciones.includes(loc.id)
+                        )}
                     />
                   </th>
-                  <th>ID/GRUPO CADENA</th>
-                  <th>ID/CADENA</th>
-                  <th>MERCADO</th>
-                  <th>ID/LOCALIZACIÓN</th>
-                  <th>ESTADO DE TIENDA RAM</th>
-                  <th>ESTADO DE LA TIENDA EN LA TAREA</th>
+                  <th>{t('ID/GRUPO CADENA')}</th>
+                  <th>{t('ID/CADENA')}</th>
+                  <th>{t('MERCADO')}</th>
+                  <th>{t('ID/LOCALIZACIÓN')}</th>
+                  <th>{t('ESTADO DE TIENDA RAM')}</th>
+                  <th>{t('ESTADO DE LA TIENDA EN LA TAREA')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -804,8 +804,8 @@ return (
         ) : (
           <div className="ambito-empty-state">
             <FaSearch className="empty-icon" />
-            <p className="empty-title">NO HAY LOCALIZACIONES</p>
-            <p className="empty-message">UTILIZA LOS CAMPOS NECESARIOS PARA AÑADIR UNA LOCALIZACIÓN</p>
+            <p className="empty-title">{t('NO HAY LOCALIZACIONES')}</p>
+            <p className="empty-message">{t('UTILIZA LOS CAMPOS NECESARIOS PARA AÑADIR UNA LOCALIZACIÓN')}</p>
           </div>
         )}
         
@@ -813,10 +813,10 @@ return (
       
       <div className="ambito-modal-footer">
         <button onClick={onClose} className="ambito-cancel-btn">
-          CANCELAR
+          {t('CANCELAR')}
         </button>
         <button onClick={handleSave} className="ambito-save-btn">
-          ACEPTAR
+          {t('ACEPTAR')}
         </button>
       </div>
     </div>

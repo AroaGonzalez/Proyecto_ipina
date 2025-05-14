@@ -305,19 +305,19 @@ const NuevaTareaDistribucion = () => {
   return (
     <div className="nueva-tarea-container">
       <h1 className="nueva-tarea-title">
-        NUEVA TAREA DISTRIBUCIÓN
+        {t('NUEVA TAREA DISTRIBUCIÓN')}
       </h1>
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 1 -</span> DATOS GENERALES DE LA TAREA
+          <span className="paso-number">{t('PASO 1')} -</span> {t('DATOS GENERALES DE LA TAREA')}
         </div>
         
         <div className="input-container">
           <input
             type="text"
             className="tarea-input"
-            placeholder="Nombre de la tarea *"
+            placeholder={t("Nombre de la tarea")}
             value={nombreTarea}
             onChange={(e) => setNombreTarea(e.target.value)}
             maxLength={50}
@@ -328,7 +328,7 @@ const NuevaTareaDistribucion = () => {
         <div className="input-container">
           <textarea
             className="tarea-textarea"
-            placeholder="Descripción de la tarea *"
+            placeholder={t("Descripción de la tarea")}
             value={descripcionTarea}
             onChange={(e) => setDescripcionTarea(e.target.value)}
             maxLength={200}
@@ -339,7 +339,7 @@ const NuevaTareaDistribucion = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 2 -</span> ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA
+          <span className="paso-number">{t('PASO 2')} -</span> {t('ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA')}
         </div>
         
         <div className="alias-select-container" ref={dropdownRef}>
@@ -347,7 +347,7 @@ const NuevaTareaDistribucion = () => {
             className="alias-select"
             onClick={toggleAliasDropdown}
           >
-            <span>{aliasSearchTerm || "Id o Nombre de Alias *"}</span>
+            <span>{aliasSearchTerm || t("Id o Nombre de Alias")}</span>
             <span className="dropdown-arrow">▼</span>
           </div>
           
@@ -357,7 +357,7 @@ const NuevaTareaDistribucion = () => {
                 <input
                   type="text"
                   className="alias-search-input"
-                  placeholder="Buscar..."
+                  placeholder={t("Buscar...")}
                   value={aliasSearchTerm}
                   onChange={handleSearchInputChange}
                 />
@@ -394,7 +394,7 @@ const NuevaTareaDistribucion = () => {
                     onChange={() => {}}
                     className="alias-checkbox"
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
               </div>
             </div>
@@ -403,13 +403,13 @@ const NuevaTareaDistribucion = () => {
         
         {selectedAliases.length > 0 ? (
           <div className="alias-table-container">
-            <div className="alias-count">{selectedAliases.length} alias incluidos</div>
+            <div className="alias-count">{t('{{count}} alias incluidos', { count: selectedAliases.length })}</div>
             
             {showDeleteAction && (
               <div className="articulos-actions-bar">
                 <div className="articulos-selection-info">
                   <span className="articulos-selected-count">
-                    {selectedRowsForDelete.length} alias seleccionados
+                    {t('{{count}} alias seleccionados', { count: selectedRowsForDelete.length })}
                   </span>
                 </div>
                 <button 
@@ -418,7 +418,7 @@ const NuevaTareaDistribucion = () => {
                   disabled={selectedRowsForDelete.length === 0}
                 >
                   <FaTrash className="action-icon" />
-                  Eliminar
+                  {t('Eliminar')}
                 </button>
               </div>
             )}            

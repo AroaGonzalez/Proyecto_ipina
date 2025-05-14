@@ -284,7 +284,7 @@ const EditarTarea = () => {
   if (loading && !tarea) {
     return (
       <div className="nueva-tarea-container">
-        <div className="loading-indicator">Cargando datos de la tarea...</div>
+        <div className="loading-indicator">{t('Cargando datos de la tarea...')}</div>
       </div>
     );
   }
@@ -294,7 +294,7 @@ const EditarTarea = () => {
       <div className="nueva-tarea-container">
         <div className="error-message">{error}</div>
         <button onClick={() => navigate('/tareas')} className="cancel-button">
-          Volver
+          {t('Volver')}
         </button>
       </div>
     );
@@ -303,19 +303,19 @@ const EditarTarea = () => {
   return (
     <div className="nueva-tarea-container">
       <h1 className="nueva-tarea-title">
-        EDICIÓN DE TAREAS - {id} / {nombreTarea}
+        {t('EDICIÓN DE TAREAS -')} {id} / {nombreTarea}
       </h1>
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 1 -</span> DATOS GENERALES DE LA TAREA
+          <span className="paso-number">{t('PASO 1')} -</span> {t('DATOS GENERALES DE LA TAREA')}
         </div>
         
         <div className="input-container">
           <input
             type="text"
             className="tarea-input"
-            placeholder="Nombre de la tarea *"
+            placeholder={t("Nombre de la tarea")}
             value={nombreTarea}
             onChange={(e) => setNombreTarea(e.target.value)}
             maxLength={50}
@@ -326,7 +326,7 @@ const EditarTarea = () => {
         <div className="input-container">
           <textarea
             className="tarea-textarea"
-            placeholder="Descripción de la tarea *"
+            placeholder={t("Descripción de la tarea")}
             value={descripcionTarea}
             onChange={(e) => setDescripcionTarea(e.target.value)}
             maxLength={200}
@@ -337,7 +337,7 @@ const EditarTarea = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 2 -</span> ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA
+          <span className="paso-number">{t('PASO 2')} -</span> {t('ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA')}
         </div>
         
         <div className="alias-select-container" ref={aliasesDropdownRef}>
@@ -345,7 +345,7 @@ const EditarTarea = () => {
             className="alias-select"
             onClick={toggleAliasesDropdown}
           >
-            <span>{aliasSearchText || "Id o Nombre de Alias *"}</span>
+            <span>{aliasSearchText || t("Id o Nombre de Alias")}</span>
             <span className="dropdown-arrow">▼</span>
           </div>
           
@@ -355,7 +355,7 @@ const EditarTarea = () => {
                 <input
                   type="text"
                   className="alias-search-input"
-                  placeholder="Buscar..."
+                  placeholder={t("Buscar...")}
                   value={aliasSearchText}
                   onChange={handleAliasSearchChange}
                 />
@@ -388,13 +388,13 @@ const EditarTarea = () => {
         
         {selectedAliases.length > 0 ? (
           <div className="alias-table-container">
-            <div className="alias-count">{selectedAliases.length} alias incluidos</div>
+            <div className="alias-count">{t('{{count}} alias incluidos', { count: selectedAliases.length })}</div>
             
             {showDeleteIcon && (
               <div className="articulos-actions-bar">
                 <div className="articulos-selection-info">
                   <span className="articulos-selected-count">
-                    {selectedAliasesIds.length} alias seleccionados
+                    {t('{{count}} alias seleccionados', { count: selectedAliasesIds.length })}
                   </span>
                 </div>
                 <button 
@@ -403,7 +403,7 @@ const EditarTarea = () => {
                   disabled={selectedAliasesIds.length === 0}
                 >
                   <FaTrash className="action-icon" />
-                  Eliminar
+                  {t('Eliminar')}
                 </button>
               </div>
             )}
@@ -428,9 +428,9 @@ const EditarTarea = () => {
                   </th>
                   <th>ID ALIAS</th>
                   <th>ALIAS</th>
-                  <th>ALIAS TIPO</th>
-                  <th>ESTADO ALIAS</th>
-                  <th>ALIAS PRINCIPAL ASOCIADO (RATIO)</th>
+                  <th>{t('ALIAS TIPO')}</th>
+                  <th>{t('ESTADO ALIAS')}</th>
+                  <th>{t('ALIAS PRINCIPAL ASOCIADO (RATIO)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -465,9 +465,9 @@ const EditarTarea = () => {
                       <td>{alias.idTipoAlias || alias.tipoAlias?.descripcion || '-'}</td>
                       <td className="estado-column">
                         <span className={`estado-tag ${(alias.descripcionTipoEstadoAlias || '')?.toLowerCase().includes('PRODUCCIÓN') || 
-                                    (alias.descripcionTipoEstadoAlias || '')?.toLowerCase().includes('PRODUCCIÓN') ? 
-                                    'estado-produccion' : 'estado-borrador'}`}>
-                          {normalizeText(alias.descripcionTipoEstadoAlias || "PRODUCCIÓN")}
+                          (alias.descripcionTipoEstadoAlias || '')?.toLowerCase().includes('PRODUCCIÓN') ? 
+                          'estado-produccion' : 'estado-borrador'}`}>
+                          {normalizeText(alias.descripcionTipoEstadoAlias)}
                         </span>
                       </td>
                       <td className="ratio-column">-</td>
@@ -491,7 +491,7 @@ const EditarTarea = () => {
             </table>
             
             <div className="description-text">
-              Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.
+              {t('Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.')}
             </div>
           
             <button 
@@ -507,40 +507,40 @@ const EditarTarea = () => {
               }}
               onClick={openDefinirAmbito}
             >
-              DEFINIR ÁMBITO
+              {t('DEFINIR ÁMBITO')}
             </button>
             
             <DefinirAmbitoModal 
                 isOpen={showAmbitoModal} 
                 onClose={() => setShowAmbitoModal(false)}
                 onSave={(localizaciones) => {
-                    console.log('Localizaciones seleccionadas:', localizaciones);
-                    setAmbitosLocalizacion(localizaciones);
-                    setShowAmbitoModal(false);
+                  console.log('Localizaciones seleccionadas:', localizaciones);
+                  setAmbitosLocalizacion(localizaciones);
+                  setShowAmbitoModal(false);
                 }}
                 selectedAliases={selectedAliases}
                 initialSelections={{
-                    existingLocations: ambitosLocalizacion,
-                    gruposCadena: [...new Set(ambitosLocalizacion.map(loc => loc.idGrupoCadena))],
-                    cadenas: [...new Set(ambitosLocalizacion.map(loc => loc.idCadena))],
-                    mercados: [...new Set(ambitosLocalizacion.map(loc => loc.idMercado || loc.mercado))]
+                  existingLocations: ambitosLocalizacion,
+                  gruposCadena: [...new Set(ambitosLocalizacion.map(loc => loc.idGrupoCadena))],
+                  cadenas: [...new Set(ambitosLocalizacion.map(loc => loc.idCadena))],
+                  mercados: [...new Set(ambitosLocalizacion.map(loc => loc.idMercado || loc.mercado))]
                 }}
             />
 
             {ambitosLocalizacion.length > 0 && (
               <div className="ambito-selected-table" style={{ marginTop: '20px' }}>
                 <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
-                  {ambitosLocalizacion.length} localizaciones en las que se distribuirá la tarea
+                  {t('{{count}} localizaciones en las que se distribuirá la tarea', { count: ambitosLocalizacion.length })}
                 </div>
                 <table className="alias-table">
                   <thead>
                     <tr>
-                      <th>ID/GRUPO CADENA</th>
-                      <th>ID/CADENA</th>
-                      <th>MERCADO</th>
-                      <th>ID/LOCALIZACIÓN</th>
-                      <th>ESTADO DE TIENDA RAM</th>
-                      <th>ESTADO DE LA TIENDA EN LA TAREA</th>
+                      <th>{t('ID/GRUPO CADENA')}</th>
+                      <th>{t('ID/CADENA')}</th>
+                      <th>{t('MERCADO')}</th>
+                      <th>{t('ID/LOCALIZACIÓN')}</th>
+                      <th>{t('ESTADO DE TIENDA RAM')}</th>
+                      <th>{t('ESTADO DE LA TIENDA EN LA TAREA')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -571,8 +571,8 @@ const EditarTarea = () => {
         ) : (
           <div className="selected-aliases-container">
             <div className="no-aliases-message">
-              <p className="no-aliases-text">NO HAY ALIAS SELECCIONADOS</p>
-              <p className="aliases-help-text">UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA</p>
+              <p className="no-aliases-text">{t('NO HAY ALIAS SELECCIONADOS')}</p>
+              <p className="aliases-help-text">{t('UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA')}</p>
             </div>
           </div>
         )}
@@ -580,14 +580,14 @@ const EditarTarea = () => {
       
       <div className="buttons-container">
         <button className="cancel-button" onClick={handleCancel}>
-          CANCELAR
+          {t('CANCELAR')}
         </button>
         <button
           className="create-button"
           onClick={handleSave}
           disabled={!hasChanges || loading}
         >
-          GUARDAR
+          {t('GUARDAR')}
         </button>
       </div>
     </div>

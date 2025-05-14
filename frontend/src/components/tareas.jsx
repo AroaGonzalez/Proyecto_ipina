@@ -613,10 +613,10 @@ const Tareas = () => {
             {showNewTaskMenu && (
               <div className="dropdown-menu">
                 <div className="dropdown-item" onClick={handleNuevaTareaDistribucion}>
-                  Alta de nueva tarea de distribución
+                  {t('Alta de nueva tarea de distribución')}
                 </div>
                 <div className="dropdown-item" onClick={handleNuevaTareaRecuento}>
-                  Alta de nueva tarea de recuento
+                  {t('Alta de nueva tarea de recuento')}
                 </div>
               </div>
             )}
@@ -630,7 +630,7 @@ const Tareas = () => {
             <div className="filter-item">
               <input
                 type="text"
-                placeholder="Id Tarea"
+                placeholder={t("Id Tarea")}
                 value={idTarea}
                 onChange={(e) => setIdTarea(e.target.value)}
                 className="filter-input"
@@ -642,12 +642,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('tipoTarea')}
         >
-          <span className="filter-label">Tipo de Tarea</span>
+          <span className="filter-label">{t('Tipo de Tarea')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedTiposTarea.length > 0 
-                ? `${selectedTiposTarea.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedTiposTarea.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -656,7 +656,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar tipo de tarea..." 
+                  placeholder={t("Buscar tipo de tarea...")}
                   value={tipoTareaSearch}
                   onChange={(e) => setTipoTareaSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -698,7 +698,7 @@ const Tareas = () => {
                     checked={selectedTiposTarea.length === tiposTarea.length && tiposTarea.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
               </div>
             </div>
@@ -711,12 +711,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('estadoTarea')}
         >
-          <span className="filter-label">Estado de la tarea</span>
+          <span className="filter-label">{t('Estado de la tarea')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedEstadosTarea.length > 0 
-                ? `${selectedEstadosTarea.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedEstadosTarea.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -725,7 +725,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar estado de tarea..." 
+                  placeholder={t("Buscar estado de tarea...")}
                   value={estadoTareaSearch}
                   onChange={(e) => setEstadoTareaSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -767,7 +767,7 @@ const Tareas = () => {
                     checked={selectedEstadosTarea.length === tiposEstadoTarea.length && tiposEstadoTarea.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
               </div>
             </div>
@@ -780,12 +780,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('alias')}
         >
-          <span className="filter-label">Id o Nombre de Alias</span>
+          <span className="filter-label">{t('Id o Nombre de Alias')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedAliases.length > 0 
-                ? `${selectedAliases.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedAliases.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -794,7 +794,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar alias..." 
+                  placeholder={t("Buscar alias...")}
                   value={aliasSearch}
                   onChange={(e) => setAliasSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -835,7 +835,7 @@ const Tareas = () => {
                     checked={selectedAliases.length === aliases.length && aliases.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
             </div>
           )}
@@ -847,12 +847,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('mercado')}
         >
-          <span className="filter-label">Id o Mercado</span>
+          <span className="filter-label">{t('Id o Mercado')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedMercados.length > 0 
-                ? `${selectedMercados.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedMercados.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -861,7 +861,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar mercado..." 
+                  placeholder={t("Buscar mercado...")}
                   value={mercadoSearch}
                   onChange={(e) => setMercadoSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -902,7 +902,7 @@ const Tareas = () => {
                     checked={selectedMercados.length === mercados.length && mercados.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
             </div>
           )}
@@ -916,12 +916,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('cadena')}
         >
-          <span className="filter-label">Id o Cadena</span>
+          <span className="filter-label">{t('Id o Cadena')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedCadenas.length > 0 
-                ? `${selectedCadenas.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedCadenas.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -930,7 +930,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar cadena..." 
+                  placeholder={t("Buscar cadena...")}
                   value={cadenaSearch}
                   onChange={(e) => setCadenaSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -971,7 +971,7 @@ const Tareas = () => {
                     checked={selectedCadenas.length === cadenas.length && cadenas.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
             </div>
           )}
@@ -983,12 +983,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('grupoCadena')}
         >
-          <span className="filter-label">Id o Grupo Cadena (T6)</span>
+          <span className="filter-label">{t('Id o Grupo Cadena (T6)')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedGruposCadena.length > 0 
-                ? `${selectedGruposCadena.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedGruposCadena.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -997,7 +997,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar grupo cadena..." 
+                  placeholder={t("Buscar grupo cadena...")}
                   value={grupoCadenaSearch}
                   onChange={(e) => setGrupoCadenaSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -1038,7 +1038,7 @@ const Tareas = () => {
                     checked={selectedGruposCadena.length === gruposCadena.length && gruposCadena.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
             </div>
           )}
@@ -1048,7 +1048,7 @@ const Tareas = () => {
       <div className="filter-item">
         <input 
           type="text" 
-          placeholder="Id Localización"
+          placeholder={t("Id Localización")}
           value={idLocalizacion}
           onChange={(e) => setIdLocalizacion(e.target.value)}
           className="filter-input"
@@ -1060,12 +1060,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('grupoLocalizacion')}
         >
-          <span className="filter-label">Id o Grupo de Localizaciones</span>
+          <span className="filter-label">{t('Id o Grupo de Localizaciones')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedGruposLocalizacion.length > 0 
-                ? `${selectedGruposLocalizacion.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedGruposLocalizacion.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -1074,7 +1074,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar grupo localización..." 
+                  placeholder={t("Buscar grupo localización...")}
                   value={grupoLocalizacionSearch}
                   onChange={(e) => setGrupoLocalizacionSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -1115,7 +1115,7 @@ const Tareas = () => {
                     checked={selectedGruposLocalizacion.length === gruposLocalizacion.length && gruposLocalizacion.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
             </div>
           )}
@@ -1127,12 +1127,12 @@ const Tareas = () => {
           className="filter-dropdown"
           onClick={() => toggleFilter('ajeno')}
         >
-          <span className="filter-label">Id o Artículos</span>
+          <span className="filter-label">{t('Id o Artículos')}</span>
           <div className="filter-value">
             <span className="filter-placeholder">
               {selectedAjenos.length > 0 
-                ? `${selectedAjenos.length} seleccionados` 
-                : 'Seleccionar'}
+                ? t('{{count}} seleccionados', { count: selectedAjenos.length })
+                : t('Seleccionar')}
             </span>
             <FaChevronDown className="dropdown-arrow" />
           </div>
@@ -1141,7 +1141,7 @@ const Tareas = () => {
               <div className="dropdown-search">
                 <input 
                   type="text" 
-                  placeholder="Buscar artículo..." 
+                  placeholder={t("Buscar artículo...")}
                   value={ajenoSearch}
                   onChange={(e) => setAjenoSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -1182,41 +1182,47 @@ const Tareas = () => {
                     checked={selectedAjenos.length === ajenos.length && ajenos.length > 0}
                     readOnly
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       
-      <div className="search-button-container">
-        <button 
-          className="search-button"
-          onClick={handleSearch}
-          disabled={loading}
-        >
-          <span>{t('BUSCAR')}</span>
-        </button>
+        <div className="search-button-container">
+          <button 
+            className="search-button"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            <span>{t('BUSCAR')}</span>
+          </button>
+        </div>
       </div>
     </div>
+  )}
+      
+  <div className="tareas-results-info">
+    <div className="results-count">
+      {t('Cargados {{count}} resultados de {{total}} encontrados', {
+        count: tareas.length,
+        total: totalElements
+      })}
+      <span className="last-update">
+        <FaRedo className="update-icon" />
+        {t('Última actualización')}: {formatTime(ultimaActualizacion)}
+      </span>
+    </div>
   </div>
-)}
       
-      <div className="tareas-results-info">
-        <div className="results-count">
-          {t('Cargados')} {tareas.length} {t('resultados de')} {totalElements} {t('encontrados')}
-          <span className="last-update">
-            <FaRedo className="update-icon" />
-            {t('Última actualización')}: {formatTime(ultimaActualizacion)}
-          </span>
+    {selectedTareas.length > 0 && (
+      <div className="selection-toolbar">
+        <div className="selection-info">
+          {t('Seleccionados {{count}} resultados de {{total}} encontrados', {
+            count: selectedTareas.length,
+            total: totalElements
+          })}
         </div>
-      </div>
-      
-      {selectedTareas.length > 0 && (
-        <div className="selection-toolbar">
-          <div className="selection-info">
-            {t('Seleccionados')} {selectedTareas.length} {t('resultados de')} {totalElements} {t('encontrados')}
-          </div>
           <div className="selection-actions">
             <button 
               className={`action-button edit-button ${selectedTareas.some(id => 

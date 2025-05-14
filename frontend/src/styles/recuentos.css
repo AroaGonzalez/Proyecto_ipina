@@ -12,6 +12,7 @@ max-width: calc(100% - 30px);
 height: 100%;
 overflow: hidden;
 }
+
 .date-fields-group {
 display: flex;
 gap: 15px;

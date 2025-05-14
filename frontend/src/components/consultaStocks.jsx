@@ -237,34 +237,44 @@ const ConsultaStocks = () => {
     return (
       stock.descripcionTipoEstadoAlias && 
       (stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCIÓN') || 
-      stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCION') ||
-      stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVO') || 
-      stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVA')) &&
+        stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCION') ||
+        stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCTION') ||
+        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVO') || 
+        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVA') ||
+        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVE')) &&
       
       stock.descripcionTipoEstadoAjenoCompras && 
       (stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02.ACTIVO') || 
-      stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVO') ||
-      stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVO')) &&
+        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVO') ||
+        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02.ACTIVE') ||
+        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVE') ||
+        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVO') ||
+        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVE')) &&
       
       stock.descripcionTipoEstadoAjenoRam && 
       (stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVO') || 
-      stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVA')) &&
+        stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVA') ||
+        stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVE')) &&
       
       stock.descripcionTipoEstadoAliasAjeno && 
       (stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVO') || 
-      stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVA')) &&
+        stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVA') ||
+        stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVE')) &&
       
       stock.descripcionTipoEstadoRelacion && 
-      (stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVA')) &&
+      (stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVA') ||
+        stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVE')) &&
       
       stock.estadoTiendaMtu && 
-      stock.estadoTiendaMtu.toUpperCase().includes('ABIERTA') &&
+      (stock.estadoTiendaMtu.toUpperCase().includes('ABIERTA') ||
+        stock.estadoTiendaMtu.toUpperCase().includes('OPEN')) &&
       
       stock.descripcionTipoEstadoLocalizacionRam && 
-      (stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVA'))
+      (stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVA') ||
+        stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVE'))
     );
   };
-
+  
   const handleStockRecuentoChange = (idAlias, idLocalizacionCompra, value) => {
     const stockKey = `${idAlias}-${idLocalizacionCompra}`;
     const originalItem = stocks.find(s => 
@@ -593,17 +603,17 @@ const ConsultaStocks = () => {
     const normalizedStatus = status ? status.toUpperCase().trim() : '';
     
     if (normalizedStatus === 'ACTIVO' || normalizedStatus === 'ACTIVA' || 
-        normalizedStatus === '02 ACTIVO' || normalizedStatus === '02.ACTIVO' ||
-        normalizedStatus === 'ABIERTA') {
+        normalizedStatus === 'ACTIVE' || normalizedStatus === '02.ACTIVO' ||
+        normalizedStatus === 'ABIERTA' || normalizedStatus === '02.ACTIVE'
+        || normalizedStatus === 'OPEN') {
       className += ' status-active';
     } else if (normalizedStatus === 'PROVISIONAL') {
       className += ' status-provisional';
-    } else if (normalizedStatus === 'CERRADA DEFINITIVAMENTE') {
+    } else if (normalizedStatus === 'CERRADA DEFINITIVAMENTE' || normalizedStatus === 'DEFINITIVELY CLOSED') {
       className += ' status-closed';
-    } else if (normalizedStatus === 'PAUSADA' || normalizedStatus === 'PAUSADO') {
+    } else if (normalizedStatus === 'PAUSADA' || normalizedStatus === 'PAUSADO' || normalizedStatus === 'PAUSED') {
       className += ' status-paused';
-    } else if (normalizedStatus === 'PRODUCCIÓN' || normalizedStatus === 'PRODUCCION' || 
-               normalizedStatus === '-' || !status) {
+    } else if (normalizedStatus === 'PRODUCCIÓN' || normalizedStatus === 'PRODUCCION' || normalizedStatus === 'PRODUCTION') {
       className += ' status-production';
     }
     
@@ -612,7 +622,7 @@ const ConsultaStocks = () => {
 
   const StocksTable = ({ stocks, loading }) => {
     if (loading && stocks.length === 0) {
-      return <div className="loading-indicator">Cargando...</div>;
+      return <div className="loading-indicator">{t('Cargando...')}</div>;
     }
 
     if (!stocks || stocks.length === 0) {
@@ -634,30 +644,30 @@ const ConsultaStocks = () => {
                   />
                 </div>
               </th>
-              <th className="id-column">ID ALIAS</th>
-              <th className="medium-text-column">ALIAS</th>
-              <th className="short-text-column">ALIAS TIPO</th>
-              <th className="short-text-column">RELACIONADO CON</th>
-              <th className="short-text-column">STOCK TEÓRICO</th>
-              <th className="short-text-column">STOCK RECUENTO</th>
-              <th className="short-text-column">CAPACIDAD MÁXIMA</th>
-              <th className="short-text-column">PROPUESTA MIN</th>
-              <th className="short-text-column">STOCK LIMITE (%)</th>
-              <th className="id-column">ID LOCALIZACIÓN</th>
-              <th className="short-text-column">TIENDA</th>
-              <th className="short-text-column">MERCADO</th>
-              <th className="short-text-column">CADENA</th>
-              <th className="short-text-column">FECHA DE RECUENTO</th>
-              <th className="short-text-column">FECHA STOCK TEÓRICO</th>
-              <th className="short-text-column">FECHA EDICIÓN</th>
-              <th className="short-text-column">USUARIO</th>
-              <th className="short-text-column">ESTADO ALIAS</th>
-              <th className="short-text-column">ESTADO ARTÍCULO SFI</th>
-              <th className="short-text-column">ESTADO ARTÍCULO RAM</th>
-              <th className="short-text-column">ESTADO ARTÍCULO EN EL ALIAS</th>
-              <th className="short-text-column">ESTADO RELACIÓN</th>
-              <th className="short-text-column">ESTADO DE TIENDA MTU</th>
-              <th className="short-text-column">ESTADO DE TIENDA RAM</th>
+              <th className="id-column">{t('ID ALIAS')}</th>
+              <th className="medium-text-column">{t('ALIAS')}</th>
+              <th className="short-text-column">{t('ALIAS TIPO')}</th>
+              <th className="short-text-column">{t('RELACIONADO CON')}</th>
+              <th className="short-text-column">{t('STOCK TEÓRICO')}</th>
+              <th className="short-text-column">{t('STOCK RECUENTO')}</th>
+              <th className="short-text-column">{t('CAPACIDAD MÁXIMA')}</th>
+              <th className="short-text-column">{t('PROPUESTA MIN')}</th>
+              <th className="short-text-column">{t('STOCK LIMITE (%)')}</th>
+              <th className="id-column">{t('ID LOCALIZACIÓN')}</th>
+              <th className="short-text-column">{t('TIENDA')}</th>
+              <th className="short-text-column">{t('MERCADO')}</th>
+              <th className="short-text-column">{t('CADENA')}</th>
+              <th className="short-text-column">{t('FECHA DE RECUENTO')}</th>
+              <th className="short-text-column">{t('FECHA STOCK TEÓRICO')}</th>
+              <th className="short-text-column">{t('FECHA EDICIÓN')}</th>
+              <th className="short-text-column">{t('USUARIO')}</th>
+              <th className="short-text-column">{t('ESTADO ALIAS')}</th>
+              <th className="short-text-column">{t('ESTADO ARTÍCULO SFI')}</th>
+              <th className="short-text-column">{t('ESTADO ARTÍCULO RAM')}</th>
+              <th className="short-text-column">{t('ESTADO ARTÍCULO EN EL ALIAS')}</th>
+              <th className="short-text-column">{t('ESTADO RELACIÓN')}</th>
+              <th className="short-text-column">{t('ESTADO DE TIENDA MTU')}</th>
+              <th className="short-text-column">{t('ESTADO DE TIENDA RAM')}</th>
             </tr>
           </thead>
           <tbody>
@@ -789,12 +799,12 @@ const ConsultaStocks = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('alias')}
               >
-                <label className="filter-label">Id o Nombre de Alias</label>
+                <label className="filter-label">{t('Id o Nombre de Alias')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedAlias.length > 0 
-                      ? `${selectedAlias.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedAlias.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -803,7 +813,7 @@ const ConsultaStocks = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar alias..." 
+                        placeholder= {t("Buscar alias...")}
                         value={aliasSearch}
                         onChange={(e) => setAliasSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -844,7 +854,7 @@ const ConsultaStocks = () => {
                         checked={selectedAlias.length === aliases.length && aliases.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -856,12 +866,12 @@ const ConsultaStocks = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('tipoAlias')}
               >
-                <label className="filter-label">Tipo de Alias</label>
+                <label className="filter-label">{t('Tipo de Alias')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedTipoAlias.length > 0 
-                      ? `${selectedTipoAlias.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedTipoAlias.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -870,7 +880,7 @@ const ConsultaStocks = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar tipo..." 
+                        placeholder={t("Buscar tipo...")}
                         value={tipoAliasSearch}
                         onChange={(e) => setTipoAliasSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -911,7 +921,7 @@ const ConsultaStocks = () => {
                         checked={selectedTipoAlias.length === tiposAlias.length && mercados.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -919,10 +929,10 @@ const ConsultaStocks = () => {
             </div>
             
             <div className="filter-field">
-              <label className="filter-label">Id Localización</label>
+              <label className="filter-label">{t('Id Localización')}</label>
               <input
                 type="text"
-                placeholder="Id Localización"
+                placeholder={t("Id Localización")}
                 value={idLocalizacion}
                 onChange={(e) => setIdLocalizacion(e.target.value)}
                 className="filter-input"
@@ -934,12 +944,12 @@ const ConsultaStocks = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('mercado')}
               >
-                <label className="filter-label">Id o Mercado</label>
+                <label className="filter-label">{t('Id o Mercado')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedMercado.length > 0 
-                      ? `${selectedMercado.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedMercado.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -948,7 +958,7 @@ const ConsultaStocks = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar mercado..." 
+                        placeholder={t("Buscar mercado...")}
                         value={mercadoSearch}
                         onChange={(e) => setMercadoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -989,7 +999,7 @@ const ConsultaStocks = () => {
                         checked={selectedMercado.length === mercados.length && mercados.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -1001,12 +1011,12 @@ const ConsultaStocks = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('grupoCadena')}
               >
-                <label className="filter-label">Id o Grupo Cadena (T6)</label>
+                <label className="filter-label">{t('Id o Grupo Cadena (T6)')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedGrupoCadena.length > 0 
-                      ? `${selectedGrupoCadena.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedGrupoCadena.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -1015,7 +1025,7 @@ const ConsultaStocks = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar grupo cadena..." 
+                        placeholder={t("Buscar grupo cadena...")}
                         value={grupoCadenaSearch}
                         onChange={(e) => setGrupoCadenaSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -1056,7 +1066,7 @@ const ConsultaStocks = () => {
                         checked={selectedGrupoCadena.length === gruposCadena.length && gruposCadena.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -1068,12 +1078,12 @@ const ConsultaStocks = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('cadena')}
               >
-                <label className="filter-label">Id o Cadena</label>
+                <label className="filter-label">{t('Id o Cadena')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedCadena.length > 0 
-                      ? `${selectedCadena.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedCadena.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -1082,7 +1092,7 @@ const ConsultaStocks = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar cadena..." 
+                        placeholder={t("Buscar cadena...")}
                         value={cadenaSearch}
                         onChange={(e) => setCadenaSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -1123,7 +1133,7 @@ const ConsultaStocks = () => {
                         checked={selectedCadena.length === cadenas.length && cadenas.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -1179,7 +1189,7 @@ const ConsultaStocks = () => {
       
       {showResults ? (
         loading ? (
-          <div className="loading-indicator">Cargando...</div>
+          <div className="loading-indicator">{t('Cargando...')}</div>
         ) : stocks.length > 0 ? (
           <StocksTable stocks={stocks} loading={loading} />
         ) : (
@@ -1187,7 +1197,7 @@ const ConsultaStocks = () => {
             <div className="search-icon">
               <FaSearch />
             </div>
-            <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
+            <p className="no-results-text">{t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}</p>
           </div>
         )
       ) : (
@@ -1195,7 +1205,7 @@ const ConsultaStocks = () => {
           <div className="search-icon">
             <FaSearch />
           </div>
-          <p className="no-results-text">UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA</p>
+          <p className="no-results-text">{t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}</p>
         </div>
       )}
     </div>
