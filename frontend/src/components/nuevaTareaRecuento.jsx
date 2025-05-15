@@ -305,19 +305,19 @@ const NuevaTareaRecuento = () => {
   return (
     <div className="nueva-tarea-container">
       <h1 className="nueva-tarea-title">
-        NUEVA TAREA RECUENTO
+        {t('NUEVA TAREA RECUENTO')}
       </h1>
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 1 -</span> DATOS GENERALES DE LA TAREA
+          <span className="paso-number">{t('PASO 1')} -</span> {t('DATOS GENERALES DE LA TAREA')}
         </div>
         
         <div className="input-container">
           <input
             type="text"
             className="tarea-input"
-            placeholder="Nombre de la tarea *"
+            placeholder={t("Nombre de la tarea")}
             value={nombreTarea}
             onChange={(e) => setNombreTarea(e.target.value)}
             maxLength={50}
@@ -328,7 +328,7 @@ const NuevaTareaRecuento = () => {
         <div className="input-container">
           <textarea
             className="tarea-textarea"
-            placeholder="Descripción de la tarea *"
+            placeholder={t("Descripción de la tarea")}
             value={descripcionTarea}
             onChange={(e) => setDescripcionTarea(e.target.value)}
             maxLength={200}
@@ -339,7 +339,7 @@ const NuevaTareaRecuento = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 2 -</span> ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA
+          <span className="paso-number">{t('PASO 2')} -</span> {t('ALIAS Y ÁMBITO QUE INCLUIRÁ ESTA TAREA')}
         </div>
         
         <div className="alias-select-container" ref={dropdownRef}>
@@ -357,7 +357,7 @@ const NuevaTareaRecuento = () => {
                 <input
                   type="text"
                   className="alias-search-input"
-                  placeholder="Buscar..."
+                  placeholder={t("Buscar...")}
                   value={aliasSearchTerm}
                   onChange={handleSearchInputChange}
                 />
@@ -394,7 +394,7 @@ const NuevaTareaRecuento = () => {
                     onChange={() => {}}
                     className="alias-checkbox"
                   />
-                  <span>Seleccionar todo</span>
+                  <span>{t('Seleccionar todo')}</span>
                 </div>
               </div>
             </div>
@@ -403,25 +403,24 @@ const NuevaTareaRecuento = () => {
         
         {selectedAliases.length > 0 ? (
           <div className="alias-table-container">
-            <div className="alias-count">{selectedAliases.length} alias incluidos</div>
-            
-            {showDeleteAction && (
-              <div className="articulos-actions-bar">
-                <div className="articulos-selection-info">
-                  <span className="articulos-selected-count">
-                    {selectedRowsForDelete.length} alias seleccionados
-                  </span>
+            <div className="alias-count">{t('{{count}} alias incluidos', { count: selectedAliases.length })}</div>
+              {showDeleteAction && (
+                <div className="articulos-actions-bar">
+                  <div className="articulos-selection-info">
+                    <span className="articulos-selected-count">
+                      {t('{{count}} alias seleccionados', { count: selectedRowsForDelete.length })}
+                    </span>
+                  </div>
+                  <button 
+                    className="delete-button"
+                    onClick={handleDeleteSelectedRows}
+                    disabled={selectedRowsForDelete.length === 0}
+                  >
+                    <FaTrash className="action-icon" />
+                    {t('Eliminar')}
+                  </button>
                 </div>
-                <button 
-                  className="delete-button"
-                  onClick={handleDeleteSelectedRows}
-                  disabled={selectedRowsForDelete.length === 0}
-                >
-                  <FaTrash className="action-icon" />
-                  Eliminar
-                </button>
-              </div>
-            )}            
+              )}            
             <table className="alias-table">
               <thead>
                 <tr>
@@ -432,11 +431,11 @@ const NuevaTareaRecuento = () => {
                       checked={selectedRowsForDelete.length === selectedAliases.length && selectedAliases.length > 0}
                     />
                   </th>
-                  <th>ID ALIAS</th>
-                  <th>ALIAS</th>
-                  <th>ALIAS TIPO</th>
-                  <th>ESTADO ALIAS</th>
-                  <th>ALIAS PRINCIPAL ASOCIADO (RATIO)</th>
+                  <th>{t('ID ALIAS')}</th>
+                  <th>{t('ALIAS')}</th>
+                  <th>{t('ALIAS TIPO')}</th>
+                  <th>{t('ESTADO ALIAS')}</th>
+                  <th>{t('ALIAS PRINCIPAL ASOCIADO (RATIO)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -493,7 +492,7 @@ const NuevaTareaRecuento = () => {
             </table>
             
             <div className="description-text">
-              Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.
+              {t('Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.')}
             </div>
           
             <button 
@@ -509,7 +508,7 @@ const NuevaTareaRecuento = () => {
               }}
               onClick={() => setShowAmbitoModal(true)}
             >
-              DEFINIR ÁMBITO
+              {t('DEFINIR ÁMBITO')}
             </button>
             
             <DefinirAmbitoModal 
@@ -526,17 +525,17 @@ const NuevaTareaRecuento = () => {
             {selectedLocalizaciones.length > 0 && (
               <div className="ambito-selected-table" style={{ marginTop: '20px' }}>
                 <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
-                  {selectedLocalizaciones.length} localizaciones en las que se distribuirá la tarea
+                  {t('{{count}} localizaciones en las que se distribuirá la tarea', { count: selectedLocalizaciones.length })}
                 </div>
                 <table className="alias-table">
                   <thead>
                     <tr>
-                      <th>ID/GRUPO CADENA</th>
-                      <th>ID/CADENA</th>
-                      <th>MERCADO</th>
-                      <th>ID/LOCALIZACIÓN</th>
-                      <th>ESTADO DE TIENDA RAM</th>
-                      <th>ESTADO DE LA TIENDA EN LA TAREA</th>
+                      <th>{t('ID/GRUPO CADENA')}</th>
+                      <th>{t('ID/CADENA')}</th>
+                      <th>{t('MERCADO')}</th>
+                      <th>{t('ID/LOCALIZACIÓN')}</th>
+                      <th>{t('ESTADO DE TIENDA RAM')}</th>
+                      <th>{t('ESTADO DE LA TIENDA EN LA TAREA')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -567,8 +566,8 @@ const NuevaTareaRecuento = () => {
         ) : (
           <div className="selected-aliases-container">
             <div className="no-aliases-message">
-              <p className="no-aliases-text">NO HAY ALIAS SELECCIONADOS</p>
-              <p className="aliases-help-text">UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA</p>
+              <p className="no-aliases-text">{t('NO HAY ALIAS SELECCIONADOS')}</p>
+              <p className="aliases-help-text">{t('UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA')}</p>
             </div>
           </div>
         )}
@@ -576,14 +575,14 @@ const NuevaTareaRecuento = () => {
       
       <div className="buttons-container">
         <button className="cancel-button" onClick={handleCancel}>
-          CANCELAR
+          {t('CANCELAR')}
         </button>
         <button
           className="create-button"
           onClick={handleSubmit}
           disabled={!nombreTarea || !descripcionTarea || selectedAliases.length === 0}
         >
-          CREAR
+          {t('CREAR')}
         </button>
       </div>
     </div>

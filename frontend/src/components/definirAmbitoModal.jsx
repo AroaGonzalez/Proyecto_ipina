@@ -449,7 +449,7 @@ const filteredLocalizaciones = localizaciones.filter(loc => {
 
 const getSelectedGrupoCadenaText = () => {
   if (selectedGruposCadena.length === 0) {
-    return t('Id o Grupo Cadena (16)');
+    return t('Id o Grupo Cadena (T6)');
   } else if (selectedGruposCadena.length === 1) {
     const grupo = gruposCadena.find(g => g.id === selectedGruposCadena[0]);
     return `${selectedGruposCadena[0]} - ${grupo?.descripcion || 'Zara'}`;

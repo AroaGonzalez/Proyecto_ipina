@@ -66,21 +66,20 @@ const Recuentos = () => {
     const [tamañoPagina] = useState(50);
     const [scrollPosition, setScrollPosition] = useState(0);
 
-
     const StatusTag = ({ status, type }) => {
         let className = 'status-tag';
         
         const normalizedStatus = status ? status.toUpperCase().trim() : '';
         
-        if (normalizedStatus === 'RECOGIDO') {
+        if (normalizedStatus === 'RECOGIDO' || normalizedStatus === 'RECEIVED') {
         className += ' status-recogido';
-        } else if (normalizedStatus === 'RESPUESTA') {
+        } else if (normalizedStatus === 'RESPUESTA' || normalizedStatus === 'ANSWERED') {
         className += ' status-respuesta';
         } else if (normalizedStatus === 'VALIDADO') {
         className += ' status-validado';
-        } else if (normalizedStatus === 'PENDIENTE') {
+        } else if (normalizedStatus === 'PENDIENTE' || normalizedStatus === 'PENDING') {
         className += ' status-validado';
-        } else if (normalizedStatus === 'DESCARTADO') {
+        } else if (normalizedStatus === 'DESCARTADO' || normalizedStatus === 'DISCARDED') {
         className += ' status-descartado';
         }
         
@@ -195,39 +194,45 @@ const Recuentos = () => {
     };
 
     useEffect(() => {
-        const fetchInitialData = async () => {
-        try {
-            setLoading(true);
-            
-            const [
-            mercadosRes,
-            gruposCadenaRes,
-            eventosRes,
-            estadosLineaRes,
-            tiposAliasRes,
-            nombreAliasRes
-            ] = await Promise.all([
-            axios.get(`${BASE_URL}/eventos/mercados?idIdioma=${languageId}`),
-            axios.get(`${BASE_URL}/eventos/grupos-cadena?idIdioma=${languageId}`),
-            axios.get(`${BASE_URL}/eventos/eventos?idIdioma=${languageId}`),
-            axios.get(`${BASE_URL}/recuento/estados?idIdioma=${languageId}`),
-            axios.get(`${BASE_URL}/tipos-alias?idIdioma=${languageId}`),
-            axios.get(`${BASE_URL}/alias?idIdioma=${languageId}`)
-            ]);
-            
-            setMercados(mercadosRes.data || []);
-            setGruposCadena(gruposCadenaRes.data || []);
-            setEventos(eventosRes.data || []);
-            setEstadosLinea(estadosLineaRes.data || []);
-            setTiposAlias(tiposAliasRes.data || []);
-            setNombreAlias(nombreAliasRes.data || []);
-            
-        } catch (error) {
-            console.error('Error al cargar datos iniciales:', error);
-            setError('Error al cargar los datos. Por favor, inténtelo de nuevo.');
-        } finally {
+        setTimeout(() => {
             setLoading(false);
-        }
+        }, 100);
+    }, []);
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                setLoading(true);
+                
+                const [
+                    mercadosRes,
+                    gruposCadenaRes,
+                    eventosRes,
+                    estadosLineaRes,
+                    tiposAliasRes,
+                    nombreAliasRes
+                ] = await Promise.all([
+                    axios.get(`${BASE_URL}/eventos/mercados?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/eventos/grupos-cadena?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/eventos/eventos?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/recuento/estados?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/tipos-alias?idIdioma=${languageId}`),
+                    axios.get(`${BASE_URL}/alias?idIdioma=${languageId}`)
+                ]);
+                
+                setMercados(mercadosRes.data || []);
+                setGruposCadena(gruposCadenaRes.data || []);
+                setEventos(eventosRes.data || []);
+                setEstadosLinea(estadosLineaRes.data || []);
+                setTiposAlias(tiposAliasRes.data || []);
+                setNombreAlias(nombreAliasRes.data || []);
+                
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                setError('Error al cargar los datos. Por favor, inténtelo de nuevo.');
+            } finally {
+                setLoading(false);
+            }
         };
         
         fetchInitialData();
@@ -622,7 +627,7 @@ const Recuentos = () => {
     const RecuentosTable = () => {
 
         if (loading && recuentos.length === 0) {
-            return <div className="loading-indicator">Cargando...</div>;
+            return <div className="loading-indicator">{t('Cargando...')}</div>;
         }  
 
         if (!showResults || recuentos.length === 0) {
@@ -644,27 +649,27 @@ const Recuentos = () => {
                                     />
                                 </div>
                             </th>
-                            <th className="id-column">ID EVENTO</th>
-                            <th className="medium-text-column">EVENTO</th>
-                            <th className="short-text-column">ESTADO DE LA LÍNEA</th>
-                            <th className="id-column">ID LOCALIZACIÓN</th>
-                            <th className="medium-text-column">LOCALIZACIÓN</th>
-                            <th className="id-column">ID ALIAS</th>
-                            <th className="medium-text-column">ALIAS</th>
-                            <th className="short-text-column">ALIAS TIPO</th>
-                            <th className="short-text-column">STOCK</th>
-                            <th className="short-text-column">STOCK VALIDADO</th>
-                            <th className="short-text-column">CAPACIDAD MÁXIMA</th>
-                            <th className="short-text-column">CAPACIDAD MÁXIMA VALIDADA</th>
-                            <th className="id-column">ID ARTÍCULO</th>
-                            <th className="medium-text-column">ARTÍCULO</th>
-                            <th className="short-text-column">COD EJECUCIÓN</th>
-                            <th className="short-text-column">CADENA</th>
-                            <th className="short-text-column">MERCADO</th>
-                            <th className="date-column">FECHA DE CREACIÓN</th>
-                            <th className="date-column">FECHA DE RECOGIDA</th>
-                            <th className="date-column">FECHA DE RESPUESTA</th>
-                            <th className="date-column">FECHA VALIDACIÓN</th>
+                            <th className="id-column">{t('ID EVENTO')}</th>
+                            <th className="medium-text-column">{t('EVENTO')}</th>
+                            <th className="short-text-column">{t('ESTADO DE LA LÍNEA')}</th>
+                            <th className="id-column">{t('ID LOCALIZACIÓN')}</th>
+                            <th className="medium-text-column">{t('LOCALIZACIÓN')}</th>
+                            <th className="id-column">{t('ID ALIAS')}</th>
+                            <th className="medium-text-column">{t('ALIAS')}</th>
+                            <th className="short-text-column">{t('ALIAS TIPO')}</th>
+                            <th className="short-text-column">{t('STOCK')}</th>
+                            <th className="short-text-column">{t('STOCK VALIDADO')}</th>
+                            <th className="short-text-column">{t('CAPACIDAD MÁXIMA')}</th>
+                            <th className="short-text-column">{t('CAPACIDAD MÁXIMA VALIDADA')}</th>
+                            <th className="id-column">{t('ID ARTÍCULO')}</th>
+                            <th className="medium-text-column">{t('ARTÍCULO')}</th>
+                            <th className="short-text-column">{t('COD EJECUCIÓN')}</th>
+                            <th className="short-text-column">{t('CADENA')}</th>
+                            <th className="short-text-column">{t('MERCADO')}</th>
+                            <th className="date-column">{t('FECHA DE CREACIÓN')}</th>
+                            <th className="date-column">{t('FECHA DE RECOGIDA')}</th>
+                            <th className="date-column">{t('FECHA DE RESPUESTA')}</th>
+                            <th className="date-column">{t('FECHA VALIDACIÓN')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -786,7 +791,7 @@ const Recuentos = () => {
                         {loadingMore && (
                             <tr>
                                 <td colSpan="18" className="loading-more-cell">
-                                <div className="loading-more-indicator">Cargando más resultados...</div>
+                                <div className="loading-more-indicator">{t('Cargando más resultados...')}</div>
                                 </td>
                             </tr>
                         )}
@@ -800,492 +805,456 @@ const Recuentos = () => {
     return (
         <div className="recuentos-container">
         <div className="recuentos-header">
-            <h1 className="recuentos-title">RECUENTOS</h1>
+            <h1 className="recuentos-title">{t('RECUENTOS')}</h1>
             <div className="filter-toggle">
             <button className="filter-button" onClick={toggleFilters}>
-                <FaFilter /> {showFilters ? 'OCULTAR FILTROS' : 'MOSTRAR FILTROS'}
+                <FaFilter /> {showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}
             </button>
             </div>
         </div>
         
         {showFilters && (
             <div className="filters-section" ref={dropdownRef}>
-            <div className="filters-row">
-                <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('mercado')}
-                >
-                    <label className="filter-label">Id o Mercado</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedMercados.length > 0 
-                        ? `${selectedMercados.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'mercado' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar mercado..." 
-                            value={mercadoSearch}
-                            onChange={(e) => setMercadoSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                <div className="filters-row">
+                    <div className="filter-field">
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('mercado')}
+                    >
+                        <label className="filter-label">{t('Id o Mercado')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedMercados.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedMercados.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
                         </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(mercados, mercadoSearch).map((mercado) => (
-                            <div 
-                            key={mercado.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('mercado', mercado.id);
-                            }}
-                            >
+                        {openFilter === 'mercado' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
                             <input 
-                                type="checkbox" 
-                                checked={selectedMercados.includes(mercado.id)}
-                                readOnly
+                                type="text" 
+                                placeholder={t("Buscar mercado...")}
+                                value={mercadoSearch}
+                                onChange={(e) => setMercadoSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
                             />
-                            <span>{mercado.id} - {normalizeText(mercado.descripcion)}</span>
                             </div>
-                        ))}
-                        </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedMercados.length === mercados.length) {
-                                setSelectedMercados([]);
-                                } else {
-                                setSelectedMercados(mercados.map(item => item.id));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedMercados.length === mercados.length && mercados.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
-                    </div>
-                    )}
-                </div>
-                </div>
-                
-                <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('grupoCadena')}
-                >
-                    <label className="filter-label">Id o Grupo Cadena (T6)</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedGruposCadena.length > 0 
-                        ? `${selectedGruposCadena.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'grupoCadena' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar grupo cadena..." 
-                            value={grupoCadenaSearch}
-                            onChange={(e) => setGrupoCadenaSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                        </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(gruposCadena, grupoCadenaSearch).map((grupo) => (
-                            <div 
-                            key={grupo.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('grupoCadena', grupo.id);
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedGruposCadena.includes(grupo.id)}
-                                readOnly
-                            />
-                            <span>{grupo.id} - {normalizeText(grupo.descripcion)}</span>
+                            <div className="dropdown-items">
+                            {filterBySearch(mercados, mercadoSearch).map((mercado) => (
+                                <div 
+                                key={mercado.id} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('mercado', mercado.id);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedMercados.includes(mercado.id)}
+                                    readOnly
+                                />
+                                <span>{mercado.id} - {normalizeText(mercado.descripcion)}</span>
+                                </div>
+                            ))}
                             </div>
-                        ))}
-                        </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedGruposCadena.length === gruposCadena.length) {
-                                setSelectedGruposCadena([]);
-                                } else {
-                                setSelectedGruposCadena(gruposCadena.map(item => item.id));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedGruposCadena.length === gruposCadena.length && gruposCadena.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
-                    </div>
-                    )}
-                </div>
-                </div>
-                
-                <div className="filter-field">
-                <label className="filter-label">Id Localización</label>
-                <input
-                    type="text"
-                    placeholder="Id Localización"
-                    value={idLocalizacion}
-                    onChange={(e) => setIdLocalizacion(e.target.value)}
-                    className="filter-input"
-                />
-                </div>
-                
-                <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('nombreAlias')}
-                >
-                    <label className="filter-label">Id o Nombre de Alias</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedNombreAlias.length > 0 
-                        ? `${selectedNombreAlias.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'nombreAlias' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar alias..." 
-                            value={nombreAliasSearch}
-                            onChange={(e) => setNombreAliasSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                        </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(nombreAlias, nombreAliasSearch).map((alias) => (
                             <div 
-                            key={alias.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('nombreAlias', alias.id);
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedNombreAlias.includes(alias.id)}
-                                readOnly
-                            />
-                            <span>{alias.id} - {normalizeText(alias.descripcion || alias.nombre)}</span>
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedMercados.length === mercados.length) {
+                                    setSelectedMercados([]);
+                                    } else {
+                                    setSelectedMercados(mercados.map(item => item.id));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedMercados.length === mercados.length && mercados.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
                             </div>
-                        ))}
                         </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedNombreAlias.length === nombreAlias.length) {
-                                setSelectedNombreAlias([]);
-                                } else {
-                                setSelectedNombreAlias(nombreAlias.map(item => item.id));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedNombreAlias.length === nombreAlias.length && nombreAlias.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
+                        )}
                     </div>
-                    )}
-                </div>
+                    </div>
+                    
+                    <div className="filter-field">
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('grupoCadena')}
+                    >
+                        <label className="filter-label">{t('Id o Grupo Cadena (T6)')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedGruposCadena.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedGruposCadena.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
+                        </div>
+                        {openFilter === 'grupoCadena' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
+                            <input 
+                                type="text" 
+                                placeholder={t("Buscar grupo cadena...")}
+                                value={grupoCadenaSearch}
+                                onChange={(e) => setGrupoCadenaSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            </div>
+                            <div className="dropdown-items">
+                            {filterBySearch(gruposCadena, grupoCadenaSearch).map((grupo) => (
+                                <div 
+                                key={grupo.id} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('grupoCadena', grupo.id);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedGruposCadena.includes(grupo.id)}
+                                    readOnly
+                                />
+                                <span>{grupo.id} - {normalizeText(grupo.descripcion)}</span>
+                                </div>
+                            ))}
+                            </div>
+                            <div 
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedGruposCadena.length === gruposCadena.length) {
+                                    setSelectedGruposCadena([]);
+                                    } else {
+                                    setSelectedGruposCadena(gruposCadena.map(item => item.id));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedGruposCadena.length === gruposCadena.length && gruposCadena.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                    </div>
+                    
+                    <div className="filter-field">
+                    <label className="filter-label">{t('Id Localización')}</label>
+                    <input
+                        type="text"
+                        placeholder={t("Id Localización")}
+                        value={idLocalizacion}
+                        onChange={(e) => setIdLocalizacion(e.target.value)}
+                        className="filter-input"
+                    />
+                    </div>
+                    
+                    <div className="filter-field">
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('nombreAlias')}
+                    >
+                        <label className="filter-label">{t('Id o Nombre de Alias')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedNombreAlias.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedNombreAlias.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
+                        </div>
+                        {openFilter === 'nombreAlias' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
+                            <input 
+                                type="text" 
+                                placeholder={t("Buscar alias...")}
+                                value={nombreAliasSearch}
+                                onChange={(e) => setNombreAliasSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            </div>
+                            <div className="dropdown-items">
+                            {filterBySearch(nombreAlias, nombreAliasSearch).map((alias) => (
+                                <div 
+                                key={alias.id} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('nombreAlias', alias.id);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedNombreAlias.includes(alias.id)}
+                                    readOnly
+                                />
+                                <span>{alias.id} - {normalizeText(alias.descripcion || alias.nombre)}</span>
+                                </div>
+                            ))}
+                            </div>
+                            <div 
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedNombreAlias.length === nombreAlias.length) {
+                                    setSelectedNombreAlias([]);
+                                    } else {
+                                    setSelectedNombreAlias(nombreAlias.map(item => item.id));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedNombreAlias.length === nombreAlias.length && nombreAlias.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
+                            </div>
+                        </div>
+                        )}
+                    </div>
                 </div>
             </div>
             
             <div className="filters-row">
                 <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('tipoAlias')}
-                >
-                    <label className="filter-label">Tipo de Alias</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedTiposAlias.length > 0 
-                        ? `${selectedTiposAlias.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'tipoAlias' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar tipo..." 
-                            value={tipoAliasSearch}
-                            onChange={(e) => setTipoAliasSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('tipoAlias')}
+                    >
+                        <label className="filter-label">{t('Tipo de Alias')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedTiposAlias.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedTiposAlias.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
                         </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(tiposAlias, tipoAliasSearch).map((tipo) => (
-                            <div 
-                            key={tipo.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('tipoAlias', tipo.id);
-                            }}
-                            >
+                        {openFilter === 'tipoAlias' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
                             <input 
-                                type="checkbox" 
-                                checked={selectedTiposAlias.includes(tipo.id)}
-                                readOnly
+                                type="text" 
+                                placeholder={t("Buscar tipo...")}
+                                value={tipoAliasSearch}
+                                onChange={(e) => setTipoAliasSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
                             />
-                            <span>{tipo.id} - {normalizeText(tipo.descripcion)}</span>
                             </div>
-                        ))}
+                            <div className="dropdown-items">
+                            {filterBySearch(tiposAlias, tipoAliasSearch).map((tipo) => (
+                                <div 
+                                key={tipo.id} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('tipoAlias', tipo.id);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedTiposAlias.includes(tipo.id)}
+                                    readOnly
+                                />
+                                <span>{tipo.id} - {normalizeText(tipo.descripcion)}</span>
+                                </div>
+                            ))}
+                            </div>
+                            <div 
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedTiposAlias.length === tiposAlias.length) {
+                                    setSelectedTiposAlias([]);
+                                    } else {
+                                    setSelectedTiposAlias(tiposAlias.map(item => item.id));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedTiposAlias.length === tiposAlias.length && tiposAlias.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
+                            </div>
                         </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedTiposAlias.length === tiposAlias.length) {
-                                setSelectedTiposAlias([]);
-                                } else {
-                                setSelectedTiposAlias(tiposAlias.map(item => item.id));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedTiposAlias.length === tiposAlias.length && tiposAlias.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
+                        )}
                     </div>
-                    )}
-                </div>
                 </div>
                 
                 <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('estadoLinea')}
-                >
-                    <label className="filter-label">Id o Estado de Línea</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedEstadosLinea.length > 0 
-                        ? `${selectedEstadosLinea.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'estadoLinea' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar estado..." 
-                            value={estadoLineaSearch}
-                            onChange={(e) => setEstadoLineaSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('estadoLinea')}
+                    >
+                        <label className="filter-label">{t('Id o Estado de Línea')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedEstadosLinea.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedEstadosLinea.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
                         </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(estadosLinea, estadoLineaSearch).map((estado) => (
-                            <div 
-                            key={estado.id} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('estadoLinea', estado.id);
-                            }}
-                            >
+                        {openFilter === 'estadoLinea' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
                             <input 
-                                type="checkbox" 
-                                checked={selectedEstadosLinea.includes(estado.id)}
-                                readOnly
+                                type="text" 
+                                placeholder={t("Buscar estado...")}
+                                value={estadoLineaSearch}
+                                onChange={(e) => setEstadoLineaSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
                             />
-                            <span>{estado.id} - {estado.descripcion}</span>
                             </div>
-                        ))}
+                            <div className="dropdown-items">
+                            {filterBySearch(estadosLinea, estadoLineaSearch).map((estado) => (
+                                <div 
+                                key={estado.id} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('estadoLinea', estado.id);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedEstadosLinea.includes(estado.id)}
+                                    readOnly
+                                />
+                                <span>{estado.id} - {estado.descripcion}</span>
+                                </div>
+                            ))}
+                            </div>
+                            <div 
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedEstadosLinea.length === estadosLinea.length) {
+                                    setSelectedEstadosLinea([]);
+                                    } else {
+                                    setSelectedEstadosLinea(estadosLinea.map(item => item.id));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedEstadosLinea.length === estadosLinea.length && estadosLinea.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
+                            </div>
                         </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedEstadosLinea.length === estadosLinea.length) {
-                                setSelectedEstadosLinea([]);
-                                } else {
-                                setSelectedEstadosLinea(estadosLinea.map(item => item.id));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedEstadosLinea.length === estadosLinea.length && estadosLinea.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
+                        )}
                     </div>
-                    )}
-                </div>
                 </div>
                 
                 <div className="filter-field">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('nombreEvento')}
-                >
-                    <label className="filter-label">Id o Nombre Evento</label>
-                    <div className="filter-value">
-                    <span className="filter-placeholder">
-                        {selectedEventos.length > 0 
-                        ? `${selectedEventos.length} seleccionados` 
-                        : 'Seleccionar'}
-                    </span>
-                    <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'nombreEvento' && (
-                    <div className="filter-dropdown-content">
-                        <div className="dropdown-search">
-                        <input 
-                            type="text" 
-                            placeholder="Buscar evento..." 
-                            value={nombreEventoSearch}
-                            onChange={(e) => setNombreEventoSearch(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                    <div 
+                        className="filter-dropdown"
+                        onClick={() => toggleFilter('nombreEvento')}
+                    >
+                        <label className="filter-label">{t('Id o Nombre Evento')}</label>
+                        <div className="filter-value">
+                            <span className="filter-placeholder">
+                                {selectedEventos.length > 0 
+                                ? t('{{count}} seleccionados', { count: selectedEventos.length })
+                                : t('Seleccionar')}
+                            </span>
+                        <FaChevronDown className="dropdown-arrow" />
                         </div>
-                        <div className="dropdown-items">
-                        {filterBySearch(eventos, nombreEventoSearch).map((evento) => (
-                            <div 
-                            key={evento.idEvento} 
-                            className="dropdown-item"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleFilterSelect('evento', evento.idEvento);
-                            }}
-                            >
+                        {openFilter === 'nombreEvento' && (
+                        <div className="filter-dropdown-content">
+                            <div className="dropdown-search">
                             <input 
-                                type="checkbox" 
-                                checked={selectedEventos.includes(evento.idEvento)}
-                                readOnly
+                                type="text" 
+                                placeholder={t("Buscar evento...")}
+                                value={nombreEventoSearch}
+                                onChange={(e) => setNombreEventoSearch(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
                             />
-                            <span>{`${evento.idEvento} - ${normalizeText(evento.nombre || '')}`}</span>
                             </div>
-                        ))}
+                            <div className="dropdown-items">
+                            {filterBySearch(eventos, nombreEventoSearch).map((evento) => (
+                                <div 
+                                key={evento.idEvento} 
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFilterSelect('evento', evento.idEvento);
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedEventos.includes(evento.idEvento)}
+                                    readOnly
+                                />
+                                <span>{`${evento.idEvento} - ${normalizeText(evento.nombre || '')}`}</span>
+                                </div>
+                            ))}
+                            </div>
+                            <div 
+                                className="dropdown-item select-all"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedEventos.length === eventos.length) {
+                                    setSelectedEventos([]);
+                                    } else {
+                                    setSelectedEventos(eventos.map(item => item.idEvento));
+                                    }
+                                }}
+                                >
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedEventos.length === eventos.length && eventos.length > 0}
+                                    readOnly
+                                />
+                                <span>{t('Seleccionar todo')}</span>
+                            </div>
                         </div>
-                        <div 
-                            className="dropdown-item select-all"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (selectedEventos.length === eventos.length) {
-                                setSelectedEventos([]);
-                                } else {
-                                setSelectedEventos(eventos.map(item => item.idEvento));
-                                }
-                            }}
-                            >
-                            <input 
-                                type="checkbox" 
-                                checked={selectedEventos.length === eventos.length && eventos.length > 0}
-                                readOnly
-                            />
-                            <span>Seleccionar todo</span>
-                        </div>
+                        )}
                     </div>
-                    )}
-                </div>
                 </div>
                 
                 <div className="filter-field">
-                <label className="filter-label">Id Ejecución</label>
-                <input
-                    type="text"
-                    placeholder="Id Ejecución"
-                    value={idEjecucion}
-                    onChange={(e) => setIdEjecucion(e.target.value)}
-                    className="filter-input"
+                    <label className="filter-label">{t('Id Ejecución')}</label>
+                    <input
+                        type="text"
+                        placeholder={t("Id Ejecución")}
+                        value={idEjecucion}
+                        onChange={(e) => setIdEjecucion(e.target.value)}
+                        className="filter-input"
                 />
                 </div>
             </div>
             
             <div className="filters-row">
-                <div className="date-fields-group">
-                    <div className="filter-field">
-                        <label className="filter-label">Inicio Fecha Creación</label>
-                        <div className="date-input-container">
-                            <DatePicker
-                            selected={inicioFechaCreacion}
-                            onChange={(date) => setInicioFechaCreacion(date)}
-                            dateFormat="dd/MM/yyyy"
-                            placeholderText="Inicio Fecha Creación"
-                            className="filter-input"
-                            showIcon
-                            icon={<FaCalendarAlt className="calendar-icon" />}
-                            isClearable
-                            locale="es"
-                            />
-                        </div>
-                    </div>
-                
-                    <div className="filter-field">
-                        <label className="filter-label">Fin Fecha Creación</label>
-                        <div className="date-input-container">
-                            <DatePicker
-                            selected={finFechaCreacion}
-                            onChange={(date) => setFinFechaCreacion(date)}
-                            dateFormat="dd/MM/yyyy"
-                            placeholderText="Fin Fecha Creación"
-                            className="filter-input"
-                            showIcon
-                            icon={<FaCalendarAlt className="calendar-icon" />}
-                            isClearable
-                            locale="es"
-                            />
-                        </div>
-                    </div>
-                </div>
-                
                 <div className="search-button-container">
-                <button className="reset-button" onClick={clearFilters}>
-                    <FaUndo />
-                </button>
-                <button 
-                    className="search-button" 
-                    onClick={handleSearch}
-                    disabled={loading}
-                >
-                    BUSCAR
-                </button>
+                    <button className="reset-button" onClick={clearFilters}>
+                        <FaUndo />
+                    </button>
+                    <button 
+                        className="search-button" 
+                        onClick={handleSearch}
+                        disabled={loading}
+                    >
+                        {t('BUSCAR')}
+                    </button>
                 </div>
             </div>
             </div>
@@ -1294,7 +1263,10 @@ const Recuentos = () => {
         {showResults && (
             <div className="recuentos-results-info">
                 <div className="results-count">
-                    {t('Cargados')} {recuentos.length} {t('resultados de')} {totalElements} {t('encontrados')}
+                    {t('Cargados {{count}} resultados de {{total}} encontrados', {
+                        count: recuentos.length,
+                        total: totalElements
+                    })}
                     <span className="last-update">
                         <FaRedo className="update-icon" />
                         {t('Última actualización')}: {formatTime(ultimaActualizacion)}
@@ -1306,7 +1278,10 @@ const Recuentos = () => {
         {selectedRecuentos.length > 0 && (
             <div className="selection-toolbar">
                 <div className="selection-info">
-                Seleccionados {selectedRecuentos.length} resultados de {totalElements} encontrados
+                    {t('Seleccionados {{count}} resultados de {{total}} encontrados', { 
+                        count: selectedRecuentos.length, 
+                        total: totalElements 
+                    })}
                 </div>
                 <div className="selection-actions">
                 <button 
@@ -1315,7 +1290,7 @@ const Recuentos = () => {
                     title="Descartar"
                     disabled={!canDiscard}
                 >
-                    <FaTrash /> DESCARTAR
+                    <FaTrash /> {t('DESCARTAR')}
                 </button>
                 <button 
                     className={`action-button ${!canValidate ? 'disabled' : ''}`}
@@ -1323,7 +1298,7 @@ const Recuentos = () => {
                     title="Validar"
                     disabled={!canValidate}
                 >
-                    VALIDAR
+                    {t('VALIDAR')}
                 </button>
                 <button 
                     className={`action-button publish-button ${!canPublish ? 'disabled' : ''}`}
@@ -1331,7 +1306,7 @@ const Recuentos = () => {
                     title="Publicar en 07"
                     disabled={!canPublish}
                 >
-                    <span>PUBLICAR EN 07</span>
+                    <span>{t('PUBLICAR EN 07')}</span>
                 </button>
                 </div>
             </div>
@@ -1340,7 +1315,7 @@ const Recuentos = () => {
         {showResults ? (
             loading ? (
                 <div className="results-section">
-                <div className="loading-indicator">Cargando...</div>
+                <div className="loading-indicator">{t('Cargando...')}</div>
                 </div>
             ) : recuentos.length > 0 ? (
                 <RecuentosTable recuentos={recuentos} loading={loading} />
@@ -1351,7 +1326,7 @@ const Recuentos = () => {
                     <FaSearch />
                     </div>
                     <p className="no-results-text">
-                    UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+                        {t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}
                     </p>
                 </div>
                 </div>
@@ -1363,7 +1338,7 @@ const Recuentos = () => {
                     <FaSearch />
                 </div>
                 <p className="no-results-text">
-                    UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+                    {t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}
                 </p>
                 </div>
             </div>

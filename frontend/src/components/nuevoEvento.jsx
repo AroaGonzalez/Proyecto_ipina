@@ -221,19 +221,19 @@ const NuevoEvento = () => {
   return (
     <div className="nuevo-evento-container">
       <h1 className="nuevo-evento-title">
-        NUEVO EVENTO
+        {t('NUEVO EVENTO')}
       </h1>
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 1</span> - DATOS EVENTO
+          <span className="paso-number">{t('PASO 1')}</span> - {t('DATOS EVENTO')}
         </div>
         
         <div className="input-container">
           <input
             type="text"
             className="evento-input"
-            placeholder="Nombre del evento *"
+            placeholder={t("Nombre del evento")}
             value={nombreEvento}
             onChange={(e) => setNombreEvento(e.target.value)}
             maxLength={50}
@@ -244,7 +244,7 @@ const NuevoEvento = () => {
         <div className="input-container">
           <textarea
             className="evento-textarea"
-            placeholder="Descripción evento *"
+            placeholder={t("Descripción evento")}
             value={descripcionEvento}
             onChange={(e) => setDescripcionEvento(e.target.value)}
             maxLength={200}
@@ -255,7 +255,7 @@ const NuevoEvento = () => {
       
       <div>
         <div className="paso-title">
-          <span className="paso-number">PASO 2</span> - TAREAS ASOCIADAS
+          <span className="paso-number">{t('PASO 2')}</span> - {t('TAREAS ASOCIADAS')}
           {selectedTareas.length > 0 && <span className="success-icon">✓</span>}
         </div>
         
@@ -265,7 +265,7 @@ const NuevoEvento = () => {
               className="custom-dropdown"
               onClick={() => toggleDropdown('tipoTarea')}
             >
-              <span>{selectedTipoTarea ? selectedTipoTarea.descripcion : "Tipo de Tarea"}</span>
+              <span>{selectedTipoTarea ? selectedTipoTarea.descripcion : t("Tipo de Tarea")}</span>
               <span className="dropdown-icon">▼</span>
               
               {showTipoTareaDropdown && (
@@ -290,7 +290,7 @@ const NuevoEvento = () => {
               onClick={() => toggleDropdown('tarea')}
               style={{ opacity: selectedTipoTarea ? 1 : 0.6, pointerEvents: selectedTipoTarea ? 'auto' : 'none' }}
             >
-              <span>Id o Nombre de Tareas *</span>
+              <span>{t('Id o Nombre de Tareas')}</span>
               <span className="dropdown-icon">▼</span>
               
               {showTareaDropdown && (
@@ -298,7 +298,7 @@ const NuevoEvento = () => {
                   <div className="dropdown-search">
                     <input 
                       type="text" 
-                      placeholder="Buscar tarea..." 
+                      placeholder={t("Buscar tarea...")}
                       value={tareaSearchTerm}
                       onChange={(e) => setTareaSearchTerm(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
@@ -327,7 +327,7 @@ const NuevoEvento = () => {
                         ))
                       ) : (
                         <div className="dropdown-item no-results">
-                          No se encontraron resultados
+                          {t('No se encontraron resultados')}
                         </div>
                       )}
                     </div>
@@ -344,7 +344,7 @@ const NuevoEvento = () => {
               <div className="articulos-actions-bar">
                 <div className="articulos-selection-info">
                   <span className="articulos-selected-count">
-                    {selectedRowsForDelete.length} tareas seleccionadas
+                    {t('{{count}} tareas seleccionadas', { count: selectedRowsForDelete.length })}
                   </span>
                 </div>
                 <button 
@@ -353,7 +353,7 @@ const NuevoEvento = () => {
                   disabled={selectedRowsForDelete.length === 0}
                 >
                   <FaTrash className="action-icon" />
-                  Eliminar
+                  {t('Eliminar')}
                 </button>
               </div>
             )}
@@ -368,13 +368,13 @@ const NuevoEvento = () => {
                       checked={selectedRowsForDelete.length === selectedTareas.length && selectedTareas.length > 0}
                     />
                   </th>
-                  <th>ID TAREA</th>
-                  <th>TAREA</th>
-                  <th>TIPO DE TAREA</th>
-                  <th>ESTADO DE LA TAREA</th>
-                  <th>MERCADOS</th>
-                  <th>CADENAS</th>
-                  <th>ALIAS</th>
+                  <th>{t('ID TAREA')}</th>
+                  <th>{t('TAREA')}</th>
+                  <th>{t('TIPO DE TAREA')}</th>
+                  <th>{t('ESTADO DE LA TAREA')}</th>
+                  <th>{t('MERCADOS')}</th>
+                  <th>{t('CADENAS')}</th>
+                  <th>{t('ALIAS')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -403,8 +403,8 @@ const NuevoEvento = () => {
           <div className="no-tareas-container">
             <div className="no-tareas-icon">⚠️</div>
             <div className="no-tareas-message">
-              <p>NO HAY TAREAS SELECCIONADAS</p>
-              <p>UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR TAREAS AL EVENTO</p>
+              <p>{t('NO HAY TAREAS SELECCIONADAS')}</p>
+              <p>{t('UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR TAREAS AL EVENTO')}</p>
             </div>
           </div>
         )}
@@ -413,7 +413,7 @@ const NuevoEvento = () => {
       {isDistribucion() && (
         <div>
           <div className="paso-title">
-            <span className="paso-number">PASO 3</span> - PROPIEDADES DE LA SOLICITUD EN SFI COMPRAS
+            <span className="paso-number">{t('PASO 3')}</span> - {t('PROPIEDADES DE LA SOLICITUD EN SFI COMPRAS')}
             <span className="info-icon" title="Información adicional">ⓘ</span>
             <span className="success-icon">✓</span>
           </div>
@@ -424,7 +424,7 @@ const NuevoEvento = () => {
               onClick={() => toggleDropdown('estado')}
               style={{ maxWidth: '250px' }}
             >
-              <span>PROPUESTA</span>
+              <span>{t('PROPUESTA')}</span>
               <span className="dropdown-icon">▼</span>
             </div>
           </div>
@@ -433,14 +433,14 @@ const NuevoEvento = () => {
       
       <div className="buttons-container">
         <button className="cancel-button" onClick={handleCancel}>
-          CANCELAR
+          {t('CANCELAR')}
         </button>
         <button
           className="create-button"
           onClick={handleSubmit}
           disabled={!nombreEvento || !descripcionEvento || selectedTareas.length === 0}
         >
-          CREAR
+          {t('CREAR')}
         </button>
       </div>
     </div>

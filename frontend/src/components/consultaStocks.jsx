@@ -56,7 +56,6 @@ const ConsultaStocks = () => {
   const [selectedStock, setSelectedStock] = useState(null);
   const [selectedStocks, setSelectedStocks] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [canRequestRecount, setCanRequestRecount] = useState(false);
   const [modifiedItems, setModifiedItems] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -135,25 +134,6 @@ const ConsultaStocks = () => {
       };
     }
   }, [loading, loadingMore, hasMore, stocks]);
-
-  useEffect(() => {
-    const selectedStockIds = selectedStocks;
-    if (selectedStockIds.length === 0) {
-      setCanRequestRecount(false);
-      return;
-    }
-
-    const allEligible = selectedStockIds.every(stockId => {
-      const [idAlias, idLocalizacionCompra] = stockId.split('-');
-      const stock = stocks.find(s => 
-        s.idAlias === parseInt(idAlias) && 
-        s.idLocalizacionCompra === parseInt(idLocalizacionCompra)
-      );
-      return stock && isStockEligibleForRecount(stock);
-    });
-
-    setCanRequestRecount(allEligible);
-  }, [selectedStocks, stocks]);
 
   const loadMoreStocks = async () => {
     if (!hasMore || loadingMore) return;
@@ -1173,15 +1153,6 @@ const ConsultaStocks = () => {
             >
               <span role="img" aria-label="document">📄</span>
               {saving ? t('GUARDANDO...') : t('GUARDAR CAMBIOS')}
-            </button>
-            <button 
-              className={`action-button ${canRequestRecount ? 'action-button-enabled' : ''}`}
-              disabled={!canRequestRecount}
-              onClick={() => {
-                console.log('Solicitar recuento para:', selectedStocks);
-              }}
-            >
-              <span>{t('SOLICITAR RECUENTO A TIENDA')}</span>
             </button>
           </div>
         </div>

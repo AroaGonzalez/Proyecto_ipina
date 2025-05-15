@@ -364,7 +364,7 @@ const Eventos = () => {
   };
   
     const fetchEventos = async () => {
-        try {
+      try {
         setLoading(true);
         setError(null);
         setPaginaActual(0);
@@ -384,61 +384,61 @@ const Eventos = () => {
         setUltimaActualizacion(new Date());
         
         if (
-            response.data.content.length === 0 || 
-            response.data.content.length < tamañoPagina || 
-            response.data.content.length === response.data.totalElements
+          response.data.content.length === 0 || 
+          response.data.content.length < tamañoPagina || 
+          response.data.content.length === response.data.totalElements
         ) {
-            setHasMore(false);
+          setHasMore(false);
         }
         
-        } catch (error) {
+      } catch (error) {
         console.error('Error al cargar eventos:', error);
         setError('Error al cargar los eventos');
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     };
 
     const renderEventoDropdownItems = (items, selectedItems, searchTerm) => {
-        const filteredItems = items.filter(item => {
-            if (!item) return false;
-            
-            const nombreStr = normalizeText(String(item.nombreEvento || '')).toLowerCase();
-            const idStr = String(item.idEvento || '');
-            const search = searchTerm.toLowerCase().trim();
-            
-            return nombreStr.includes(search) || idStr.includes(search);
-        });
+      const filteredItems = items.filter(item => {
+        if (!item) return false;
         
-        if (filteredItems.length === 0) {
-            return (
-                <div className="dropdown-item no-results">
-                    No se encontraron resultados
-                </div>
-            );
-        }
+        const nombreStr = normalizeText(String(item.nombreEvento || '')).toLowerCase();
+        const idStr = String(item.idEvento || '');
+        const search = searchTerm.toLowerCase().trim();
         
+        return nombreStr.includes(search) || idStr.includes(search);
+      });
+        
+      if (filteredItems.length === 0) {
         return (
-            <>
-                {filteredItems.map(item => (
-                    <div 
-                        key={item.idEvento} 
-                        className="dropdown-item"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleFilterSelect('idEvento', item.idEvento);
-                        }}
-                    >
-                        <input 
-                            type="checkbox" 
-                            checked={selectedItems.includes(item.idEvento)}
-                            readOnly
-                        />
-                        <span>{`${item.idEvento} - ${normalizeText(item.nombreEvento || '')}`}</span>
-                    </div>
-                ))}
-            </>
+          <div className="dropdown-item no-results">
+            No se encontraron resultados
+          </div>
         );
+      }
+        
+      return (
+        <>
+          {filteredItems.map(item => (
+            <div 
+              key={item.idEvento} 
+              className="dropdown-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterSelect('idEvento', item.idEvento);
+              }}
+            >
+              <input 
+                type="checkbox" 
+                checked={selectedItems.includes(item.idEvento)}
+                readOnly
+              />
+              <span>{`${item.idEvento} - ${normalizeText(item.nombreEvento || '')}`}</span>
+            </div>
+          ))}
+        </>
+      );
     };
   
   useEffect(() => {
@@ -481,9 +481,9 @@ const Eventos = () => {
         );
         break;
         case 'idEvento':
-            setIdEvento(prev => 
-                prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
-            );
+          setIdEvento(prev => 
+            prev.includes(value) ? prev.filter(id => id !== value) : [...prev, value]
+          );
         break;
       case 'estadoEvento':
         setSelectedEstadosEvento(prev => 
@@ -665,7 +665,7 @@ const Eventos = () => {
     if (filteredItems.length === 0) {
       return (
         <div className="dropdown-item no-results">
-          No se encontraron resultados
+          {t('No se encontraron resultados')}
         </div>
       );
     }
@@ -725,51 +725,50 @@ const Eventos = () => {
         <div className="filters-section">
           <div className="filters-row">
             <div className="filter-item">
-                <div 
-                    className="filter-dropdown"
-                    onClick={() => toggleFilter('idEvento')}
-                >
-                    <span className="filter-label">Id o Nombre Evento</span>
-                    <div className="filter-value">
-                        <span className="filter-placeholder">
-                            {idEvento.length > 0 
-                                ? `${idEvento.length} seleccionados` 
-                                : 'Seleccionar'}
-                        </span>
-                        <FaChevronDown className="dropdown-arrow" />
-                    </div>
-                    {openFilter === 'idEvento' && (
-                        <div className="filter-dropdown-content">
-                            <div className="dropdown-search">
-                            <input 
-                                type="text" 
-                                placeholder="Buscar evento..." 
-                                value={eventoSearch}
-                                onChange={(e) => setEventoSearch(e.target.value)}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                            </div>
-                            <div className="dropdown-items-container">
-                            <div className="dropdown-items">
-                                {renderEventoDropdownItems(eventos, idEvento, eventoSearch)}
-                            </div>
-                            </div>
-                        </div>
-                    )}
+              <div 
+                className="filter-dropdown"
+                onClick={() => toggleFilter('idEvento')}
+              >
+                <span className="filter-label">{t('Id o Nombre Evento')}</span>
+                <div className="filter-value">
+                  <span className="filter-placeholder">
+                    {idEvento.length > 0 
+                      ? t('{{count}} seleccionados', { count: idEvento.length })
+                      : t('Seleccionar')}
+                  </span>
+                  <FaChevronDown className="dropdown-arrow" />
                 </div>
-            </div>
-            
+                {openFilter === 'idEvento' && (
+                  <div className="filter-dropdown-content">
+                    <div className="dropdown-search">
+                      <input 
+                        type="text" 
+                        placeholder={t("Buscar evento...")}
+                        value={eventoSearch}
+                        onChange={(e) => setEventoSearch(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      </div>
+                      <div className="dropdown-items-container">
+                      <div className="dropdown-items">
+                        {renderEventoDropdownItems(eventos, idEvento, eventoSearch)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>            
             <div className="filter-item">
               <div 
                 className="filter-dropdown"
                 onClick={() => toggleFilter('tipoEvento')}
               >
-                <span className="filter-label">Id o Tipo de Evento</span>
+                <span className="filter-label">{t('Id o Tipo de Evento')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedTiposEvento.length > 0 
-                      ? `${selectedTiposEvento.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedTiposEvento.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -778,7 +777,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar tipo de evento..." 
+                        placeholder={t("Buscar tipo de evento...")}
                         value={tipoEventoSearch}
                         onChange={(e) => setTipoEventoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -799,12 +798,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('estadoEvento')}
               >
-                <span className="filter-label">Id o Estado de Evento</span>
+                <span className="filter-label">{t('Id o Estado de Evento')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedEstadosEvento.length > 0 
-                      ? `${selectedEstadosEvento.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedEstadosEvento.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -813,7 +812,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar estado de evento..." 
+                        placeholder={t("Buscar estado de evento...")}
                         value={estadoEventoSearch}
                         onChange={(e) => setEstadoEventoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -832,7 +831,7 @@ const Eventos = () => {
             <div className="filter-item">
               <input
                 type="text"
-                placeholder="Id Ejecución"
+                placeholder={t("Id Ejecución")}
                 value={idEjecucion}
                 onChange={(e) => setIdEjecucion(e.target.value)}
                 className="filter-input"
@@ -844,12 +843,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('alias')}
               >
-                <span className="filter-label">Id o Nombre de Alias</span>
+                <span className="filter-label">{t('Id o Nombre de Alias')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedAliases.length > 0 
-                      ? `${selectedAliases.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedAliases.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -858,7 +857,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar alias..." 
+                        placeholder={t("Buscar alias...")}
                         value={aliasSearch}
                         onChange={(e) => setAliasSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -879,12 +878,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('mercado')}
               >
-                <span className="filter-label">Id o Mercado</span>
+                <span className="filter-label">{t('Id o Mercado')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedMercados.length > 0 
-                      ? `${selectedMercados.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedMercados.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -893,7 +892,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar mercado..." 
+                        placeholder={t("Buscar mercado...")}
                         value={mercadoSearch}
                         onChange={(e) => setMercadoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -916,12 +915,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('grupoCadena')}
               >
-                <span className="filter-label">Id o Grupo Cadena (T6)</span>
+                <span className="filter-label">{t('Id o Grupo Cadena (T6)')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedGruposCadena.length > 0 
-                      ? `${selectedGruposCadena.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedGruposCadena.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -930,7 +929,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar grupo cadena..." 
+                        placeholder={t("Buscar grupo cadena...")}
                         value={grupoCadenaSearch}
                         onChange={(e) => setGrupoCadenaSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -949,7 +948,7 @@ const Eventos = () => {
             <div className="filter-item">
               <input 
                 type="text" 
-                placeholder="Id Localización"
+                placeholder={t("Id Localización")}
                 value={idLocalizacion}
                 onChange={(e) => setIdLocalizacion(e.target.value)}
                 className="filter-input"
@@ -961,12 +960,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('grupoLocalizacion')}
               >
-                <span className="filter-label">Id o Grupo de Localizaciones</span>
+                <span className="filter-label">{t('Id o Grupo de Localizaciones')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedGruposLocalizacion.length > 0 
-                      ? `${selectedGruposLocalizacion.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedGruposLocalizacion.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -975,7 +974,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar grupo localización..." 
+                        placeholder={t("Buscar grupo localización...")}
                         value={grupoLocalizacionSearch}
                         onChange={(e) => setGrupoLocalizacionSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -996,12 +995,12 @@ const Eventos = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('articulo')}
               >
-                <span className="filter-label">Id o Artículos</span>
+                <span className="filter-label">{t('Id o Artículos')}</span>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedArticulos.length > 0 
-                      ? `${selectedArticulos.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedArticulos.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -1010,7 +1009,7 @@ const Eventos = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar artículo..." 
+                        placeholder={t("Buscar artículo...")}
                         value={articuloSearch}
                         onChange={(e) => setArticuloSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -1041,7 +1040,10 @@ const Eventos = () => {
       
       <div className="eventos-results-info">
         <div className="results-count">
-          {t('Cargados')} {eventos.length} {t('resultados de')} {totalElements} {t('encontrados')}
+          {t('Cargados {{count}} resultados de {{total}} encontrados', {
+            count: eventos.length,
+            total: totalElements
+          })}
           <span className="last-update">
             <FaRedo className="update-icon" />
             {t('Última actualización')}: {formatTime(ultimaActualizacion)}
@@ -1052,7 +1054,10 @@ const Eventos = () => {
       {selectedEventos.length > 0 && (
         <div className="selection-toolbar">
           <div className="selection-info">
-            {t('Seleccionados')} {selectedEventos.length} {t('resultados de')} {totalElements} {t('encontrados')}
+            {t('Seleccionados {{count}} resultados de {{total}} encontrados', {
+              count: selectedEventos.length,
+              total: totalElements
+            })}
           </div>
           <div className="selection-actions">
             <button 

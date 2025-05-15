@@ -436,7 +436,7 @@ const Propuestas = () => {
 
   const PropuestasTable = ({ propuestas, loading }) => {
     if (loading && propuestas.length === 0) {
-      return <div className="loading-indicator">Cargando...</div>;
+      return <div className="loading-indicator">{t('Cargando...')}</div>;
     }
   
     if (!propuestas || propuestas.length === 0) {
@@ -458,23 +458,23 @@ const Propuestas = () => {
                   />
                 </div>
               </th>
-              <th className="id-column">ID LÍNEA</th>
-              <th className="id-column">ID PROPUESTA</th>
-              <th className="short-text-column">COD EJECUCIÓN</th>
-              <th className="short-text-column">ESTADO DE LA LÍNEA</th>
-              <th className="id-column">ID UNIDAD COMPRAS</th>
-              <th className="medium-text-column">NOMBRE UNIDAD COMPRAS GESTORA</th>
-              <th className="id-column">ID EVENTO</th>
-              <th className="medium-text-column">EVENTO</th>
-              <th className="short-text-column">MERCADO</th>
-              <th className="id-column">ID LOCALIZACIÓN</th>
-              <th className="medium-text-column">LOCALIZACIÓN</th>
-              <th className="id-column">ID ARTÍCULO</th>
-              <th className="medium-text-column">ARTÍCULO</th>
-              <th className="short-text-column">CANTIDAD</th>
-              <th className="id-column">ID ALIAS</th>
-              <th className="long-text-column">DESCRIPCIÓN DEL ALIAS</th>
-              <th className="medium-text-column">FECHA DE CREACIÓN</th>
+              <th className="id-column">{t('ID LÍNEA')}</th>
+              <th className="id-column">{t('ID PROPUESTA')}</th>
+              <th className="short-text-column">{t('COD EJECUCIÓN')}</th>
+              <th className="short-text-column">{t('ESTADO DE LA LÍNEA')}</th>
+              <th className="id-column">{t('ID UNIDAD COMPRAS')}</th>
+              <th className="medium-text-column">{t('NOMBRE UNIDAD COMPRAS GESTORA')}</th>
+              <th className="id-column">{t('ID EVENTO')}</th>
+              <th className="medium-text-column">{t('EVENTO')}</th>
+              <th className="short-text-column">{t('MERCADO')}</th>
+              <th className="id-column">{t('ID LOCALIZACIÓN')}</th>
+              <th className="medium-text-column">{t('LOCALIZACIÓN')}</th>
+              <th className="id-column">{t('ID ARTÍCULO')}</th>
+              <th className="medium-text-column">{t('ARTÍCULO')}</th>
+              <th className="short-text-column">{t('CANTIDAD')}</th>
+              <th className="id-column">{t('ID ALIAS')}</th>
+              <th className="long-text-column">{t('DESCRIPCIÓN DEL ALIAS')}</th>
+              <th className="medium-text-column">{t('FECHA DE CREACIÓN')}</th>
             </tr>
           </thead>
           <tbody>
@@ -502,7 +502,7 @@ const Propuestas = () => {
                   </span>
                 </td>
                 <td className="id-column">{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.id : '-'}</td>
-                <td className="medium-text-column">{propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.descripcion : '-'}</td>
+                <td className="medium-text-column">{normalizeText(propuesta.unidadComprasGestora ? propuesta.unidadComprasGestora.descripcion : '-')}</td>
                 <td className="id-column">{propuesta.idEvento}</td>
                 <td className="medium-text-column">{propuesta.nombreEvento}</td>
                 <td className="short-text-column">
@@ -521,7 +521,7 @@ const Propuestas = () => {
             {loadingMore && (
               <tr>
                 <td colSpan="18" className="loading-more-cell">
-                  <div className="loading-more-indicator">Cargando más resultados...</div>
+                  <div className="loading-more-indicator">{t('Cargando más resultados...')}</div>
                 </td>
               </tr>
             )}
@@ -534,10 +534,10 @@ const Propuestas = () => {
   return (
     <div className="propuestas-container">
       <div className="propuestas-header">
-        <h1 className="propuestas-title">PROPUESTAS</h1>
+        <h1 className="propuestas-title">{t('PROPUESTAS')}</h1>
         <div className="filter-toggle">
           <button className="filter-button" onClick={toggleFilters}>
-            <FaFilter /> {showFilters ? 'OCULTAR FILTROS' : 'MOSTRAR FILTROS'}
+            <FaFilter /> {showFilters ? t('OCULTAR FILTROS') : t('MOSTRAR FILTROS')}
           </button>
         </div>
       </div>
@@ -546,7 +546,7 @@ const Propuestas = () => {
         <div className="filters-section" ref={dropdownRef}>
           <div className="filters-row">
             <div className="filter-field">
-              <label className="filter-label">Id Localización</label>
+              <label className="filter-label">{t('Id Localización')}</label>
               <input
                 type="text"
                 placeholder="Id Localización"
@@ -561,12 +561,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('mercado')}
               >
-                <label className="filter-label">Id o Mercado</label>
+                <label className="filter-label">{t('Id o Mercado')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedMercados.length > 0 
-                      ? `${selectedMercados.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedMercados.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -575,7 +575,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar mercado..." 
+                        placeholder={t("Buscar mercado...")} 
                         value={mercadoSearch}
                         onChange={(e) => setMercadoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -616,7 +616,7 @@ const Propuestas = () => {
                         checked={selectedMercados.length === mercados.length && mercados.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -628,12 +628,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('grupoCadena')}
               >
-                <label className="filter-label">Id o Grupo Cadena (T6)</label>
+                <label className="filter-label">{t('Id o Grupo Cadena (T6)')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedGruposCadena.length > 0 
-                      ? `${selectedGruposCadena.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedGruposCadena.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -642,7 +642,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar grupo cadena..." 
+                        placeholder={t("Buscar grupo cadena...")}
                         value={grupoCadenaSearch}
                         onChange={(e) => setGrupoCadenaSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -683,7 +683,7 @@ const Propuestas = () => {
                         checked={selectedGruposCadena.length === gruposCadena.length && gruposCadena.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -695,12 +695,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('nombreEvento')}
               >
-                <label className="filter-label">Id o Nombre Evento</label>
+                <label className="filter-label">{t('Id o Nombre Evento')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedEventos.length > 0 
-                      ? `${selectedEventos.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedEventos.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -709,7 +709,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar evento..." 
+                        placeholder={t("Buscar evento...")}
                         value={nombreEventoSearch}
                         onChange={(e) => setNombreEventoSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -750,7 +750,7 @@ const Propuestas = () => {
                         checked={selectedEventos.length === eventos.length && eventos.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -758,10 +758,10 @@ const Propuestas = () => {
             </div>
             
             <div className="filter-field">
-              <label className="filter-label">Id Ejecución</label>
+              <label className="filter-label">{t('Id Ejecución')}</label>
               <input
                 type="text"
-                placeholder="Id Ejecución"
+                placeholder={t("Id Ejecución")}
                 value={idEjecucion}
                 onChange={(e) => setIdEjecucion(e.target.value)}
                 className="filter-input"
@@ -769,10 +769,10 @@ const Propuestas = () => {
             </div>
             
             <div className="filter-field">
-              <label className="filter-label">Id Propuesta</label>
+              <label className="filter-label">{t('Id Propuesta')}</label>
               <input
                 type="text"
-                placeholder="Id Propuesta"
+                placeholder={t("Id Propuesta")}
                 value={idPropuesta}
                 onChange={(e) => setIdPropuesta(e.target.value)}
                 className="filter-input"
@@ -786,12 +786,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('estadoPropuesta')}
               >
-                <label className="filter-label">Estado de la Propuesta</label>
+                <label className="filter-label">{t('Estado de la Propuesta')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedEstadosPropuesta.length > 0 
-                      ? `${selectedEstadosPropuesta.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedEstadosPropuesta.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -800,7 +800,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar estado..." 
+                        placeholder={t("Buscar estado...")}
                         value={estadoPropuestaSearch}
                         onChange={(e) => setEstadoPropuestaSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -841,7 +841,7 @@ const Propuestas = () => {
                         checked={selectedEstadosPropuesta.length === estadosPropuesta.length && estadosPropuesta.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -849,11 +849,11 @@ const Propuestas = () => {
             </div>
             
             <div className="filter-field">
-              <label className="filter-label">Inicio Fecha Creación</label>
+              <label className="filter-label">{t('Inicio Fecha Creación')}</label>
               <div className="date-input-container">
                 <input
                   type="text"
-                  placeholder="Inicio Fecha Creación"
+                  placeholder={t("Inicio Fecha Creación")}
                   value={inicioFechaCreacion}
                   onChange={(e) => setInicioFechaCreacion(e.target.value)}
                   className="filter-input"
@@ -863,11 +863,11 @@ const Propuestas = () => {
             </div>
             
             <div className="filter-field">
-              <label className="filter-label">Fin Fecha Creación</label>
+              <label className="filter-label">{t('Fin Fecha Creación')}</label>
               <div className="date-input-container">
                 <input
                   type="text"
-                  placeholder="Fin Fecha Creación"
+                  placeholder={t("Fin Fecha Creación")}
                   value={finFechaCreacion}
                   onChange={(e) => setFinFechaCreacion(e.target.value)}
                   className="filter-input"
@@ -881,12 +881,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('unidadCompras')}
               >
-                <label className="filter-label">Id o Nombre de Unidad Compras Gestión</label>
+                <label className="filter-label">{t('Id o Nombre de Unidad Compras Gestora')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedUnidadesCompras.length > 0 
-                      ? `${selectedUnidadesCompras.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedUnidadesCompras.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -895,7 +895,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar unidad compras..." 
+                        placeholder={t("Buscar unidad compras...")}
                         value={unidadComprasSearch}
                         onChange={(e) => setUnidadComprasSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -936,7 +936,7 @@ const Propuestas = () => {
                         checked={selectedUnidadesCompras.length === unidadesCompras.length && unidadesCompras.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -948,12 +948,12 @@ const Propuestas = () => {
                 className="filter-dropdown"
                 onClick={() => toggleFilter('articulos')}
               >
-                <label className="filter-label">Id o Artículos</label>
+                <label className="filter-label">{t('Id o Artículos')}</label>
                 <div className="filter-value">
                   <span className="filter-placeholder">
                     {selectedArticulos.length > 0 
-                      ? `${selectedArticulos.length} seleccionados` 
-                      : 'Seleccionar'}
+                      ? t('{{count}} seleccionados', { count: selectedArticulos.length })
+                      : t('Seleccionar')}
                   </span>
                   <FaChevronDown className="dropdown-arrow" />
                 </div>
@@ -962,7 +962,7 @@ const Propuestas = () => {
                     <div className="dropdown-search">
                       <input 
                         type="text" 
-                        placeholder="Buscar artículo..." 
+                        placeholder={t("Buscar artículo...")}
                         value={articulosSearch}
                         onChange={(e) => setArticulosSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -1003,7 +1003,7 @@ const Propuestas = () => {
                         checked={selectedArticulos.length === articulos.length && articulos.length > 0}
                         readOnly
                       />
-                      <span>Seleccionar todo</span>
+                      <span>{t('Seleccionar todo')}</span>
                     </div>
                   </div>
                 )}
@@ -1019,7 +1019,7 @@ const Propuestas = () => {
                 onClick={handleSearch}
                 disabled={loading}
               >
-                BUSCAR
+                {t('BUSCAR')}
               </button>
             </div>
           </div>
@@ -1029,7 +1029,10 @@ const Propuestas = () => {
       {showResults && (
         <div className="propuestas-results-info">
           <div className="results-count">
-            {t('Cargados')} {propuestas.length} {t('resultados de')} {totalElements} {t('encontrados')}
+            {t('Cargados {{count}} resultados de {{total}} encontrados', {
+              count: propuestas.length,
+              total: totalElements
+            })}
             <span className="last-update">
               <FaRedo className="update-icon" />
               {t('Última actualización')}: {formatTime(ultimaActualizacion)}
@@ -1041,7 +1044,10 @@ const Propuestas = () => {
       {selectedPropuestas.length > 0 && (
         <div className="selection-toolbar">
           <div className="selection-info">
-            Seleccionados {selectedPropuestas.length} resultados de {totalElements} encontrados
+            {t('Seleccionados {{count}} resultados de {{total}} encontrados', {
+              count: selectedPropuestas.length,
+              total: totalElements
+            })}
           </div>
           <div className="selection-actions">
             <button 
@@ -1056,7 +1062,7 @@ const Propuestas = () => {
               onClick={handlePublishInSFI}
               title="Publicar en SFI"
             >
-              <span>PUBLICAR EN SFI</span>
+              <span>{t('PUBLICAR EN SFI')}</span>
             </button>
           </div>
         </div>
@@ -1065,7 +1071,7 @@ const Propuestas = () => {
       {showResults ? (
         loading ? (
           <div className="results-section">
-            <div className="loading-indicator">Cargando...</div>
+            <div className="loading-indicator">{t('Cargando...')}</div>
           </div>
         ) : propuestas.length > 0 ? (
           <PropuestasTable propuestas={propuestas} loading={loading} />
@@ -1076,7 +1082,7 @@ const Propuestas = () => {
                 <FaSearch />
               </div>
               <p className="no-results-text">
-                UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+                {t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}
               </p>
             </div>
           </div>
@@ -1088,7 +1094,7 @@ const Propuestas = () => {
               <FaSearch />
             </div>
             <p className="no-results-text">
-              UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA
+              {t('UTILIZA LOS CAMPOS NECESARIOS PARA REALIZAR UNA BÚSQUEDA')}
             </p>
           </div>
         </div>

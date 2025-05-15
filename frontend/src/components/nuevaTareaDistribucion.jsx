@@ -432,11 +432,11 @@ const NuevaTareaDistribucion = () => {
                       checked={selectedRowsForDelete.length === selectedAliases.length && selectedAliases.length > 0}
                     />
                   </th>
-                  <th>ID ALIAS</th>
-                  <th>ALIAS</th>
-                  <th>ALIAS TIPO</th>
-                  <th>ESTADO ALIAS</th>
-                  <th>ALIAS PRINCIPAL ASOCIADO (RATIO)</th>
+                  <th>{t('ID ALIAS')}</th>
+                  <th>{t('ALIAS')}</th>
+                  <th>{t('ALIAS TIPO')}</th>
+                  <th>{t('ESTADO ALIAS')}</th>
+                  <th>{t('ALIAS PRINCIPAL ASOCIADO (RATIO)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -493,7 +493,7 @@ const NuevaTareaDistribucion = () => {
             </table>
             
             <div className="description-text">
-              Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.
+              {t('Define el ámbito donde se distribuirán los alias seleccionados para poder crear la tarea.')}
             </div>
           
             <button 
@@ -509,7 +509,7 @@ const NuevaTareaDistribucion = () => {
               }}
               onClick={() => setShowAmbitoModal(true)}
             >
-              DEFINIR ÁMBITO
+              {t('DEFINIR ÁMBITO')}
             </button>
             
             <DefinirAmbitoModal 
@@ -526,17 +526,17 @@ const NuevaTareaDistribucion = () => {
             {selectedLocalizaciones.length > 0 && (
               <div className="ambito-selected-table" style={{ marginTop: '20px' }}>
                 <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
-                  {selectedLocalizaciones.length} localizaciones en las que se distribuirá la tarea
+                  {t('{{count}} localizaciones en las que se distribuirá la tarea', { count: selectedLocalizaciones.length })}
                 </div>
                 <table className="alias-table">
                   <thead>
                     <tr>
-                      <th>ID/GRUPO CADENA</th>
-                      <th>ID/CADENA</th>
-                      <th>MERCADO</th>
-                      <th>ID/LOCALIZACIÓN</th>
-                      <th>ESTADO DE TIENDA RAM</th>
-                      <th>ESTADO DE LA TIENDA EN LA TAREA</th>
+                      <th>{t('ID/GRUPO CADENA')}</th>
+                      <th>{t('ID/CADENA')}</th>
+                      <th>{t('MERCADO')}</th>
+                      <th>{t('ID/LOCALIZACIÓN')}</th>
+                      <th>{t('ESTADO DE TIENDA RAM')}</th>
+                      <th>{t('ESTADO DE LA TIENDA EN LA TAREA')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -567,8 +567,8 @@ const NuevaTareaDistribucion = () => {
         ) : (
           <div className="selected-aliases-container">
             <div className="no-aliases-message">
-              <p className="no-aliases-text">NO HAY ALIAS SELECCIONADOS</p>
-              <p className="aliases-help-text">UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA</p>
+              <p className="no-aliases-text">{t('NO HAY ALIAS SELECCIONADOS')}</p>
+              <p className="aliases-help-text">{t('UTILIZAR LOS CAMPOS NECESARIOS PARA AÑADIR ALIAS A LA TAREA')}</p>
             </div>
           </div>
         )}
@@ -576,14 +576,14 @@ const NuevaTareaDistribucion = () => {
       
       <div className="buttons-container">
         <button className="cancel-button" onClick={handleCancel}>
-          CANCELAR
+          {t('CANCELAR')}
         </button>
         <button
           className="create-button"
           onClick={handleSubmit}
           disabled={!nombreTarea || !descripcionTarea || selectedAliases.length === 0}
         >
-          CREAR
+          {t('CREAR')}
         </button>
       </div>
     </div>
