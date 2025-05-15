@@ -396,10 +396,10 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
     if (idTipoEstadoRecuento === TIPO_ESTADO_RECUENTO.DESCARTADO) {
       const [affectedRows] = await sequelizeAjenos.query(
         `UPDATE AJENOS.RECUENTO_RAM 
-         SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
-            FECHA_MODIFICACION = :fechaModificacion,
-            USUARIO_MODIFICACION = :usuario
-         WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
+          SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
+              FECHA_MODIFICACION = :fechaModificacion,
+              USUARIO_MODIFICACION = :usuario
+          WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
         { 
           replacements: { 
             idTipoEstadoRecuento,
@@ -414,15 +414,15 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
       totalActualizados = affectedRows;
       
     } else if (idTipoEstadoRecuento === TIPO_ESTADO_RECUENTO.VALIDADO) {
-      const [affectedRows] = await sequelizeAjenos.query(
+      const result = await sequelizeAjenos.query(
         `UPDATE AJENOS.RECUENTO_RAM 
-         SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
+          SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
             FECHA_MODIFICACION = :fechaModificacion,
             FECHA_HORA_VALIDACION = :fechaValidacion,
             STOCK_FISICO_VALIDADO = STOCK_FISICO,
             CAPACIDAD_MAX_FISICA_VALIDADA = CAPACIDAD_MAX_FISICA,
             USUARIO_MODIFICACION = :usuario
-         WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
+          WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
         { 
           replacements: { 
             idTipoEstadoRecuento,
@@ -435,7 +435,7 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
         }
       );
       
-      totalActualizados = affectedRows;
+      totalActualizados = result[0];
       
       recuentosValidados = recuentos.map(recuento => ({
         idRecuento: recuento.ID_RECUENTO_RAM,
@@ -445,15 +445,15 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
         capacidadMaxima: recuento.CAPACIDAD_MAX_FISICA,
         fechaRespuesta: recuento.FECHA_HORA_RESPUESTA || fechaActual
       }));
-      
+
     } else if (idTipoEstadoRecuento === TIPO_ESTADO_RECUENTO.RECOGIDO) {
       const [affectedRows] = await sequelizeAjenos.query(
         `UPDATE AJENOS.RECUENTO_RAM 
-         SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
-            FECHA_MODIFICACION = :fechaModificacion,
-            FECHA_HORA_RECOGIDA = :fechaRecogida,
-            USUARIO_MODIFICACION = :usuario
-         WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
+          SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
+              FECHA_MODIFICACION = :fechaModificacion,
+              FECHA_HORA_RECOGIDA = :fechaRecogida,
+              USUARIO_MODIFICACION = :usuario
+          WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
         { 
           replacements: { 
             idTipoEstadoRecuento,
@@ -467,14 +467,56 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
       );
       
       totalActualizados = affectedRows;
+      
+    } else if (idTipoEstadoRecuento === TIPO_ESTADO_RECUENTO.RESPUESTA) {
+      const updateFields = [
+        'ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento',
+        'FECHA_MODIFICACION = :fechaModificacion',
+        'FECHA_HORA_RESPUESTA = :fechaRespuesta',
+        'USUARIO_MODIFICACION = :usuario'
+      ];
+      
+      const replacements = {
+        idTipoEstadoRecuento,
+        fechaModificacion: fechaActual,
+        fechaRespuesta: fechaActual,
+        usuario
+      };
+      
+      if (recuentoFilterProcess.stockFisico !== undefined) {
+        updateFields.push('STOCK_FISICO = :stockFisico');
+        replacements.stockFisico = recuentoFilterProcess.stockFisico;
+      }
+      
+      if (recuentoFilterProcess.capacidadMaximaFisica !== undefined) {
+        updateFields.push('CAPACIDAD_MAX_FISICA = :capacidadMaximaFisica');
+        replacements.capacidadMaximaFisica = recuentoFilterProcess.capacidadMaximaFisica;
+      }
+      
+      const result = await sequelizeAjenos.query(
+        `UPDATE AJENOS.RECUENTO_RAM 
+          SET ${updateFields.join(', ')}
+          WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
+        { 
+          replacements,
+          type: sequelizeAjenos.QueryTypes.UPDATE,
+          transaction
+        }
+      );
+
+      totalActualizados = result[0];
     }
     
     await transaction.commit();
-    
+
     if (recuentosValidados.length > 0) {
-      await updateStock(recuentosValidados);
+      try {
+        await exports.updateStock(recuentosValidados);
+      } catch (stockError) {
+        console.error('Error actualizando stock:', stockError);
+      }
     }
-    
+
     return {
       totalUpdated: totalActualizados,
       recuentosValidados
@@ -486,7 +528,6 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
     throw error;
   }
 };
-
 
 exports.updateStock = async (recuentosValidados) => {
   const transaction = await sequelizeAjenos.transaction();
@@ -664,6 +705,36 @@ exports.updateStock = async (recuentosValidados) => {
   } catch (error) {
     await transaction.rollback();
     console.error('Error en updateStock:', error);
+    throw error;
+  }
+};
+
+exports.updateRecuentoValues = async (recuentoData) => {
+  try {
+    const { idRecuento, stockFisico, capacidadMaximaFisica, usuario } = recuentoData;
+    
+    await sequelizeAjenos.query(
+      `UPDATE AJENOS.RECUENTO_RAM 
+        SET STOCK_FISICO = :stockFisico,
+          CAPACIDAD_MAX_FISICA = :capacidadMaximaFisica,
+          FECHA_MODIFICACION = :fechaModificacion,
+          USUARIO_MODIFICACION = :usuario
+        WHERE ID_RECUENTO_RAM = :idRecuento`,
+      {
+        replacements: {
+          stockFisico,
+          capacidadMaximaFisica,
+          fechaModificacion: new Date(),
+          usuario,
+          idRecuento
+        },
+        type: sequelizeAjenos.QueryTypes.UPDATE
+      }
+    );
+    
+    return { updated: true, idRecuento };
+  } catch (error) {
+    console.error('Error en updateRecuentoValues:', error);
     throw error;
   }
 };

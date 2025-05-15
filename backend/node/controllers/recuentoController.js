@@ -62,7 +62,7 @@ exports.getRecuentosByFilter = async (req, res) => {
 
 exports.updateEstadoRecuentos = async (req, res) => {
   try {
-    const { idsRecuento, idTipoEstadoRecuento, usuario } = req.body;
+    const { idsRecuento, idTipoEstadoRecuento, stockFisico, capacidadMaximaFisica, usuario } = req.body;
     
     if (!idsRecuento || idsRecuento.length === 0) {
       return res.status(400).json({
@@ -74,6 +74,8 @@ exports.updateEstadoRecuentos = async (req, res) => {
     const result = await recuentoRepository.updateEstadoRecuentos({
       idsRecuento,
       idTipoEstadoRecuento,
+      stockFisico,
+      capacidadMaximaFisica,
       usuario
     });
     
@@ -89,5 +91,15 @@ exports.updateEstadoRecuentos = async (req, res) => {
       message: 'Error al actualizar estado de recuentos',
       error: error.message
     });
+  }
+};
+
+exports.updateValues = async (req, res) => {
+  try {
+    const result = await recuentoRepository.updateRecuentoValues(req.body);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error al actualizar valores:', error);
+    res.status(500).json({ error: 'Error al actualizar valores del recuento' });
   }
 };

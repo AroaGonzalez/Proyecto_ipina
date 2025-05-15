@@ -48,12 +48,8 @@ function fixEncoding(text) {
 
 exports.findStocksByFilter = async (stockFilter) => {
   try {
-    const cacheKey = `stocks_${JSON.stringify(stockFilter)}`;
-    const cachedResult = cache.get(cacheKey);
     
-    if (cachedResult) {
-      return cachedResult;
-    }
+    const cacheKey = `stocks_${JSON.stringify(stockFilter)}`;    
     
     let searchQuery = `
       SELECT DISTINCT slr.ID_ALIAS AS idAlias,
@@ -151,24 +147,6 @@ exports.findStocksByFilter = async (stockFilter) => {
         WHERE slr.FECHA_BAJA IS NULL
     `;
     
-    if (stockFilter.allExecutionsAllowed) {
-      searchQuery += " AND ar.ID_TIPO_ESTADO_AJENO_RAM = 1 ";
-      searchQuery += " AND a.ID_TIPO_ESTADO_ALIAS != 3 ";
-      searchQuery += " AND lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 ";
-      searchQuery += " AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 ";
-      searchQuery += " AND aaj.ID_TIPO_ESTADO_AJENO_RAM = 1 ";
-      searchQuery += " AND et.ID_ESTADO_TIENDA = 3 ";
-      searchQuery += " AND aaa.ID_AJENO_SECCION_GLOBAL IS NOT NULL ";
-      
-      countQuery += " AND ar.ID_TIPO_ESTADO_AJENO_RAM = 1 ";
-      countQuery += " AND a.ID_TIPO_ESTADO_ALIAS != 3 ";
-      countQuery += " AND lcr.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 ";
-      countQuery += " AND aaa.ID_TIPO_ESTADO_LOCALIZACION_RAM = 1 ";
-      countQuery += " AND aaj.ID_TIPO_ESTADO_AJENO_RAM = 1 ";
-      countQuery += " AND et.ID_ESTADO_TIENDA = 3 ";
-      countQuery += " AND aaa.ID_AJENO_SECCION_GLOBAL IS NOT NULL ";
-    }
-    
     if (stockFilter.idsTipoAlias && stockFilter.idsTipoAlias.length > 0) {
       searchQuery += ` AND a.ID_TIPO_ALIAS IN (${stockFilter.idsTipoAlias.join(',')}) `;
       countQuery += ` AND a.ID_TIPO_ALIAS IN (${stockFilter.idsTipoAlias.join(',')}) `;
@@ -179,11 +157,12 @@ exports.findStocksByFilter = async (stockFilter) => {
       countQuery += ` AND slr.ID_ALIAS IN (${stockFilter.idsAlias.join(',')}) `;
     }
     
-    if (stockFilter.idsLocalizacion && stockFilter.idsLocalizacion.length > 0) {
-      searchQuery += ` AND slr.ID_LOCALIZACION_COMPRA IN (${stockFilter.idsLocalizacion.join(',')}) `;
-      countQuery += ` AND slr.ID_LOCALIZACION_COMPRA IN (${stockFilter.idsLocalizacion.join(',')}) `;
+    if (stockFilter.idLocalizacion) {
+      const locationIds = stockFilter.idLocalizacion.split(' ').map(id => parseInt(id));
+      searchQuery += ` AND slr.ID_LOCALIZACION_COMPRA IN (${locationIds.join(',')}) `;
+      countQuery += ` AND slr.ID_LOCALIZACION_COMPRA IN (${locationIds.join(',')}) `;
     }
-    
+      
     if (stockFilter.idsMercado && stockFilter.idsMercado.length > 0) {
       searchQuery += ` AND p.ID_PAIS IN (${stockFilter.idsMercado.join(',')}) `;
       countQuery += ` AND p.ID_PAIS IN (${stockFilter.idsMercado.join(',')}) `;
@@ -200,17 +179,19 @@ exports.findStocksByFilter = async (stockFilter) => {
     }
     
     searchQuery += ` ORDER BY idAlias, idLocalizacionCompra LIMIT ${stockFilter.limit} OFFSET ${stockFilter.offset * stockFilter.limit}`;
-
+    
     const [countResult, results] = await Promise.all([
       sequelizeAjenos.query(countQuery, {
         replacements: { idIdioma: stockFilter.idIdioma },
         type: sequelizeAjenos.QueryTypes.SELECT,
-        plain: true
+        plain: true,
+        logging: console.log
       }),
       
       sequelizeAjenos.query(searchQuery, {
         replacements: { idIdioma: stockFilter.idIdioma },
-        type: sequelizeAjenos.QueryTypes.SELECT
+        type: sequelizeAjenos.QueryTypes.SELECT,
+        logging: console.log
       })
     ]);
     
@@ -268,7 +249,8 @@ exports.findStocksByFilter = async (stockFilter) => {
     
     return result;
   } catch (error) {
-    console.error('Error en findStocksByFilter:', error);
+    console.error('❌ Error en findStocksByFilter:', error);
+    console.error('Stack trace:', error.stack);
     throw error;
   }
 };

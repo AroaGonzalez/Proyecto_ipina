@@ -6,12 +6,15 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/recuentos.css';
+import ViewRecuento07Modal from './ViewRecuento07Modal';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const Recuentos = () => {
     const { t } = useTranslation();
     const { languageId } = useContext(LanguageContext);
+    const [showRecuento07Modal, setShowRecuento07Modal] = useState(false);
+    const [selectedRecuentoDetails, setSelectedRecuentoDetails] = useState(null);
 
     const [idLocalizacion, setIdLocalizacion] = useState('');
     const [idEjecucion, setIdEjecucion] = useState('');
@@ -327,66 +330,83 @@ const Recuentos = () => {
         PENDIENTE: 1
     };
   
-  const handleDescartar = async () => {
-    try {
-        setLoading(true);
-        
-        const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
-            idsRecuento: selectedRecuentos,
-            idTipoEstadoRecuento: ESTADO_RECUENTO.DESCARTADO,
-            usuario: 'frontend_user'
-        });
-        
-        if (response.data.success) {
-            handleSearch();
-            setSelectedRecuentos([]);
-            setSelectAll(false);
-            alert(`Se han descartado ${selectedRecuentos.length} recuento(s) correctamente`);
+    const handleDescartar = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+                idsRecuento: selectedRecuentos,
+                idTipoEstadoRecuento: ESTADO_RECUENTO.DESCARTADO,
+                usuario: 'frontend_user'
+            });
+            
+            if (response.data.success) {
+                handleSearch();
+                setSelectedRecuentos([]);
+                setSelectAll(false);
+                alert(`Se han descartado ${selectedRecuentos.length} recuento(s) correctamente`);
+            }
+        } catch (error) {
+            console.error('Error al descartar recuentos:', error);
+            setError('Error al descartar recuentos');
+        } finally {
+            setLoading(false);
         }
-    } catch (error) {
-        console.error('Error al descartar recuentos:', error);
-        setError('Error al descartar recuentos');
-    } finally {
-        setLoading(false);
-    }
-  };
+    };
   
-  const handleValidar = async () => {
-    try {
-        setLoading(true);
+    const handleValidar = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+                idsRecuento: selectedRecuentos,
+                idTipoEstadoRecuento: ESTADO_RECUENTO.VALIDADO,
+                usuario: 'frontend_user'
+            });
         
-        const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
-            idsRecuento: selectedRecuentos,
-            idTipoEstadoRecuento: ESTADO_RECUENTO.VALIDADO,
-            usuario: 'frontend_user'
-        });
-      
-        if (response.data.success) {
-            handleSearch();
-            setSelectedRecuentos([]);
-            setSelectAll(false);
-            alert(`Se han validado ${selectedRecuentos.length} recuento(s) correctamente`);
+            if (response.data.success) {
+                handleSearch();
+                setSelectedRecuentos([]);
+                setSelectAll(false);
+                alert(`Se han validado ${selectedRecuentos.length} recuento(s) correctamente`);
+            }
+        } catch (error) {
+            console.error('Error al validar recuentos:', error);
+            setError('Error al validar recuentos');
+        } finally {
+            setLoading(false);
         }
-    } catch (error) {
-        console.error('Error al validar recuentos:', error);
-        setError('Error al validar recuentos');
-    } finally {
-        setLoading(false);
-    }
-  };
+    };
 
     const handlePublishIn07 = async () => {
         try {
-            console.log("Publishing to SFI:", selectedPropuestas);
+            setLoading(true);
             
-            alert(`Propuestas ${selectedPropuestas.join(', ')} publicadas en SFI correctamente`);
-            
-            setSelectedPropuestas([]);
-            setSelectAll(false);
-            
+            const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
+                idsRecuento: selectedRecuentos,
+                idTipoEstadoRecuento: ESTADO_RECUENTO.RECOGIDO,
+                usuario: 'frontend_user'
+            });
+        
+            if (response.data.success) {
+                handleSearch();
+                
+                if (selectedRecuentos.length > 0) {
+                    const recuentoDetails = recuentos.find(r => r.idRecuento === selectedRecuentos[0]);
+                    if (recuentoDetails) {
+                        setSelectedRecuentoDetails(recuentoDetails);
+                        setShowRecuento07Modal(true);
+                    }
+                }
+                
+                setSelectedRecuentos([]);
+                setSelectAll(false);
+            }
         } catch (error) {
-            console.error('Error al publicar en SFI:', error);
-            setError('Error al publicar en SFI');
+            console.error('Error al validar recuentos:', error);
+            setError('Error al validar recuentos');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -776,7 +796,7 @@ const Recuentos = () => {
                                     </div>
                                 </td>
                                 <td className="id-column">{recuento.ajeno.id}</td>
-                                <td className="medium-text-column">{recuento.ajeno.nombre}</td>
+                                <td className="medium-text-column">{normalizeText(recuento.ajeno.nombre)}</td>
                                 <td className="short-text-column">{recuento.codEjecucion}</td>
                                 <td className="short-text-column">{normalizeText(recuento.cadena.nombre)}</td>
                                 <td className="short-text-column">
@@ -1342,6 +1362,16 @@ const Recuentos = () => {
                 </p>
                 </div>
             </div>
+            )}
+            {showRecuento07Modal && selectedRecuentoDetails && (
+                <ViewRecuento07Modal 
+                    recuento={selectedRecuentoDetails}
+                    onClose={() => {
+                    setShowRecuento07Modal(false);
+                    setSelectedRecuentoDetails(null);
+                    }}
+                    onUpdate={handleSearch}
+                />
             )}
         </div>
     );
