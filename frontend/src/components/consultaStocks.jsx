@@ -212,48 +212,6 @@ const ConsultaStocks = () => {
   
     return normalizedText;
   };
-
-  const isStockEligibleForRecount = (stock) => {
-    return (
-      stock.descripcionTipoEstadoAlias && 
-      (stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCIÓN') || 
-        stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCCION') ||
-        stock.descripcionTipoEstadoAlias.toUpperCase().includes('PRODUCTION') ||
-        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVO') || 
-        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVA') ||
-        stock.descripcionTipoEstadoAlias.toUpperCase().includes('ACTIVE')) &&
-      
-      stock.descripcionTipoEstadoAjenoCompras && 
-      (stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02.ACTIVO') || 
-        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVO') ||
-        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02.ACTIVE') ||
-        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('02 ACTIVE') ||
-        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVO') ||
-        stock.descripcionTipoEstadoAjenoCompras.toUpperCase().includes('ACTIVE')) &&
-      
-      stock.descripcionTipoEstadoAjenoRam && 
-      (stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVO') || 
-        stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVA') ||
-        stock.descripcionTipoEstadoAjenoRam.toUpperCase().includes('ACTIVE')) &&
-      
-      stock.descripcionTipoEstadoAliasAjeno && 
-      (stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVO') || 
-        stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVA') ||
-        stock.descripcionTipoEstadoAliasAjeno.toUpperCase().includes('ACTIVE')) &&
-      
-      stock.descripcionTipoEstadoRelacion && 
-      (stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVA') ||
-        stock.descripcionTipoEstadoRelacion.toUpperCase().includes('ACTIVE')) &&
-      
-      stock.estadoTiendaMtu && 
-      (stock.estadoTiendaMtu.toUpperCase().includes('ABIERTA') ||
-        stock.estadoTiendaMtu.toUpperCase().includes('OPEN')) &&
-      
-      stock.descripcionTipoEstadoLocalizacionRam && 
-      (stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVA') ||
-        stock.descripcionTipoEstadoLocalizacionRam.toUpperCase().includes('ACTIVE'))
-    );
-  };
   
   const handleStockRecuentoChange = (idAlias, idLocalizacionCompra, value) => {
     const stockKey = `${idAlias}-${idLocalizacionCompra}`;
@@ -614,16 +572,6 @@ const ConsultaStocks = () => {
         <table className="stocks-table">
           <thead>
             <tr>
-              <th className="checkbox-column">
-                <div className="checkbox">
-                  <input 
-                    type="checkbox" 
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                    id="select-all"
-                  />
-                </div>
-              </th>
               <th className="id-column">{t('ID ALIAS')}</th>
               <th className="medium-text-column">{t('ALIAS')}</th>
               <th className="short-text-column">{t('ALIAS TIPO')}</th>
@@ -656,16 +604,6 @@ const ConsultaStocks = () => {
                 key={`${stock.idAlias}-${stock.idLocalizacionCompra}`} 
                 className={selectedStocks.includes(`${stock.idAlias}-${stock.idLocalizacionCompra}`) ? 'selected-row' : ''}
               >
-                <td className="checkbox-column">
-                  <div className="checkbox">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStocks.includes(`${stock.idAlias}-${stock.idLocalizacionCompra}`)}
-                      onChange={() => handleSelectStock(stock.idAlias, stock.idLocalizacionCompra)}
-                      id={`stock-${stock.idAlias}-${stock.idLocalizacionCompra}`}
-                    />
-                  </div>
-                </td>
                 <td className="id-column">{stock.idAlias}</td>
                 <td className="medium-text-column">{normalizeText(stock.nombreAlias)}</td>
                 <td className="short-text-column">{stock.idTipoAlias}</td>
@@ -723,7 +661,7 @@ const ConsultaStocks = () => {
                 <td className="medium-text-column">{normalizeText(stock.fechaRecuento)}</td>
                 <td className="medium-text-column">{normalizeText(stock.fechaHoraEjecucionStockTeorico)}</td>
                 <td className="medium-text-column">{normalizeText(stock.fechaModificacion)}</td>
-                <td className="medium-text-column">{normalizeText(stock.usuarioModificacion)}</td>
+                <td className="medium-text-column">{"userTest"}</td>
                 <td className="medium-text-column">
                   <StatusTag status={stock.descripcionTipoEstadoAlias} />
                 </td>

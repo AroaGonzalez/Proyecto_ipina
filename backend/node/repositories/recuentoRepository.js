@@ -1,5 +1,5 @@
 const { sequelizeAjenos, sequelizeMaestros } = require('../utils/database');
-const CACHE_DURATION = 30 * 1000;
+const CACHE_DURATION = 2 * 1000;
 const LIMITE_STOCK_CAPACIDAD_MAXIMA = 999999;
 const UNIDADES_EMPAQUETADO = 1;
 
@@ -91,10 +91,6 @@ exports.findRecuentosByFilter = async (recuentoFilter) => {
     if (recuentoFilter.idsEstadoLinea && !recuentoFilter.idsTipoEstadoRecuento) {
       recuentoFilter.idsTipoEstadoRecuento = recuentoFilter.idsEstadoLinea;
       delete recuentoFilter.idsEstadoLinea;
-    }
-
-    if (!recuentoFilter.idsTipoEstadoRecuento || recuentoFilter.idsTipoEstadoRecuento.length === 0) {
-      recuentoFilter.idsTipoEstadoRecuento = [1, 2, 3];
     }
     
     const cacheKey = `recuentos_${JSON.stringify(recuentoFilter)}`;
@@ -397,8 +393,8 @@ exports.updateEstadoRecuentos = async (recuentoFilterProcess) => {
       const [affectedRows] = await sequelizeAjenos.query(
         `UPDATE AJENOS.RECUENTO_RAM 
           SET ID_TIPO_ESTADO_RECUENTO_RAM = :idTipoEstadoRecuento,
-              FECHA_MODIFICACION = :fechaModificacion,
-              USUARIO_MODIFICACION = :usuario
+            FECHA_MODIFICACION = :fechaModificacion,
+            USUARIO_MODIFICACION = :usuario
           WHERE ID_RECUENTO_RAM IN (${idsRecuento.join(',')})`,
         { 
           replacements: { 
@@ -737,4 +733,8 @@ exports.updateRecuentoValues = async (recuentoData) => {
     console.error('Error en updateRecuentoValues:', error);
     throw error;
   }
+};
+
+exports.clearCache = () => {
+  cache.clear();
 };

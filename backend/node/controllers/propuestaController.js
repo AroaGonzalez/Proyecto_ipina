@@ -106,3 +106,37 @@ exports.deletePropuestas = async (req, res) => {
     });
   }
 };
+
+exports.updateEstadoPropuestas = async (req, res) => {
+  try {
+    const { idsPropuesta, idTipoEstadoPropuesta } = req.body;
+    
+    if (!idsPropuesta || idsPropuesta.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se proporcionaron IDs de propuesta'
+      });
+    }
+    
+    const usuario = req.body.usuario || 'frontend_user';
+    
+    const result = await propuestaRepository.updateEstadoPropuestas(
+      idsPropuesta,
+      idTipoEstadoPropuesta,
+      usuario
+    );
+    
+    res.json({
+      success: true,
+      totalUpdated: result.totalUpdated,
+      message: 'Estado de propuestas actualizado correctamente'
+    });
+  } catch (error) {
+    console.error('Error en updateEstadoPropuestas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar estado de propuestas',
+      error: error.message
+    });
+  }
+};

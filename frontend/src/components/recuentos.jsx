@@ -382,29 +382,19 @@ const Recuentos = () => {
         try {
             setLoading(true);
             
-            const response = await axios.put(`${BASE_URL}/recuento/update-estado`, {
-                idsRecuento: selectedRecuentos,
-                idTipoEstadoRecuento: ESTADO_RECUENTO.RECOGIDO,
-                usuario: 'frontend_user'
-            });
-        
-            if (response.data.success) {
-                handleSearch();
-                
-                if (selectedRecuentos.length > 0) {
-                    const recuentoDetails = recuentos.find(r => r.idRecuento === selectedRecuentos[0]);
-                    if (recuentoDetails) {
-                        setSelectedRecuentoDetails(recuentoDetails);
-                        setShowRecuento07Modal(true);
-                    }
+            if (selectedRecuentos.length > 0) {
+                const recuentoDetails = recuentos.find(r => r.idRecuento === selectedRecuentos[0]);
+                if (recuentoDetails) {
+                    setSelectedRecuentoDetails(recuentoDetails);
+                    setShowRecuento07Modal(true);
                 }
-                
-                setSelectedRecuentos([]);
-                setSelectAll(false);
             }
+            
+            setSelectedRecuentos([]);
+            setSelectAll(false);
         } catch (error) {
-            console.error('Error al validar recuentos:', error);
-            setError('Error al validar recuentos');
+            console.error('Error al abrir modal 07:', error);
+            setError('Error al abrir modal 07');
         } finally {
             setLoading(false);
         }
@@ -624,12 +614,17 @@ const Recuentos = () => {
     };
   
     const handleSelectRecuento = (idRecuento) => {
-        setSelectedRecuentos(prev => {
-        if (prev.includes(idRecuento)) {
-            return prev.filter(id => id !== idRecuento);
-        } else {
-            return [...prev, idRecuento];
+        const container = tableContainerRef.current;
+        if (container) {
+            setScrollPosition(container.scrollTop);
         }
+        
+        setSelectedRecuentos(prev => {
+            if (prev.includes(idRecuento)) {
+                return prev.filter(id => id !== idRecuento);
+            } else {
+                return [...prev, idRecuento];
+            }
         });
     };
   

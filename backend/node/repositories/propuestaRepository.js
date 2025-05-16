@@ -393,3 +393,41 @@ exports.deletePropuestas = async (idsPropuesta, usuarioBaja, fechaBaja) => {
     throw error;
   }
 };
+
+exports.updateEstadoPropuestas = async (idsPropuesta, idTipoEstadoPropuesta, usuario) => {
+  const transaction = await sequelizeAjenos.transaction();
+  
+  try {
+    const fechaActual = new Date();
+    
+    const [affectedRows] = await sequelizeAjenos.query(
+      `UPDATE AJENOS.PROPUESTA_RAM 
+        SET ID_TIPO_ESTADO_PROPUESTA_RAM = :idTipoEstadoPropuesta,
+          FECHA_MODIFICACION = :fechaModificacion,
+          USUARIO_MODIFICACION = :usuario
+        WHERE ID_PROPUESTA_RAM IN (${idsPropuesta.join(',')})`,
+      { 
+        replacements: { 
+          idTipoEstadoPropuesta,
+          fechaModificacion: fechaActual,
+          usuario
+        },
+        type: sequelizeAjenos.QueryTypes.UPDATE,
+        transaction
+      }
+    );
+    
+    await transaction.commit();
+    
+    cache.clear('propuestas_');
+    
+    return {
+      totalUpdated: affectedRows,
+      idsPropuesta
+    };
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error en updateEstadoPropuestas:', error);
+    throw error;
+  }
+};

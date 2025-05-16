@@ -7,5 +7,6 @@ router.post('/filter', propuestaController.getPropuestasByFilter);
 router.get('/unidades-compras', propuestaController.getUnidadesCompras);
 router.get('/tipos-estado-propuesta', propuestaController.getTiposEstadoPropuesta);
 router.put('/delete-propuestas', propuestaController.deletePropuestas);
+router.put('/update-estado', propuestaController.updateEstadoPropuestas);
 
 module.exports = router;

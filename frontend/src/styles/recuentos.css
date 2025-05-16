@@ -883,6 +883,11 @@ outline: none;
 background-color: #e9a735;
 }
 
+.status-tag.status-recogido {
+  background-color: #e39b9b;
+  color: white !important;
+}
+
 .status-recogido {
 background-color: #e39b9b;
 }

@@ -78,7 +78,7 @@ exports.updateEstadoRecuentos = async (req, res) => {
       capacidadMaximaFisica,
       usuario
     });
-    
+    recuentoRepository.clearCache();
     res.json({
       success: true,
       totalUpdated: result.totalUpdated,
@@ -101,5 +101,14 @@ exports.updateValues = async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar valores:', error);
     res.status(500).json({ error: 'Error al actualizar valores del recuento' });
+  }
+};
+
+exports.clearCache = (req, res) => {
+  try {
+    recuentoRepository.clearCache();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
   }
 };

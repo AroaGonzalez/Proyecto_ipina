@@ -6,5 +6,6 @@ router.get('/estados', recuentoController.getEstados);
 router.post('/filter', recuentoController.getRecuentosByFilter);
 router.put('/update-estado', recuentoController.updateEstadoRecuentos);
 router.put('/update-values', recuentoController.updateValues);
+router.get('/clear-cache', recuentoController.clearCache);
 
 module.exports = router;

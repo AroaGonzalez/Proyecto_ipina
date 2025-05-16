@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { FaChevronDown, FaSearch, FaTrash, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo, FaCheckSquare, FaSquare } from 'react-icons/fa';
+import { FaChevronDown, FaSearch, FaTrash, FaTimes, FaFilter, FaCalendarAlt, FaUndo, FaRedo } from 'react-icons/fa';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../context/LanguageContext';
 import '../styles/propuestas.css';
+import ViewPropuestaSFIModal from './viewPropuestaSFIModal';
 
 const BASE_URL = process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000';
 
 const Propuestas = () => {
   const { t } = useTranslation();
   const { languageId } = useContext(LanguageContext);
+  const [showPropuestaSFIModal, setShowPropuestaSFIModal] = useState(false);
+  const [selectedPropuestaDetails, setSelectedPropuestaDetails] = useState(null);
 
   const [paginaActual, setPaginaActual] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -251,16 +254,21 @@ const Propuestas = () => {
 
   const handlePublishInSFI = async () => {
     try {
-      console.log("Publishing to SFI:", selectedPropuestas);
+      setLoading(true);
       
-      alert(`Propuestas ${selectedPropuestas.join(', ')} publicadas en SFI correctamente`);
-      
-      setSelectedPropuestas([]);
-      setSelectAll(false);
-      
+      if (selectedPropuestas.length > 0) {
+        const propuestaDetails = propuestas.find(p => p.idPropuesta === selectedPropuestas[0]);
+        if (propuestaDetails) {
+          setSelectedPropuestaDetails(propuestaDetails);
+          setShowPropuestaSFIModal(true);
+        }
+      }
+        
     } catch (error) {
       console.error('Error al publicar en SFI:', error);
       setError('Error al publicar en SFI');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1098,6 +1106,16 @@ const Propuestas = () => {
             </p>
           </div>
         </div>
+      )}
+      {showPropuestaSFIModal && selectedPropuestaDetails && (
+        <ViewPropuestaSFIModal 
+          propuesta={selectedPropuestaDetails}
+          onClose={() => {
+            setShowPropuestaSFIModal(false);
+            setSelectedPropuestaDetails(null);
+          }}
+          onUpdate={handleSearch}
+        />
       )}
     </div>
   );

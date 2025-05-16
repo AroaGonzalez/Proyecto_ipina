@@ -54,17 +54,18 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
         try {
             setLoading(true);
             
-            // Siempre actualizar con estado RESPUESTA
             await axios.put(`${BASE_URL}/recuento/update-estado`, {
-            idsRecuento: [recuento.idRecuento],
-            idTipoEstadoRecuento: 3, // RESPUESTA
-            usuario: 'frontend_user',
-            stockFisico: parseInt(stockFisico) || null,
-            capacidadMaximaFisica: parseInt(capacidadMaxima) || null
+                idsRecuento: [recuento.idRecuento],
+                idTipoEstadoRecuento: 3, // RESPUESTA
+                usuario: 'frontend_user',
+                stockFisico: parseInt(stockFisico) || null,
+                capacidadMaximaFisica: parseInt(capacidadMaxima) || null
             });
+
+            await axios.get(`${BASE_URL}/recuento/clear-cache`);
             
             if (onUpdate) {
-            await onUpdate(); // Esperar a que se actualice
+                await onUpdate();
             }
             onClose();
         } catch (error) {
@@ -74,6 +75,7 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="modal-overlay">

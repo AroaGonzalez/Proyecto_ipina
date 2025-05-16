@@ -551,6 +551,8 @@
   font-size: 11px;
   text-transform: uppercase;
   font-weight: 500;
+  color: white !important;
+  font-weight: bold;
 }
 
 .estado-1 {
