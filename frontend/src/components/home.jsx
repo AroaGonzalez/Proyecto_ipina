@@ -58,9 +58,9 @@ const Home = () => {
             <i className="fas fa-tasks"></i>
           </div>
           <div className="card-content">
-            <h3>{t('Tareas pendientes')}</h3>
-            <p>{t('Gestiona las tareas asignadas y pendientes')}</p>
-            <Link to="/tareas" className="card-link">{t('Acceder')}</Link>
+            <h3>{t('Consulta de recuentos')}</h3>
+            <p>{t('Consulta los recuentos')}</p>
+            <Link to="/recuentos" className="card-link">{t('Acceder')}</Link>
           </div>
         </div>
         
@@ -69,9 +69,9 @@ const Home = () => {
             <i className="fas fa-chart-bar"></i>
           </div>
           <div className="card-content">
-            <h3>{t('Informes y estadísticas')}</h3>
-            <p>{t('Visualiza informes sobre reposición y consumo')}</p>
-            <Link to="/informes" className="card-link">{t('Acceder')}</Link>
+            <h3>{t('Consulta de propuestas')}</h3>
+            <p>{t('Visualiza las propuestas realizadas')}</p>
+            <Link to="/propuestas" className="card-link">{t('Acceder')}</Link>
           </div>
         </div>
       </div>

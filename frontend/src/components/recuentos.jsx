@@ -78,10 +78,10 @@ const Recuentos = () => {
         className += ' status-recogido';
         } else if (normalizedStatus === 'RESPUESTA' || normalizedStatus === 'ANSWERED') {
         className += ' status-respuesta';
-        } else if (normalizedStatus === 'VALIDADO') {
+        } else if (normalizedStatus === 'VALIDADO' || normalizedStatus === 'VALIDATED') {
         className += ' status-validado';
         } else if (normalizedStatus === 'PENDIENTE' || normalizedStatus === 'PENDING') {
-        className += ' status-validado';
+        className += ' status-pendiente';
         } else if (normalizedStatus === 'DESCARTADO' || normalizedStatus === 'DISCARDED') {
         className += ' status-descartado';
         }
@@ -711,7 +711,7 @@ const Recuentos = () => {
                                 <td className="id-column">{recuento.localizacionCompra.id}</td>
                                 <td className="medium-text-column">{recuento.localizacionCompra.descripcion}</td>
                                 <td className="id-column">{recuento.alias.id}</td>
-                                <td className="medium-text-column">{recuento.alias.nombre}</td>
+                                <td className="medium-text-column">{normalizeText(recuento.alias.nombre)}</td>
                                 <td className="short-text-column">{recuento.alias.idTipoAlias}</td>
                                 <td className="short-text-column">{recuento.stockFisico || '-'}</td>
                                 <td className="short-text-column editable-cell">

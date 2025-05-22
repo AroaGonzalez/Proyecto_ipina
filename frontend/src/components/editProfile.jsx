@@ -13,6 +13,7 @@ function EditProfile() {
     address: ''
   });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -33,7 +34,6 @@ function EditProfile() {
         setLoading(false);
       }
     };
-
     fetchUserProfile();
   }, [t]);
 
@@ -43,24 +43,45 @@ function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       const token = localStorage.getItem('token');
       await axios.put('http://localhost:5000/profile', form, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      localStorage.setItem('profileSuccessMessage', t('Perfil actualizado correctamente'));
       navigate('/profile');
     } catch (err) {
       setError(t('Error al actualizar el perfil'));
+      setSaving(false);
     }
   };
 
-  if (loading) return <div className="loading">{t('Cargando perfil...')}</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) return (
+    <div className="profile-container">
+      <div className="profile-card shadow">
+        <div className="card-header">
+          <span className="header-icon">✏️</span>
+          <h2>{t('Editar Perfil')}</h2>
+        </div>
+        <div className="loading-indicator">{t('Cargando perfil...')}</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="profile-container">
-      <div className="profile-card">
-        <h1>{t('Editar Perfil')}</h1>
+      <div className="profile-card shadow">
+        <div className="card-header">
+          <span className="header-icon">✏️</span>
+          <h2>{t('Editar Perfil')}</h2>
+        </div>
+        
+        {error && (
+          <div className="alert alert-danger">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -71,6 +92,8 @@ function EditProfile() {
               name="name"
               value={form.name}
               onChange={handleChange}
+              className="form-input"
+              placeholder={t('Introduce tu nombre')}
             />
           </div>
           
@@ -82,6 +105,8 @@ function EditProfile() {
               name="email"
               value={form.email}
               onChange={handleChange}
+              className="form-input"
+              placeholder={t('Introduce tu email')}
             />
           </div>
           
@@ -93,16 +118,22 @@ function EditProfile() {
               name="address"
               value={form.address}
               onChange={handleChange}
+              className="form-input"
+              placeholder={t('Introduce tu dirección')}
             />
           </div>
           
-          <div className="form-actions">
-            <button type="submit" className="save-button">
-              {t('Guardar cambios')}
-            </button>
+          <div className="button-group">
             <button 
-              type="button" 
-              className="cancel-button" 
+              type="submit" 
+              className="primary-btn"
+              disabled={saving}
+            >
+              {saving ? t('Guardando...') : t('Guardar cambios')}
+            </button>
+            <button
+              type="button"
+              className="secondary-btn"
               onClick={() => navigate('/profile')}
             >
               {t('Cancelar')}

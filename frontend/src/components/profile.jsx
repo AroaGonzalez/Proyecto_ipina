@@ -14,6 +14,7 @@ function Profile() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -29,46 +30,90 @@ function Profile() {
         setLoading(false);
       }
     };
-
     fetchUserProfile();
+
+    const message = localStorage.getItem('profileSuccessMessage');
+    if (message) {
+      setSuccessMessage(message);
+      localStorage.removeItem('profileSuccessMessage');
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
   }, [t]);
 
-  if (loading) return <div className="loading">{t('Cargando perfil...')}</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) return (
+    <div className="profile-container">
+      <div className="profile-card shadow">
+        <div className="card-header">
+          <span className="header-icon">👤</span>
+          <h2>{t('Mi Perfil')}</h2>
+        </div>
+        <div className="loading-indicator">{t('Cargando perfil...')}</div>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="profile-container">
+      <div className="profile-card shadow">
+        <div className="card-header">
+          <span className="header-icon">👤</span>
+          <h2>{t('Mi Perfil')}</h2>
+        </div>
+        <div className="alert alert-danger">
+          {error}
+        </div>
+        <button 
+          className="primary-btn" 
+          onClick={() => window.location.reload()}
+        >
+          {t('Intentar nuevamente')}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="profile-container">
-      <div className="profile-card">
-        <h1>{t('Mi Perfil')}</h1>
+      <div className="profile-card shadow">
+        <div className="card-header">
+          <span className="header-icon">👤</span>
+          <h2>{t('Mi Perfil')}</h2>
+        </div>
+        
+        {successMessage && (
+          <div className="alert alert-success">
+            {successMessage}
+          </div>
+        )}
         
         <div className="profile-info">
           <div className="info-group">
             <label>{t('Nombre de usuario')}:</label>
-            <p>{profile.username}</p>
+            <p className="info-value">{profile.username}</p>
           </div>
           
           <div className="info-group">
             <label>{t('Nombre')}:</label>
-            <p>{profile.name || t('No especificado')}</p>
+            <p className="info-value">{profile.name || t('No especificado')}</p>
           </div>
           
           <div className="info-group">
             <label>{t('Email')}:</label>
-            <p>{profile.email || t('No especificado')}</p>
+            <p className="info-value">{profile.email || t('No especificado')}</p>
           </div>
           
           <div className="info-group">
             <label>{t('Dirección')}:</label>
-            <p>{profile.address || t('No especificada')}</p>
+            <p className="info-value">{profile.address || t('No especificada')}</p>
           </div>
         </div>
         
-        <div className="profile-actions">
-          <Link to="/edit-profile" className="edit-button">
-            {t('Editar perfil')}
+        <div className="button-group">
+          <Link to="/edit-profile" className="primary-btn">
+            ✏️ {t('Editar perfil')}
           </Link>
-          <Link to="/change-password" className="password-button">
-            {t('Cambiar contraseña')}
+          <Link to="/change-password" className="secondary-btn">
+            🔑 {t('Cambiar contraseña')}
           </Link>
         </div>
       </div>

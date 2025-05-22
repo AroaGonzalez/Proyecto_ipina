@@ -49,39 +49,11 @@ const ViewPropuestaSFIModal = ({ propuesta, onClose, onUpdate }) => {
         return normalizedText;
     };
 
-    const handleAceptar = async () => {
-        try {
-            setLoading(true);
-            
-            // Luego actualizar a estado RESPUESTA con los valores de stock
-            await axios.put(`${BASE_URL}/recuento/update-estado`, {
-                idsRecuento: [recuento.idRecuento],
-                idTipoEstadoRecuento: 3, // RESPUESTA
-                usuario: 'frontend_user',
-                stockFisico: parseInt(stockFisico) || null,
-                capacidadMaximaFisica: parseInt(capacidadMaxima) || null
-            });
-            
-            // Forzar limpieza de caché
-            await axios.get(`${BASE_URL}/recuento/clear-cache`);
-            
-            if (onUpdate) {
-                await onUpdate(); // Actualiza la vista con los filtros actuales
-            }
-            onClose();
-        } catch (error) {
-            console.error('Error al actualizar recuento:', error);
-            alert('Error al actualizar el recuento');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
         <div className="modal-overlay">
             <div className="modal-content propuesta-sfi">
                 <div className="modal-header">
-                    <h2>Simulación SFI - Propuesta #{propuesta.idPropuesta}</h2>
+                    <h2>{t('Simulación SFI - Propuesta')} #{propuesta.idPropuesta}</h2>
                     <button className="close-button" onClick={onClose}>
                         <FaTimes />
                     </button>
@@ -89,96 +61,96 @@ const ViewPropuestaSFIModal = ({ propuesta, onClose, onUpdate }) => {
                 
                 <div className="modal-body">
                     <div className="propuesta-section">
-                        <h3>Información General</h3>
+                        <h3>{t('Información General')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
-                                <label>ID Evento:</label>
+                                <label>{t('ID Evento:')}</label>
                                 <span>{propuesta.idEvento}</span>
                             </div>
                             <div className="info-item">
-                                <label>Evento:</label>
+                                <label>{t('Evento:')}</label>
                                 <span>{normalizeText(propuesta.nombreEvento)}</span>
                             </div>
                             <div className="info-item">
-                                <label>Estado:</label>
+                                <label>{t('Estado:')}</label>
                                 <span className="estado-propuesta estado-2">{propuesta.tipoEstadoPropuesta.descripcion}</span>
                             </div>
                             <div className="info-item">
-                                <label>Código Ejecución:</label>
+                                <label>{t('Código Ejecución:')}</label>
                                 <span>{propuesta.codEjecucion}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Localización</h3>
+                        <h3>{t('Localización')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
                                 <label>ID:</label>
                                 <span>{propuesta.localizacionCompra.id}</span>
                             </div>
                             <div className="info-item">
-                                <label>Descripción:</label>
+                                <label>{t('Descripción:')}</label>
                                 <span>{normalizeText(propuesta.localizacionCompra.descripcion)}</span>
                             </div>
                             <div className="info-item">
-                                <label>Cadena:</label>
+                                <label>{t('Cadena:')}</label>
                                 <span>{normalizeText(propuesta.cadena.descripcion)}</span>
                             </div>
                             <div className="info-item">
-                                <label>Mercado:</label>
+                                <label>{t('Mercado:')}</label>
                                 <span>{propuesta.mercado.id} - {normalizeText(propuesta.mercado.descripcion)}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Unidad de Compras</h3>
+                        <h3>{t('Unidad de Compras')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
-                                <label>ID:</label>
+                                <label>{t('ID:')}</label>
                                 <span>{propuesta.unidadComprasGestora?.id || '-'}</span>
                             </div>
                             <div className="info-item">
-                                <label>Nombre:</label>
+                                <label>{t('Nombre:')}</label>
                                 <span>{normalizeText(propuesta.unidadComprasGestora?.descripcion || '-')}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Artículo</h3>
+                        <h3>{t('Artículo')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
-                                <label>ID:</label>
+                                <label>{t('ID:')}</label>
                                 <span>{propuesta.idAjeno}</span>
                             </div>
                             <div className="info-item">
-                                <label>Descripción:</label>
+                                <label>{t('Descripción:')}</label>
                                 <span>{normalizeText(propuesta.descripcionAjeno)}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Alias</h3>
+                        <h3>{t('Alias')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
-                                <label>ID:</label>
+                                <label>{t('ID:')}</label>
                                 <span>{propuesta.idAlias}</span>
                             </div>
                             <div className="info-item">
-                                <label>Descripción:</label>
+                                <label>{t('Descripción:')}</label>
                                 <span>{normalizeText(propuesta.descripcionAlias)}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Cantidad - Editable</h3>
+                        <h3>{t('Cantidad - Editable')}</h3>
                         <div className="info-grid editable">
                             <div className="info-item">
-                                <label>Cantidad:</label>
+                                <label>{t('Cantidad:')}</label>
                                 <input 
                                     type="number"
                                     value={cantidad}
@@ -192,10 +164,10 @@ const ViewPropuestaSFIModal = ({ propuesta, onClose, onUpdate }) => {
                     </div>
 
                     <div className="propuesta-section">
-                        <h3>Fechas</h3>
+                        <h3>{t('Fechas')}</h3>
                         <div className="info-grid">
                             <div className="info-item">
-                                <label>Creación:</label>
+                                <label>{t('Creación:')}</label>
                                 <span>{propuesta.fechaCreacion || '-'}</span>
                             </div>
                         </div>
@@ -209,13 +181,6 @@ const ViewPropuestaSFIModal = ({ propuesta, onClose, onUpdate }) => {
                         disabled={loading}
                     >
                         {t('Cancelar')}
-                    </button>
-                    <button 
-                        className="accept-button" 
-                        onClick={handleAceptar}
-                        disabled={loading}
-                    >
-                        {loading ? t('Publicando...') : t('Publicar en SFI')}
                     </button>
                 </div>
             </div>

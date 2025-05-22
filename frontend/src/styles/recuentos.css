@@ -490,6 +490,7 @@ table-layout: fixed;
 .recuentos-table td {
 white-space: normal;
 overflow: visible;
+  border: 1px solid #ddd;
 text-overflow: clip;
 padding: 10px 15px;
 text-align: left;

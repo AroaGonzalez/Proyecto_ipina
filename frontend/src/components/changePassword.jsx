@@ -3,17 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import '../styles/profile.css';
-import { FaEye, FaEyeSlash, FaLock } from 'react-icons/fa';
 
-const ChangePassword = () => {
+function ChangePassword() {
   const { t } = useTranslation();
-  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
+  const navigate = useNavigate();
+  const [passwordForm, setPasswordForm] = useState({ 
+    currentPassword: '', 
+    newPassword: '' 
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const navigate = useNavigate();
 
   const handlePasswordChange = (e) => {
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
@@ -46,6 +48,8 @@ const ChangePassword = () => {
       setPasswordForm({ currentPassword: '', newPassword: '' });
       setLoading(false);
 
+      localStorage.setItem('profileSuccessMessage', t('Contraseña actualizada correctamente'));
+      
       setTimeout(() => {
         navigate('/profile');
       }, 2000);
@@ -59,7 +63,7 @@ const ChangePassword = () => {
     <div className="profile-container">
       <div className="profile-card shadow">
         <div className="card-header">
-          <FaLock className="header-icon" />
+          <span className="header-icon">🔒</span>
           <h2>{t('Cambiar Contraseña')}</h2>
         </div>
 
@@ -75,7 +79,7 @@ const ChangePassword = () => {
               name="currentPassword"
               value={passwordForm.currentPassword}
               onChange={handlePasswordChange}
-              className="form-control"
+              className="form-input"
               placeholder={t('Ingresa tu contraseña actual')}
             />
             <button
@@ -84,7 +88,7 @@ const ChangePassword = () => {
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               aria-label={showCurrentPassword ? t('Ocultar contraseña') : t('Mostrar contraseña')}
             >
-              {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
+              {showCurrentPassword ? "👁️‍🗨️" : "👁️"}
             </button>
           </div>
         </div>
@@ -98,7 +102,7 @@ const ChangePassword = () => {
               name="newPassword"
               value={passwordForm.newPassword}
               onChange={handlePasswordChange}
-              className="form-control"
+              className="form-input"
               placeholder={t('Ingresa tu nueva contraseña')}
             />
             <button
@@ -107,22 +111,25 @@ const ChangePassword = () => {
               onClick={() => setShowNewPassword(!showNewPassword)}
               aria-label={showNewPassword ? t('Ocultar contraseña') : t('Mostrar contraseña')}
             >
-              {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+              {showNewPassword ? "👁️‍🗨️" : "👁️"}
             </button>
           </div>
+          {passwordForm.newPassword && passwordForm.newPassword.length < 6 && (
+            <div className="password-hint">{t('La contraseña debe tener al menos 6 caracteres')}</div>
+          )}
         </div>
         
         <div className="button-group">
           <button 
             onClick={changePassword} 
-            className="update-button primary-btn"
+            className="primary-btn"
             disabled={loading}
           >
             {loading ? t('Actualizando...') : t('Actualizar Contraseña')}
           </button>
           <button 
             onClick={() => navigate('/profile')} 
-            className="cancel-button secondary-btn"
+            className="secondary-btn"
           >
             {t('Cancelar')}
           </button>
@@ -130,6 +137,6 @@ const ChangePassword = () => {
       </div>
     </div>
   );
-};
+}
 
 export default ChangePassword;

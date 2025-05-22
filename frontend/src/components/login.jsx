@@ -50,9 +50,6 @@ function Login() {
     navigate('/register');
   };
 
-  const handleForgotPassword = () => {
-    alert(t('Función de recuperar contraseña en desarrollo'));
-  };
   const toggleLanguage = () => {
     const newLang = currentLanguage === 'es' ? 'en' : 'es';
     console.log('Cambiando idioma de', currentLanguage, 'a', newLang);
@@ -82,12 +79,12 @@ function Login() {
       
       <div className="login-form-container">
         <div className="form-header">
-          <h2>{t('WELCOME TO RAM')}</h2>
-          <p>{t('SIGN IN WITH YOUR EMAIL OR USER ACCOUNT')}</p>
+          <h2>{t('BIENVENIDO A RAM')}</h2>
+          <p>{t('INICIA SESIÓN CON TU CORREO ELECTRÓNICO O CUENTA DE USUARIO')}</p>
         </div>
         
         <form onSubmit={handleLogin} className="login-form">
-          <div className="input-label">{t('Username')}</div>
+          <div className="input-label">{t('Nombre de usuario')}</div>
           <div className="form-field">
             <input
               type="text"
@@ -99,7 +96,7 @@ function Login() {
             />
           </div>
           
-          <div className="input-label">{t('Password')}</div>
+          <div className="input-label">{t('Contraseña')}</div>
           <div className="form-field password-field">
             <input
               type={showPassword ? "text" : "password"}
@@ -125,7 +122,7 @@ function Login() {
             className="login-button"
             disabled={loading}
           >
-            {loading ? t('INICIANDO...') : t('SIGN IN')}
+            {loading ? t('INICIANDO...') : t('INICIAR SESIÓN')}
           </button>
           
           <button 
@@ -133,14 +130,9 @@ function Login() {
             className="register-button"
             onClick={handleRegisterRedirect}
           >
-            {t('REGISTER')}
+            {t('REGISTRATE')}
           </button>
           
-          <div className="forgot-password">
-            <button type="button" onClick={handleForgotPassword}>
-              {t('FORGOT YOUR PASSWORD?')}
-            </button>
-          </div>
         </form>
       </div>
     </div>

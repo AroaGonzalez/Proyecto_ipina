@@ -404,7 +404,8 @@
   overflow: visible;
   text-overflow: clip;
   padding: 10px 15px;
-  text-align: left;
+  text-align: left;  
+  border: 1px solid #ddd;
   vertical-align: middle;
   word-wrap: break-word;
   word-break: normal;

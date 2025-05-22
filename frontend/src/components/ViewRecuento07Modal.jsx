@@ -81,7 +81,7 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
         <div className="modal-overlay">
             <div className="modal-content recuento-07">
             <div className="modal-header">
-                <h2>Simulación Aplicación 07 - Recuento #{recuento.idRecuento}</h2>
+                <h2>{t('Simulación Aplicación 07 - Recuento')} #{recuento.idRecuento}</h2>
                 <button className="close-button" onClick={onClose}>
                 <FaTimes />
                 </button>
@@ -89,44 +89,44 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
             
             <div className="modal-body">
                 <div className="recuento-section">
-                <h3>Información General</h3>
+                <h3>{t('Información General')}</h3>
                 <div className="info-grid">
                     <div className="info-item">
-                    <label>ID Evento:</label>
+                    <label>{t('ID Evento:')}</label>
                     <span>{recuento.evento.id}</span>
                     </div>
                     <div className="info-item">
-                    <label>Evento:</label>
+                    <label>{t('Evento:')}</label>
                     <span>{recuento.evento.nombre}</span>
                     </div>
                     <div className="info-item">
-                    <label>Estado:</label>
+                    <label>{t('Estado:')}</label>
                     <span className="status-recogido">{recuento.tipoEstadoRecuento.descripcion}</span>
                     </div>
                     <div className="info-item">
-                    <label>Código Ejecución:</label>
+                    <label>{t('Código Ejecución:')}</label>
                     <span>{recuento.codEjecucion}</span>
                     </div>
                 </div>
                 </div>
 
                 <div className="recuento-section">
-                <h3>Localización</h3>
+                <h3>{t('Localización')}</h3>
                 <div className="info-grid">
                     <div className="info-item">
                     <label>ID:</label>
                     <span>{recuento.localizacionCompra.id}</span>
                     </div>
                     <div className="info-item">
-                    <label>Descripción:</label>
+                    <label>{t('Descripción:')}</label>
                     <span>{recuento.localizacionCompra.descripcion}</span>
                     </div>
                     <div className="info-item">
-                    <label>Cadena:</label>
+                    <label>{t('Cadena:')}</label>
                     <span>{normalizeText(recuento.cadena.nombre)}</span>
                     </div>
                     <div className="info-item">
-                    <label>Mercado:</label>
+                    <label>{t('Mercado:')}</label>
                     <span>{recuento.mercado.id} - {normalizeText(recuento.mercado.descripcion)}</span>
                     </div>
                 </div>
@@ -140,21 +140,21 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
                     <span>{recuento.alias.id}</span>
                     </div>
                     <div className="info-item">
-                    <label>Nombre:</label>
+                    <label>{t('Nombre:')}</label>
                     <span>{recuento.alias.nombre}</span>
                     </div>
                     <div className="info-item">
-                    <label>Tipo:</label>
+                    <label>{t('Tipo:')}</label>
                     <span>{recuento.alias.idTipoAlias}</span>
                     </div>
                 </div>
                 </div>
 
                 <div className="recuento-section">
-                <h3>Stock - Editable</h3>
+                <h3>{t('Stock - Editable')}</h3>
                 <div className="info-grid editable">
                     <div className="info-item">
-                    <label>Stock Físico:</label>
+                    <label>{t('Stock Físico:')}</label>
                     <input 
                         type="number"
                         value={stockFisico}
@@ -165,11 +165,11 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
                     />
                     </div>
                     <div className="info-item">
-                    <label>Stock Validado:</label>
+                    <label>{t('Stock Validado:')}</label>
                     <span>{recuento.stockFisicoValidado || '-'}</span>
                     </div>
                     <div className="info-item">
-                    <label>Capacidad Máxima:</label>
+                    <label>{t('Capacidad Máxima:')}</label>
                     <input 
                         type="number"
                         value={capacidadMaxima}
@@ -180,43 +180,43 @@ const ViewRecuento07Modal = ({ recuento, onClose, onUpdate }) => {
                     />
                     </div>
                     <div className="info-item">
-                    <label>Capacidad Validada:</label>
+                    <label>{t('Capacidad Validada:')}</label>
                     <span>{recuento.capacidadMaximaFisicaValidada || '-'}</span>
                     </div>
                 </div>
                 </div>
 
                 <div className="recuento-section">
-                <h3>Artículo</h3>
+                <h3>{t('Artículo')}</h3>
                 <div className="info-grid">
                     <div className="info-item">
                     <label>ID:</label>
                     <span>{recuento.ajeno.id}</span>
                     </div>
                     <div className="info-item">
-                    <label>Descripción:</label>
+                    <label>{t('Descripción:')}</label>
                     <span>{normalizeText(recuento.ajeno.nombre)}</span>
                     </div>
                 </div>
                 </div>
 
                 <div className="recuento-section">
-                <h3>Fechas</h3>
+                <h3>{t('Fechas')}</h3>
                 <div className="info-grid">
                     <div className="info-item">
-                    <label>Creación:</label>
+                    <label>{t('Creación:')}</label>
                     <span>{recuento.fechaAlta}</span>
                     </div>
                     <div className="info-item">
-                    <label>Recogida:</label>
+                    <label>{t('Recogida:')}</label>
                     <span>{recuento.fechaRecogida || '-'}</span>
                     </div>
                     <div className="info-item">
-                    <label>Respuesta:</label>
+                    <label>{t('Respuesta:')}</label>
                     <span>{recuento.fechaRespuesta || '-'}</span>
                     </div>
                     <div className="info-item">
-                    <label>Validación:</label>
+                    <label>{t('Validación:')}</label>
                     <span>{recuento.fechaValidacion || '-'}</span>
                     </div>
                 </div>

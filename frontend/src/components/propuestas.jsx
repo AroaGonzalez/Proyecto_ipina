@@ -194,6 +194,7 @@ const Propuestas = () => {
       .replace(/PEQUE.?.AS/g, 'PEQUEÑAS')
       .replace(/PEQUE.?.A/g, 'PEQUEÑA')
       .replace(/CAMPA.?.A/g, 'CAMPAÑA')
+      .replace(/ADMINISTRACI.?.N/g, 'ADMINISTRACIÓN')
       .replace(/PEQUE.?.OS/g, 'PEQUEÑOS');
   
     const replacements = {
@@ -254,16 +255,30 @@ const Propuestas = () => {
 
   const handlePublishInSFI = async () => {
     try {
+      if (selectedPropuestas.length === 0) {
+        return;
+      }
+      
       setLoading(true);
       
-      if (selectedPropuestas.length > 0) {
-        const propuestaDetails = propuestas.find(p => p.idPropuesta === selectedPropuestas[0]);
-        if (propuestaDetails) {
-          setSelectedPropuestaDetails(propuestaDetails);
-          setShowPropuestaSFIModal(true);
-        }
-      }
+      const propuestaDetails = propuestas.find(p => p.idPropuesta === selectedPropuestas[0]);
+      
+      if (propuestaDetails) {
+        const ESTADO_PUBLICADO = 1;
         
+        await axios.put(`${BASE_URL}/propuestas/update-estado`, {
+          idsPropuesta: [propuestaDetails.idPropuesta],
+          idTipoEstadoPropuesta: ESTADO_PUBLICADO,
+          usuario: 'frontend_user'
+        });
+        
+        setSelectedPropuestaDetails(propuestaDetails);
+        setShowPropuestaSFIModal(true);
+        setSelectedPropuestas([]);
+        setSelectAll(false);
+        
+        handleSearch();
+      }
     } catch (error) {
       console.error('Error al publicar en SFI:', error);
       setError('Error al publicar en SFI');
@@ -699,6 +714,30 @@ const Propuestas = () => {
             </div>
             
             <div className="filter-field">
+              <label className="filter-label">{t('Id Ejecución')}</label>
+              <input
+                type="text"
+                placeholder={t("Id Ejecución")}
+                value={idEjecucion}
+                onChange={(e) => setIdEjecucion(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+            
+            <div className="filter-field">
+              <label className="filter-label">{t('Id Propuesta')}</label>
+              <input
+                type="text"
+                placeholder={t("Id Propuesta")}
+                value={idPropuesta}
+                onChange={(e) => setIdPropuesta(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+          </div>
+          
+          <div className="filters-row">
+                        <div className="filter-field">
               <div 
                 className="filter-dropdown"
                 onClick={() => toggleFilter('nombreEvento')}
@@ -764,31 +803,6 @@ const Propuestas = () => {
                 )}
               </div>
             </div>
-            
-            <div className="filter-field">
-              <label className="filter-label">{t('Id Ejecución')}</label>
-              <input
-                type="text"
-                placeholder={t("Id Ejecución")}
-                value={idEjecucion}
-                onChange={(e) => setIdEjecucion(e.target.value)}
-                className="filter-input"
-              />
-            </div>
-            
-            <div className="filter-field">
-              <label className="filter-label">{t('Id Propuesta')}</label>
-              <input
-                type="text"
-                placeholder={t("Id Propuesta")}
-                value={idPropuesta}
-                onChange={(e) => setIdPropuesta(e.target.value)}
-                className="filter-input"
-              />
-            </div>
-          </div>
-          
-          <div className="filters-row">
             <div className="filter-field">
               <div 
                 className="filter-dropdown"
@@ -853,34 +867,6 @@ const Propuestas = () => {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-            
-            <div className="filter-field">
-              <label className="filter-label">{t('Inicio Fecha Creación')}</label>
-              <div className="date-input-container">
-                <input
-                  type="text"
-                  placeholder={t("Inicio Fecha Creación")}
-                  value={inicioFechaCreacion}
-                  onChange={(e) => setInicioFechaCreacion(e.target.value)}
-                  className="filter-input"
-                />
-                <FaCalendarAlt className="calendar-icon" />
-              </div>
-            </div>
-            
-            <div className="filter-field">
-              <label className="filter-label">{t('Fin Fecha Creación')}</label>
-              <div className="date-input-container">
-                <input
-                  type="text"
-                  placeholder={t("Fin Fecha Creación")}
-                  value={finFechaCreacion}
-                  onChange={(e) => setFinFechaCreacion(e.target.value)}
-                  className="filter-input"
-                />
-                <FaCalendarAlt className="calendar-icon" />
               </div>
             </div>
             
@@ -1069,6 +1055,13 @@ const Propuestas = () => {
               className="action-button publish-button"
               onClick={handlePublishInSFI}
               title="Publicar en SFI"
+              disabled={
+                selectedPropuestas.length === 0 || 
+                propuestas.some(p => 
+                  selectedPropuestas.includes(p.idPropuesta) && 
+                  p.tipoEstadoPropuesta?.id === 1
+                )
+              }
             >
               <span>{t('PUBLICAR EN SFI')}</span>
             </button>

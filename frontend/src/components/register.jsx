@@ -65,12 +65,12 @@ function Register() {
       
       <div className="login-form-container">
         <div className="form-header">
-          <h2>{t('register.title')}</h2>
-          <p>{t('CREATE AN ACCOUNT TO ACCESS THE SYSTEM')}</p>
+          <h2>{t('REGISTRO')}</h2>
+          <p>{t('CREAR UNA CUENTA PARA ACCEDER AL SISTEMA')}</p>
         </div>
         
         <form onSubmit={handleRegister} className="login-form">
-          <div className="input-label">{t('register.username')}</div>
+          <div className="input-label">{t('Nombre de usuario')}</div>
           <div className="form-field">
             <input
               type="text"
@@ -82,7 +82,7 @@ function Register() {
             />
           </div>
           
-          <div className="input-label">{t('register.password')}</div>
+          <div className="input-label">{t('Contraseña')}</div>
           <div className="form-field password-field">
             <input
               type={showPassword ? "text" : "password"}
@@ -108,7 +108,7 @@ function Register() {
             className="register-button"
             disabled={loading}
           >
-            {loading ? t('REGISTRANDO...') : t('register.submit_button')}
+            {loading ? t('REGISTRANDO...') : t('Registrarse')}
           </button>
           
           <button 
@@ -116,7 +116,7 @@ function Register() {
             className="login-button"
             onClick={handleLoginRedirect}
           >
-            {t('BACK TO LOGIN')}
+            {t('Vuelta al inicio de sesión')}
           </button>
         </form>
       </div>
